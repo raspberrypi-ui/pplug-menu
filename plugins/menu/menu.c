@@ -1,33 +1,44 @@
 /*
- * Copyright (C) 2006-2010 Hong Jen Yee (PCMan) <pcman.tw@gmail.com>
- *               2006-2008 Jim Huang <jserv.tw@gmail.com>
- *               2008 Fred Chien <fred@lxde.org>
- *               2009 Ying-Chun Liu (PaulLiu) <grandpaul@gmail.com>
- *               2009-2010 Marty Jack <martyj19@comcast.net>
- *               2010 Jürgen Hötzel <juergen@archlinux.org>
- *               2010-2011 Julien Lavergne <julien.lavergne@gmail.com>
- *               2012-2013 Henry Gebhardt <hsggebhardt@gmail.com>
- *               2012 Michael Rawson <michaelrawson76@gmail.com>
- *               2014 Max Krummenacher <max.oss.09@gmail.com>
- *               2014 SHiNE CsyFeK <csyfek@users.sourceforge.net>
- *               2014 Andriy Grytsenko <andrej@rep.kiev.ua>
- *
- * This file is a part of LXPanel project.
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- */
+Copyright (c) 2022 Raspberry Pi (Trading) Ltd.
+All rights reserved.
+
+Based on lxpanel menu.c module; copyrights as follows:
+
+Copyright (C) 2006-2010 Hong Jen Yee (PCMan) <pcman.tw@gmail.com>
+            2006-2008 Jim Huang <jserv.tw@gmail.com>
+            2008 Fred Chien <fred@lxde.org>
+            2009 Ying-Chun Liu (PaulLiu) <grandpaul@gmail.com>
+            2009-2010 Marty Jack <martyj19@comcast.net>
+            2010 Jürgen Hötzel <juergen@archlinux.org>
+            2010-2011 Julien Lavergne <julien.lavergne@gmail.com>
+            2012-2013 Henry Gebhardt <hsggebhardt@gmail.com>
+            2012 Michael Rawson <michaelrawson76@gmail.com>
+            2014 Max Krummenacher <max.oss.09@gmail.com>
+            2014 SHiNE CsyFeK <csyfek@users.sourceforge.net>
+            2014 Andriy Grytsenko <andrej@rep.kiev.ua>
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of the copyright holder nor the
+      names of its contributors may be used to endorse or promote products
+      derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -51,7 +62,7 @@
 #include "plugin.h"
 
 typedef struct {
-    GtkWidget *menu, *box, *img;
+    GtkWidget *plugin, *img, *menu;
     char *fname;
     int padding;
     gboolean has_system_menu;
@@ -65,13 +76,13 @@ typedef struct {
     FmDndSrc *ds;
 } MenuPlugin;
 
+GQuark sys_menu_item_quark = 0;
+
 typedef struct {
     char *name;
     char *disp_name;
     void (*cmd)(void);
 } Command;
-
-GQuark sys_menu_item_quark = 0;
 
 extern void restart (void);
 extern void gtk_run (void);
@@ -210,7 +221,7 @@ static void handle_menu_item_map (GtkWidget *mi, MenuPlugin *m)
                 gtk_image_set_from_pixbuf (img, icon);
                 g_object_unref (icon);
             }
-       }
+        }
     }
 }
 
@@ -234,6 +245,7 @@ static GtkWidget *create_system_menu_item (MenuCacheItem *item, MenuPlugin *m)
         mi = gtk_menu_item_new ();
         box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, MENU_ICON_SPACE);
         gtk_container_add (GTK_CONTAINER (mi), box);
+
         img = gtk_image_new ();
         gtk_container_add (GTK_CONTAINER (box), img);
         label = gtk_label_new (menu_cache_item_get_name (item));
@@ -517,7 +529,7 @@ static gboolean show_system_menu_idle (gpointer user_data)
 
     if (g_source_is_destroyed (g_main_current_source ())) return FALSE;
 
-    gtk_menu_popup_at_widget (GTK_MENU (m->menu), m->box, GDK_GRAVITY_NORTH_WEST, GDK_GRAVITY_NORTH_WEST, NULL);
+    gtk_menu_popup_at_widget (GTK_MENU (m->menu), m->plugin, GDK_GRAVITY_NORTH_WEST, GDK_GRAVITY_NORTH_WEST, NULL);
     m->show_system_menu_idle = 0;
     return FALSE;
 }
@@ -601,16 +613,16 @@ static GtkWidget *menu_constructor (LXPanel *panel, config_setting_t *settings)
     /* Allocate top level widget and set into plugin widget pointer. */
     m->panel = panel;
     m->settings = settings;
-    m->box = gtk_button_new ();
-    lxpanel_plugin_set_data (m->box, m, menu_destructor);
+    m->plugin = gtk_button_new ();
+    lxpanel_plugin_set_data (m->plugin, m, menu_destructor);
 
     /* Allocate icon as a child of top level */
     m->img = gtk_image_new ();
-    gtk_container_add (GTK_CONTAINER (m->box), m->img);
+    gtk_container_add (GTK_CONTAINER (m->plugin), m->img);
     gtk_widget_set_tooltip_text (m->img, _("Click here to open applications menu"));
 
     /* Set up button */
-    gtk_button_set_relief (GTK_BUTTON (m->box), GTK_RELIEF_NONE);
+    gtk_button_set_relief (GTK_BUTTON (m->plugin), GTK_RELIEF_NONE);
 
     /* Check if configuration exists */
     settings = config_setting_add (settings, "", PANEL_CONF_TYPE_LIST);
@@ -651,13 +663,13 @@ static GtkWidget *menu_constructor (LXPanel *panel, config_setting_t *settings)
         g_warning ("menu: plugin init failed");
         gtk_widget_destroy (m->img);
         gtk_widget_destroy (m->menu);
-        gtk_widget_destroy (m->box);
+        gtk_widget_destroy (m->plugin);
         return NULL;
     }
 
     /* Show the widget and return */
-    gtk_widget_show_all (m->box);
-    return m->box;
+    gtk_widget_show_all (m->plugin);
+    return m->plugin;
 }
 
 /* Handler to make changes from configure dialog */
