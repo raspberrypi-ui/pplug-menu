@@ -195,45 +195,17 @@ static gboolean handle_menu_item_button_press (GtkWidget* mi, GdkEventButton* ev
     return FALSE;
 }
 
-static void handle_menu_item_map (GtkWidget *mi, MenuPlugin *m)
-{
-    FmFileInfo *fi;
-    FmIcon *fm_icon = NULL;
-    GdkPixbuf *icon = NULL;
-    GtkImage *img;
-    GList *children;
-
-    children = gtk_container_get_children (GTK_CONTAINER (gtk_bin_get_child (GTK_BIN (mi))));
-    img = children->data;
-    g_list_free (children);
-
-    if (img)
-    {
-        fi = g_object_get_qdata (G_OBJECT (mi), sys_menu_item_quark);
-        if (gtk_image_get_storage_type (img) == GTK_IMAGE_EMPTY && fi != NULL && fi != GINT_TO_POINTER (1))
-        {
-            fm_icon = fm_file_info_get_icon (fi);
-            if (fm_icon == NULL) fm_icon = fm_icon_from_name ("application-x-executable");
-            icon = fm_pixbuf_from_icon_with_fallback (fm_icon, panel_get_safe_icon_size (m->panel), "application-x-executable");
-            if (fm_icon) g_object_unref (fm_icon);
-            if (icon)
-            {
-                gtk_image_set_from_pixbuf (img, icon);
-                g_object_unref (icon);
-            }
-        }
-    }
-}
-
 
 /* Functions to create system menu items */
 
 static GtkWidget *create_system_menu_item (MenuCacheItem *item, MenuPlugin *m)
 {
     GtkWidget* mi, *img, *box, *label;
-    char *mpath;
+    GdkPixbuf *icon;
     FmPath *path;
     FmFileInfo *fi;
+    FmIcon *fm_icon;
+    char *mpath;
 
     if (menu_cache_item_get_type (item) == MENU_CACHE_TYPE_SEP)
     {
@@ -248,16 +220,23 @@ static GtkWidget *create_system_menu_item (MenuCacheItem *item, MenuPlugin *m)
 
         img = gtk_image_new ();
         gtk_container_add (GTK_CONTAINER (box), img);
+
         label = gtk_label_new (menu_cache_item_get_name (item));
         gtk_container_add (GTK_CONTAINER (box), label);
-        
+
         mpath = menu_cache_dir_make_path (MENU_CACHE_DIR (item));
         path = fm_path_new_relative (fm_path_get_apps_menu (), mpath + 13);
         fi = fm_file_info_new_from_menu_cache_item (path, item);
         fm_path_unref (path);
         g_free (mpath);
         g_object_set_qdata_full (G_OBJECT (mi), sys_menu_item_quark, fi, (GDestroyNotify) fm_file_info_unref);
-        
+
+        fm_icon = fm_file_info_get_icon (fi);
+        if (fm_icon == NULL) fm_icon = fm_icon_from_name ("application-x-executable");
+        icon = fm_pixbuf_from_icon_with_fallback (fm_icon, panel_get_safe_icon_size (m->panel), "application-x-executable");
+        gtk_image_set_from_pixbuf (GTK_IMAGE (img), icon);
+        g_object_unref (icon);
+
         if (menu_cache_item_get_type (item) == MENU_CACHE_TYPE_APP)
         {
             gtk_widget_set_name (mi, "syssubmenu");
@@ -266,7 +245,6 @@ static GtkWidget *create_system_menu_item (MenuCacheItem *item, MenuPlugin *m)
             g_signal_connect (mi, "activate", G_CALLBACK (handle_menu_item_activate), m);
         }
 
-        g_signal_connect (mi, "map", G_CALLBACK (handle_menu_item_map), m);
         g_signal_connect (mi, "button-press-event", G_CALLBACK (handle_menu_item_button_press), m);
         gtk_drag_source_set (mi, GDK_BUTTON1_MASK, NULL, 0, GDK_ACTION_COPY);
     }
