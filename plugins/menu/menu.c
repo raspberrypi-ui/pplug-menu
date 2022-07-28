@@ -132,6 +132,34 @@ gboolean handle_list_keypress (GtkWidget *widget, GdkEventKey *event, gpointer u
         return TRUE;
     }
 
+    if (event->keyval >= 97 && event->keyval <= 122 && event->state == 0 ||
+        event->keyval >= 65 && event->keyval <= 90 && event->state == 1)
+    {
+        char *buf = g_strdup_printf ("%s%c", gtk_entry_get_text (GTK_ENTRY (m->srch)), event->keyval);
+        gtk_entry_set_text (GTK_ENTRY (m->srch), buf);
+        g_free (buf);
+
+        gtk_widget_grab_focus (m->srch);
+        gtk_editable_set_position (GTK_EDITABLE (m->srch), -1);
+        return TRUE;
+    }
+
+    if (event->keyval == GDK_KEY_BackSpace)
+    {
+        char *buf = g_strdup_printf ("%s", gtk_entry_get_text (GTK_ENTRY (m->srch)));
+        int len = strlen (buf);
+        if (len)
+        {
+            buf[len - 1] = 0;
+            gtk_entry_set_text (GTK_ENTRY (m->srch), buf);
+
+            gtk_widget_grab_focus (m->srch);
+            gtk_editable_set_position (GTK_EDITABLE (m->srch), -1);
+        }
+        g_free (buf);
+        return TRUE;
+    }
+
     return FALSE;
 }
 
@@ -141,6 +169,7 @@ gboolean handle_search_keypress (GtkWidget *widget, GdkEventKey *event, gpointer
     GtkTreeSelection *sel;
     GtkTreeModel *model;
     GtkTreeIter iter;
+    GtkTreePath *path;
     gchar *str;
     FmPath *fpath;
 
@@ -157,6 +186,12 @@ gboolean handle_search_keypress (GtkWidget *widget, GdkEventKey *event, gpointer
 
         case GDK_KEY_Escape :   gtk_widget_destroy (m->swin);
                                 m->swin = NULL;
+                                return TRUE;
+
+        case GDK_KEY_Down :     path = gtk_tree_path_new_from_indices (1, -1);
+                                gtk_tree_view_set_cursor (GTK_TREE_VIEW (m->stv), path, NULL, FALSE);
+                                gtk_tree_path_free (path);
+                                gtk_widget_grab_focus (m->stv);
                                 return TRUE;
 
         default :               return FALSE;
