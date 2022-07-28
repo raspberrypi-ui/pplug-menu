@@ -128,6 +128,7 @@ gboolean handle_list_keypress (GtkWidget *widget, GdkEventKey *event, gpointer u
     if (event->keyval == GDK_KEY_Escape)
     {
         gtk_widget_destroy (m->swin);
+        m->swin = NULL;
         return TRUE;
     }
 
@@ -155,6 +156,7 @@ gboolean handle_search_keypress (GtkWidget *widget, GdkEventKey *event, gpointer
                                 }
 
         case GDK_KEY_Escape :   gtk_widget_destroy (m->swin);
+                                m->swin = NULL;
                                 return TRUE;
 
         default :               return FALSE;
@@ -178,6 +180,7 @@ static void handle_list_select (GtkTreeView *tv, GtkTreePath *path, GtkTreeViewC
     }
 
     gtk_widget_destroy (m->swin);
+    m->swin = NULL;
 }
 
 static gboolean handle_search_mapped (GtkWidget *widget, GdkEvent *event, gpointer user_data)
@@ -195,6 +198,7 @@ static gboolean handle_search_button_press (GtkWidget *widget, GdkEventButton *e
     if (event->x < 0 || event->y < 0 || event->x > x || event->y > y)
     {
         gtk_widget_destroy (m->swin);
+        m->swin = NULL;
         gdk_seat_ungrab (gdk_display_get_default_seat (gdk_display_get_default ()));
     }
     return FALSE;
@@ -704,7 +708,12 @@ static void menu_show_menu (GtkWidget *p)
 {
     MenuPlugin *m = lxpanel_plugin_get_data (p);
 
-    if (m->show_system_menu_idle == 0)
+    if (m->swin)
+    {
+        gtk_widget_destroy (m->swin);
+        m->swin = NULL;
+    }
+    else if (m->show_system_menu_idle == 0)
         m->show_system_menu_idle = g_timeout_add (200, show_system_menu_idle, m);
 }
 
@@ -820,6 +829,7 @@ static GtkWidget *menu_constructor (LXPanel *panel, config_setting_t *settings)
 
     m->applist = gtk_list_store_new (3, GDK_TYPE_PIXBUF, G_TYPE_STRING, G_TYPE_STRING);
     m->ds = fm_dnd_src_new (NULL);
+    m->swin = NULL;
 
     /* Load the menu configuration */
     if (!create_menu (m))
