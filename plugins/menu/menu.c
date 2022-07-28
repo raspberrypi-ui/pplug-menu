@@ -69,7 +69,6 @@ typedef struct {
     GtkListStore *applist;
     char *fname;
     int padding;
-    gboolean has_system_menu;
     guint show_system_menu_idle;
     LXPanel *panel;
     config_setting_t *settings;
@@ -553,8 +552,6 @@ static void read_system_menu (GtkMenu *menu, MenuPlugin *m, config_setting_t *s)
         m->reload_notify = menu_cache_add_reload_notify (m->menu_cache, handle_reload_menu, m);
         sys_menu_insert_items (m, menu, -1);
     }
-
-    m->has_system_menu = TRUE;
 }
 
 
@@ -707,7 +704,7 @@ static void menu_show_menu (GtkWidget *p)
 {
     MenuPlugin *m = lxpanel_plugin_get_data (p);
 
-    if (m->has_system_menu && m->show_system_menu_idle == 0)
+    if (m->show_system_menu_idle == 0)
         m->show_system_menu_idle = g_timeout_add (200, show_system_menu_idle, m);
 }
 
