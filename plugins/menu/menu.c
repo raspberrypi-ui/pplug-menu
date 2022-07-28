@@ -102,7 +102,7 @@ static Command commands[] = {
 };
 
 
-static gboolean filter_app (GtkTreeModel *model, GtkTreeIter *iter, gpointer user_data)
+static gboolean filter_apps (GtkTreeModel *model, GtkTreeIter *iter, gpointer user_data)
 {
     MenuPlugin *m = (MenuPlugin *) user_data;
     gboolean res = FALSE;
@@ -141,34 +141,28 @@ gboolean handle_list_keypress (GtkWidget *widget, GdkEventKey *event, gpointer u
 gboolean handle_search_keypress (GtkWidget *widget, GdkEventKey *event, gpointer user_data)
 {
     MenuPlugin *m = (MenuPlugin *) user_data;
+    GtkTreeSelection *sel;
+    GtkTreeModel *model;
+    GtkTreeIter iter;
+    gchar *str;
+    FmPath *fpath;
 
-    if (event->keyval == GDK_KEY_Escape)
+    switch (event->keyval)
     {
-        gtk_widget_destroy (m->swin);
-        return TRUE;
+        case GDK_KEY_Return :   sel = gtk_tree_view_get_selection (GTK_TREE_VIEW (m->stv));
+                                if (gtk_tree_selection_get_selected (sel, &model, &iter))
+                                {
+                                    gtk_tree_model_get (model, &iter, 2, &str, -1);
+                                    fpath = fm_path_new_for_str (str);
+                                    lxpanel_launch_path (m->panel, fpath);
+                                    fm_path_unref (fpath);
+                                }
+
+        case GDK_KEY_Escape :   gtk_widget_destroy (m->swin);
+                                return TRUE;
+
+        default :               return FALSE;
     }
-
-    if (event->keyval == GDK_KEY_Return)
-    {
-        GtkTreeSelection *sel = gtk_tree_view_get_selection (GTK_TREE_VIEW (m->stv));
-        GtkTreeModel *model;
-        GtkTreeIter iter;
-        gchar *str;
-        FmPath *fpath;
-
-        if (gtk_tree_selection_get_selected (sel, &model, &iter))
-        {
-            gtk_tree_model_get (model, &iter, 2, &str, -1);
-            fpath = fm_path_new_for_str (str);
-            lxpanel_launch_path (m->panel, fpath);
-            fm_path_unref (fpath);
-        }
-
-        gtk_widget_destroy (m->swin);
-        return TRUE;
-    }
-
-    return FALSE;
 }
 
 static void handle_list_select (GtkTreeView *tv, GtkTreePath *path, GtkTreeViewColumn *col, gpointer user_data)
@@ -232,7 +226,7 @@ static void do_search (MenuPlugin *m, GdkEventKey *event)
     m->slist = GTK_TREE_MODEL_SORT (gtk_tree_model_sort_new_with_model (GTK_TREE_MODEL (m->applist)));
     gtk_tree_sortable_set_sort_column_id (GTK_TREE_SORTABLE (m->slist), 1, GTK_SORT_ASCENDING);
     m->flist = GTK_TREE_MODEL_FILTER (gtk_tree_model_filter_new (GTK_TREE_MODEL (m->slist), NULL));
-    gtk_tree_model_filter_set_visible_func (m->flist, (GtkTreeModelFilterVisibleFunc) filter_app, m, NULL);
+    gtk_tree_model_filter_set_visible_func (m->flist, (GtkTreeModelFilterVisibleFunc) filter_apps, m, NULL);
 
     m->stv = gtk_tree_view_new_with_model (GTK_TREE_MODEL (m->flist));
     g_signal_connect (m->stv, "key-press-event", G_CALLBACK (handle_list_keypress), m);
