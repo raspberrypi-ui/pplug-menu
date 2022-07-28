@@ -212,6 +212,9 @@ static gboolean handle_search_button_press (GtkWidget *widget, GdkEventButton *e
 
 static void do_search (MenuPlugin *m, GdkEventKey *event)
 {
+    GtkCellRenderer *prend, *trend;
+    gint x, y;
+
     if (m->menu) gtk_widget_hide (m->menu);
     m->swin = gtk_window_new (GTK_WINDOW_TOPLEVEL);
     gtk_window_set_decorated (GTK_WINDOW (m->swin), FALSE);
@@ -223,7 +226,6 @@ static void do_search (MenuPlugin *m, GdkEventKey *event)
     gtk_container_add (GTK_CONTAINER (m->swin), box);
 
     m->srch = gtk_search_entry_new ();
-    gtk_box_pack_start (GTK_BOX (box), m->srch, FALSE, FALSE, 0);
     g_signal_connect (m->srch, "changed", G_CALLBACK (filter_changed), m);
     g_signal_connect (m->srch, "key-press-event", G_CALLBACK (handle_search_keypress), m);
 
@@ -233,19 +235,26 @@ static void do_search (MenuPlugin *m, GdkEventKey *event)
     gtk_tree_model_filter_set_visible_func (m->flist, (GtkTreeModelFilterVisibleFunc) filter_app, m, NULL);
 
     m->stv = gtk_tree_view_new_with_model (GTK_TREE_MODEL (m->flist));
-    gtk_box_pack_start (GTK_BOX (box), m->stv, FALSE, FALSE, 0);
     g_signal_connect (m->stv, "key-press-event", G_CALLBACK (handle_list_keypress), m);
     g_signal_connect (m->stv, "row-activated", G_CALLBACK (handle_list_select), m);
 
-    GtkCellRenderer *prend = gtk_cell_renderer_pixbuf_new ();
-    GtkCellRenderer *trend = gtk_cell_renderer_text_new ();
+    prend = gtk_cell_renderer_pixbuf_new ();
+    trend = gtk_cell_renderer_text_new ();
 
     gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (m->stv), -1, NULL, prend, "pixbuf", 0, NULL);
     gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (m->stv), -1, NULL, trend, "text", 1, NULL);
     gtk_tree_view_set_headers_visible (GTK_TREE_VIEW (m->stv), FALSE);
     gtk_tree_view_set_enable_search (GTK_TREE_VIEW (m->stv), FALSE);
 
+    gtk_box_pack_start (GTK_BOX (box), m->srch, FALSE, FALSE, 0);
+    gtk_box_pack_start (GTK_BOX (box), m->stv, FALSE, FALSE, 0);
+
     gtk_widget_show_all (m->swin);
+    gtk_widget_hide (m->swin);
+    lxpanel_plugin_popup_set_position_helper (m->panel, m->plugin, m->swin, &x, &y);
+    gdk_window_move (gtk_widget_get_window (m->swin), x, y);
+    gtk_widget_show_all (m->swin);
+
     gtk_widget_grab_focus (m->srch);
     gtk_window_present_with_time (GTK_WINDOW (m->swin), gdk_event_get_time ((GdkEvent *) event));
     char init[2] = {event->keyval, 0};
