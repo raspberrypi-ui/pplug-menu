@@ -44,6 +44,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <config.h>
 #endif
 
+#define _GNU_SOURCE
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -63,6 +65,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 typedef struct {
     GtkWidget *plugin, *img, *menu;
+    GtkWidget *swin, *srch, *stv;
+    GtkListStore *applist;
+    GtkTreeModelSort *slist;
+    GtkTreeModelFilter *flist;
     char *fname;
     int padding;
     gboolean has_system_menu;
@@ -96,15 +102,171 @@ static Command commands[] = {
 };
 
 
-/* Handler for keyboard events while menu is open */
-
-gboolean handle_key_presses (GtkWidget *widget, GdkEventKey *event, gpointer userdata)
+static gboolean match_app (GtkTreeModel *model, GtkTreeIter *iter, gpointer user_data)
 {
-    if (event->keyval == 65515 && event->state == 0)
+    MenuPlugin *m = (MenuPlugin *) user_data;
+    gboolean res = FALSE;
+    char *str;
+
+    gtk_tree_model_get (model, iter, 1, &str, -1);
+    if (strcasestr (str, gtk_entry_get_text (GTK_ENTRY (m->srch)))) res = TRUE;
+    g_free (str);
+    return res;
+}
+
+void filter_changed (GtkEditable *wid, gpointer user_data)
+{
+    MenuPlugin *m = (MenuPlugin *) user_data;
+    gtk_tree_model_filter_refilter (m->flist);
+}
+
+gboolean handle_list_keypress (GtkWidget *widget, GdkEventKey *event, gpointer user_data)
+{
+    MenuPlugin *m = (MenuPlugin *) user_data;
+
+    if (event->keyval == GDK_KEY_Escape)
     {
-        gtk_menu_popdown (GTK_MENU (userdata));
+        gtk_widget_destroy (m->swin);
         return TRUE;
     }
+
+    return FALSE;
+}
+
+gboolean handle_search_keypress (GtkWidget *widget, GdkEventKey *event, gpointer user_data)
+{
+    MenuPlugin *m = (MenuPlugin *) user_data;
+
+    if (event->keyval == GDK_KEY_Escape)
+    {
+        gtk_widget_destroy (m->swin);
+        return TRUE;
+    }
+
+    if (event->keyval == GDK_KEY_Return)
+    {
+        GtkTreeSelection *sel = gtk_tree_view_get_selection (GTK_TREE_VIEW (m->stv));
+        GtkTreeModel *model;
+        GtkTreeIter iter;
+        gchar *str;
+        FmPath *fpath;
+
+        if (!gtk_tree_selection_get_selected (sel, &model, &iter))
+            gtk_tree_model_get_iter_first (model, &iter);
+
+        gtk_tree_model_get (model, &iter, 2, &str, -1);
+        fpath = fm_path_new_for_str (str);
+        lxpanel_launch_path (m->panel, fpath);
+        fm_path_unref (fpath);
+
+        gtk_widget_destroy (m->swin);
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+static void handle_list_select (GtkTreeView *tv, GtkTreePath *path, GtkTreeViewColumn *col, gpointer user_data)
+{
+    MenuPlugin *m = (MenuPlugin *) user_data;
+    GtkTreeModel *mod = gtk_tree_view_get_model (tv);
+    GtkTreeIter iter;
+    gchar *str;
+    FmPath *fpath;
+
+    if (gtk_tree_model_get_iter (mod, &iter, path))
+    {
+        gtk_tree_model_get (mod, &iter, 2, &str, -1);
+        fpath = fm_path_new_for_str (str);
+        lxpanel_launch_path (m->panel, fpath);
+        fm_path_unref (fpath);
+    }
+
+    gtk_widget_destroy (m->swin);
+}
+
+static gboolean handle_search_mapped (GtkWidget *widget, GdkEvent *event, gpointer user_data)
+{
+    gdk_seat_grab (gdk_display_get_default_seat (gdk_display_get_default ()), gtk_widget_get_window (widget), GDK_SEAT_CAPABILITY_ALL_POINTING, TRUE, NULL, NULL, NULL, NULL);
+    return FALSE;
+}
+
+static gboolean handle_search_button_press (GtkWidget *widget, GdkEventButton *event, gpointer user_data)
+{
+    MenuPlugin *m = (MenuPlugin *) user_data;
+    int x, y;
+
+    gtk_window_get_size (GTK_WINDOW (widget), &x, &y);
+    if (event->x < 0 || event->y < 0 || event->x > x || event->y > y)
+    {
+        gtk_widget_destroy (m->swin);
+        gdk_seat_ungrab (gdk_display_get_default_seat (gdk_display_get_default ()));
+    }
+    return FALSE;
+}
+
+static void do_search (MenuPlugin *m, char start)
+{
+    if (m->menu) gtk_widget_hide (m->menu);
+    m->swin = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_decorated (GTK_WINDOW (m->swin), FALSE);
+    gtk_window_set_type_hint (GTK_WINDOW (m->swin), GDK_WINDOW_TYPE_HINT_POPUP_MENU);
+
+    GtkWidget *box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
+    gtk_container_add (GTK_CONTAINER (m->swin), box);
+
+    m->srch = gtk_search_entry_new ();
+    gtk_box_pack_start (GTK_BOX (box), m->srch, FALSE, FALSE, 0);
+    g_signal_connect (m->srch, "changed", G_CALLBACK (filter_changed), m);
+    g_signal_connect (m->srch, "key-press-event", G_CALLBACK (handle_search_keypress), m);
+
+    m->slist = GTK_TREE_MODEL_SORT (gtk_tree_model_sort_new_with_model (GTK_TREE_MODEL (m->applist)));
+    gtk_tree_sortable_set_sort_column_id (GTK_TREE_SORTABLE (m->slist), 1, GTK_SORT_ASCENDING);
+    m->flist = GTK_TREE_MODEL_FILTER (gtk_tree_model_filter_new (GTK_TREE_MODEL (m->slist), NULL));
+    gtk_tree_model_filter_set_visible_func (m->flist, (GtkTreeModelFilterVisibleFunc) match_app, m, NULL);
+
+    m->stv = gtk_tree_view_new_with_model (GTK_TREE_MODEL (m->flist));
+    gtk_box_pack_start (GTK_BOX (box), m->stv, FALSE, FALSE, 0);
+    g_signal_connect (m->stv, "key-press-event", G_CALLBACK (handle_list_keypress), m);
+    g_signal_connect (m->stv, "row-activated", G_CALLBACK (handle_list_select), m);
+
+    GtkCellRenderer *prend = gtk_cell_renderer_pixbuf_new ();
+    GtkCellRenderer *trend = gtk_cell_renderer_text_new ();
+
+    gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (m->stv), -1, NULL, prend, "pixbuf", 0, NULL);
+    gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (m->stv), -1, NULL, trend, "text", 1, NULL);
+    gtk_tree_view_set_headers_visible (GTK_TREE_VIEW (m->stv), FALSE);
+    gtk_tree_view_set_enable_search (GTK_TREE_VIEW (m->stv), FALSE);
+
+    g_signal_connect (G_OBJECT (m->swin), "map-event", G_CALLBACK (handle_search_mapped), NULL);
+    g_signal_connect (G_OBJECT (m->swin), "button-press-event", G_CALLBACK (handle_search_button_press), m);
+
+    gtk_widget_show_all (m->swin);
+    gtk_widget_grab_focus (m->srch);
+    gtk_window_present (GTK_WINDOW (m->swin));
+    char init[2] = {start, 0};
+    gtk_entry_set_text (GTK_ENTRY (m->srch), init);
+    gtk_editable_set_position (GTK_EDITABLE (m->srch), -1);
+}
+
+/* Handler for keyboard events while menu is open */
+
+gboolean handle_key_presses (GtkWidget *widget, GdkEventKey *event, gpointer user_data)
+{
+    MenuPlugin *m = (MenuPlugin *) user_data;
+
+    if (event->keyval == 65515 && event->state == 0)
+    {
+        gtk_menu_popdown (GTK_MENU (m->menu));
+        return TRUE;
+    }
+    if (event->keyval >= 97 && event->keyval <= 122 && event->state == 0 ||
+        event->keyval >= 65 && event->keyval <= 90 && event->state == 1)
+    {
+        do_search (m, event->keyval);
+        return TRUE;
+    }
+
     return FALSE;
 }
 
@@ -226,24 +388,30 @@ static GtkWidget *create_system_menu_item (MenuCacheItem *item, MenuPlugin *m)
 
         mpath = menu_cache_dir_make_path (MENU_CACHE_DIR (item));
         path = fm_path_new_relative (fm_path_get_apps_menu (), mpath + 13);
-        fi = fm_file_info_new_from_menu_cache_item (path, item);
-        fm_path_unref (path);
         g_free (mpath);
+
+        fi = fm_file_info_new_from_menu_cache_item (path, item);
         g_object_set_qdata_full (G_OBJECT (mi), sys_menu_item_quark, fi, (GDestroyNotify) fm_file_info_unref);
 
         fm_icon = fm_file_info_get_icon (fi);
         if (fm_icon == NULL) fm_icon = fm_icon_from_name ("application-x-executable");
         icon = fm_pixbuf_from_icon_with_fallback (fm_icon, panel_get_safe_icon_size (m->panel), "application-x-executable");
         gtk_image_set_from_pixbuf (GTK_IMAGE (img), icon);
-        g_object_unref (icon);
 
         if (menu_cache_item_get_type (item) == MENU_CACHE_TYPE_APP)
         {
+            mpath = fm_path_to_str (path);
+            gtk_list_store_insert_with_values (m->applist, NULL, -1, 0, icon, 1, menu_cache_item_get_name (item), 2, mpath, -1);
+            g_free (mpath);
+
             gtk_widget_set_name (mi, "syssubmenu");
             const char *comment = menu_cache_item_get_comment (item);
             if (comment) gtk_widget_set_tooltip_text (mi, comment);
+
             g_signal_connect (mi, "activate", G_CALLBACK (handle_menu_item_activate), m);
         }
+        fm_path_unref (path);
+        g_object_unref (icon);
 
         g_signal_connect (mi, "button-press-event", G_CALLBACK (handle_menu_item_button_press), m);
         gtk_drag_source_set (mi, GDK_BUTTON1_MASK, NULL, 0, GDK_ACTION_COPY);
@@ -266,7 +434,7 @@ static int sys_menu_load_submenu (MenuPlugin* m, MenuCacheDir* dir, GtkWidget* m
         MenuCacheItem* item = MENU_CACHE_ITEM (l->data);
         if ((menu_cache_item_get_type (item) != MENU_CACHE_TYPE_APP) || (menu_cache_app_get_is_visible (MENU_CACHE_APP (item), m->visibility_flags)))
         {
-            GtkWidget * mi = create_system_menu_item (item, m);
+            GtkWidget *mi = create_system_menu_item (item, m);
             count++;
             if (mi != NULL) gtk_menu_shell_insert ((GtkMenuShell*) menu, mi, pos);
             if (pos >= 0) ++pos;
@@ -276,7 +444,7 @@ static int sys_menu_load_submenu (MenuPlugin* m, MenuCacheDir* dir, GtkWidget* m
             {
                 GtkWidget* sub = gtk_menu_new ();
                 gtk_menu_set_reserve_toggle_size (GTK_MENU (sub), FALSE);
-                g_signal_connect (sub, "key-press-event", G_CALLBACK (handle_key_presses), m->menu);
+                g_signal_connect (sub, "key-press-event", G_CALLBACK (handle_key_presses), m);
                 gint s_count = sys_menu_load_submenu (m, MENU_CACHE_DIR (item), sub, -1);
                 if (s_count)
                 {   
@@ -354,10 +522,11 @@ static void reload_system_menu (MenuPlugin *m, GtkMenu *menu)
     g_list_free (children);
 }
 
-static void handle_reload_menu (MenuCache* cache, gpointer menu_pointer)
+static void handle_reload_menu (MenuCache* cache, gpointer user_data)
 {
-    MenuPlugin *m = menu_pointer;
+    MenuPlugin *m = (MenuPlugin *) user_data;
 
+    gtk_list_store_clear (m->applist);
     reload_system_menu (m, GTK_MENU (m->menu));
 }
 
@@ -470,7 +639,7 @@ static gboolean create_menu (MenuPlugin *m)
     m->menu = gtk_menu_new ();
     gtk_menu_set_reserve_toggle_size (GTK_MENU (m->menu), FALSE);
     gtk_container_set_border_width (GTK_CONTAINER (m->menu), 0);
-    g_signal_connect (m->menu, "key-press-event", G_CALLBACK (handle_key_presses), m->menu);
+    g_signal_connect (m->menu, "key-press-event", G_CALLBACK (handle_key_presses), m);
 
     list = config_setting_add (m->settings, "", PANEL_CONF_TYPE_LIST);
     for (i = 0; (s = config_setting_get_elem (list, i)) != NULL; i++)
@@ -550,6 +719,8 @@ static void menu_panel_configuration_changed (LXPanel *panel, GtkWidget *p)
 
     lxpanel_plugin_set_taskbar_icon (m->panel, m->img, m->fname);
     gtk_widget_set_size_request (m->img, panel_get_safe_icon_size (m->panel) + 2 * m->padding, -1);
+
+    if (m->applist) gtk_list_store_clear (m->applist);
 
     if (m->menu) gtk_widget_destroy (m->menu);
     if (m->menu_cache)
@@ -642,6 +813,7 @@ static GtkWidget *menu_constructor (LXPanel *panel, config_setting_t *settings)
     else
         m->padding = 4;
 
+    m->applist = gtk_list_store_new (3, GDK_TYPE_PIXBUF, G_TYPE_STRING, G_TYPE_STRING);
     m->ds = fm_dnd_src_new (NULL);
 
     /* Load the menu configuration */
