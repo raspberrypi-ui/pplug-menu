@@ -67,8 +67,6 @@ typedef struct {
     GtkWidget *plugin, *img, *menu;
     GtkWidget *swin, *srch, *stv;
     GtkListStore *applist;
-    GtkTreeModelSort *slist;
-    GtkTreeModelFilter *flist;
     char *fname;
     int padding;
     gboolean has_system_menu;
@@ -119,7 +117,7 @@ void filter_changed (GtkEditable *wid, gpointer user_data)
     MenuPlugin *m = (MenuPlugin *) user_data;
     GtkTreePath *path = gtk_tree_path_new_from_indices (0, -1);
 
-    gtk_tree_model_filter_refilter (m->flist);
+    gtk_tree_model_filter_refilter (GTK_TREE_MODEL_FILTER (gtk_tree_view_get_model (GTK_TREE_VIEW (m->stv))));
     gtk_tree_view_set_cursor (GTK_TREE_VIEW (m->stv), path, NULL, FALSE);
     gtk_tree_path_free (path);
 }
@@ -225,12 +223,12 @@ static void do_search (MenuPlugin *m, GdkEventKey *event)
     g_signal_connect (m->srch, "changed", G_CALLBACK (filter_changed), m);
     g_signal_connect (m->srch, "key-press-event", G_CALLBACK (handle_search_keypress), m);
 
-    m->slist = GTK_TREE_MODEL_SORT (gtk_tree_model_sort_new_with_model (GTK_TREE_MODEL (m->applist)));
-    gtk_tree_sortable_set_sort_column_id (GTK_TREE_SORTABLE (m->slist), 1, GTK_SORT_ASCENDING);
-    m->flist = GTK_TREE_MODEL_FILTER (gtk_tree_model_filter_new (GTK_TREE_MODEL (m->slist), NULL));
-    gtk_tree_model_filter_set_visible_func (m->flist, (GtkTreeModelFilterVisibleFunc) filter_apps, m, NULL);
+    GtkTreeModelSort *slist = GTK_TREE_MODEL_SORT (gtk_tree_model_sort_new_with_model (GTK_TREE_MODEL (m->applist)));
+    gtk_tree_sortable_set_sort_column_id (GTK_TREE_SORTABLE (slist), 1, GTK_SORT_ASCENDING);
+    GtkTreeModelFilter *flist = GTK_TREE_MODEL_FILTER (gtk_tree_model_filter_new (GTK_TREE_MODEL (slist), NULL));
+    gtk_tree_model_filter_set_visible_func (flist, (GtkTreeModelFilterVisibleFunc) filter_apps, m, NULL);
 
-    m->stv = gtk_tree_view_new_with_model (GTK_TREE_MODEL (m->flist));
+    m->stv = gtk_tree_view_new_with_model (GTK_TREE_MODEL (flist));
     g_signal_connect (m->stv, "key-press-event", G_CALLBACK (handle_list_keypress), m);
     g_signal_connect (m->stv, "row-activated", G_CALLBACK (handle_list_select), m);
     gtk_container_add (GTK_CONTAINER (sw), m->stv);
