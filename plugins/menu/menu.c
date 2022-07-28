@@ -550,6 +550,15 @@ static void menu_panel_configuration_changed (LXPanel *panel, GtkWidget *p)
 
     lxpanel_plugin_set_taskbar_icon (m->panel, m->img, m->fname);
     gtk_widget_set_size_request (m->img, panel_get_safe_icon_size (m->panel) + 2 * m->padding, -1);
+
+    if (m->menu) gtk_widget_destroy (m->menu);
+    if (m->menu_cache)
+    {
+        menu_cache_remove_reload_notify (m->menu_cache, m->reload_notify);
+        menu_cache_unref (m->menu_cache);
+        m->menu_cache = NULL;
+    }
+    create_menu (m);
 }
 
 /* Plugin destructor */
