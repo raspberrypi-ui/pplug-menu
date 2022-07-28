@@ -102,7 +102,7 @@ static Command commands[] = {
 };
 
 
-static gboolean match_app (GtkTreeModel *model, GtkTreeIter *iter, gpointer user_data)
+static gboolean filter_app (GtkTreeModel *model, GtkTreeIter *iter, gpointer user_data)
 {
     MenuPlugin *m = (MenuPlugin *) user_data;
     gboolean res = FALSE;
@@ -117,7 +117,12 @@ static gboolean match_app (GtkTreeModel *model, GtkTreeIter *iter, gpointer user
 void filter_changed (GtkEditable *wid, gpointer user_data)
 {
     MenuPlugin *m = (MenuPlugin *) user_data;
+    GtkTreePath *path = gtk_tree_path_new_from_indices (0, -1);
+
     gtk_tree_model_filter_refilter (m->flist);
+    gtk_tree_view_set_cursor (GTK_TREE_VIEW (m->stv), path, NULL, FALSE);
+    gtk_window_resize (GTK_WINDOW (m->swin), 1, 1);
+    gtk_tree_path_free (path);
 }
 
 gboolean handle_list_keypress (GtkWidget *widget, GdkEventKey *event, gpointer user_data)
@@ -151,13 +156,13 @@ gboolean handle_search_keypress (GtkWidget *widget, GdkEventKey *event, gpointer
         gchar *str;
         FmPath *fpath;
 
-        if (!gtk_tree_selection_get_selected (sel, &model, &iter))
-            gtk_tree_model_get_iter_first (model, &iter);
-
-        gtk_tree_model_get (model, &iter, 2, &str, -1);
-        fpath = fm_path_new_for_str (str);
-        lxpanel_launch_path (m->panel, fpath);
-        fm_path_unref (fpath);
+        if (gtk_tree_selection_get_selected (sel, &model, &iter))
+        {
+            gtk_tree_model_get (model, &iter, 2, &str, -1);
+            fpath = fm_path_new_for_str (str);
+            lxpanel_launch_path (m->panel, fpath);
+            fm_path_unref (fpath);
+        }
 
         gtk_widget_destroy (m->swin);
         return TRUE;
@@ -205,12 +210,14 @@ static gboolean handle_search_button_press (GtkWidget *widget, GdkEventButton *e
     return FALSE;
 }
 
-static void do_search (MenuPlugin *m, char start)
+static void do_search (MenuPlugin *m, GdkEventKey *event)
 {
     if (m->menu) gtk_widget_hide (m->menu);
     m->swin = gtk_window_new (GTK_WINDOW_TOPLEVEL);
     gtk_window_set_decorated (GTK_WINDOW (m->swin), FALSE);
     gtk_window_set_type_hint (GTK_WINDOW (m->swin), GDK_WINDOW_TYPE_HINT_POPUP_MENU);
+    g_signal_connect (m->swin, "map-event", G_CALLBACK (handle_search_mapped), NULL);
+    g_signal_connect (m->swin, "button-press-event", G_CALLBACK (handle_search_button_press), m);
 
     GtkWidget *box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
     gtk_container_add (GTK_CONTAINER (m->swin), box);
@@ -223,7 +230,7 @@ static void do_search (MenuPlugin *m, char start)
     m->slist = GTK_TREE_MODEL_SORT (gtk_tree_model_sort_new_with_model (GTK_TREE_MODEL (m->applist)));
     gtk_tree_sortable_set_sort_column_id (GTK_TREE_SORTABLE (m->slist), 1, GTK_SORT_ASCENDING);
     m->flist = GTK_TREE_MODEL_FILTER (gtk_tree_model_filter_new (GTK_TREE_MODEL (m->slist), NULL));
-    gtk_tree_model_filter_set_visible_func (m->flist, (GtkTreeModelFilterVisibleFunc) match_app, m, NULL);
+    gtk_tree_model_filter_set_visible_func (m->flist, (GtkTreeModelFilterVisibleFunc) filter_app, m, NULL);
 
     m->stv = gtk_tree_view_new_with_model (GTK_TREE_MODEL (m->flist));
     gtk_box_pack_start (GTK_BOX (box), m->stv, FALSE, FALSE, 0);
@@ -238,13 +245,10 @@ static void do_search (MenuPlugin *m, char start)
     gtk_tree_view_set_headers_visible (GTK_TREE_VIEW (m->stv), FALSE);
     gtk_tree_view_set_enable_search (GTK_TREE_VIEW (m->stv), FALSE);
 
-    g_signal_connect (G_OBJECT (m->swin), "map-event", G_CALLBACK (handle_search_mapped), NULL);
-    g_signal_connect (G_OBJECT (m->swin), "button-press-event", G_CALLBACK (handle_search_button_press), m);
-
     gtk_widget_show_all (m->swin);
     gtk_widget_grab_focus (m->srch);
-    gtk_window_present (GTK_WINDOW (m->swin));
-    char init[2] = {start, 0};
+    gtk_window_present_with_time (GTK_WINDOW (m->swin), gdk_event_get_time ((GdkEvent *) event));
+    char init[2] = {event->keyval, 0};
     gtk_entry_set_text (GTK_ENTRY (m->srch), init);
     gtk_editable_set_position (GTK_EDITABLE (m->srch), -1);
 }
@@ -263,7 +267,7 @@ gboolean handle_key_presses (GtkWidget *widget, GdkEventKey *event, gpointer use
     if (event->keyval >= 97 && event->keyval <= 122 && event->state == 0 ||
         event->keyval >= 65 && event->keyval <= 90 && event->state == 1)
     {
-        do_search (m, event->keyval);
+        do_search (m, event);
         return TRUE;
     }
 
