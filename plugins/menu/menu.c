@@ -242,6 +242,9 @@ static gboolean handle_search_button_press (GtkWidget *widget, GdkEventButton *e
 static void do_search (MenuPlugin *m, GdkEventKey *event)
 {
     GtkCellRenderer *prend, *trend;
+    GtkTreeModelSort *slist;
+    GtkTreeModelFilter *flist;
+    GtkWidget *box, *sw;
     gint x, y;
 
     if (m->menu) gtk_widget_hide (m->menu);
@@ -251,9 +254,9 @@ static void do_search (MenuPlugin *m, GdkEventKey *event)
     g_signal_connect (m->swin, "map-event", G_CALLBACK (handle_search_mapped), NULL);
     g_signal_connect (m->swin, "button-press-event", G_CALLBACK (handle_search_button_press), m);
 
-    GtkWidget *box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
+    box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
     gtk_container_add (GTK_CONTAINER (m->swin), box);
-    GtkWidget *sw = gtk_scrolled_window_new (NULL, NULL);
+    sw = gtk_scrolled_window_new (NULL, NULL);
     gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (sw), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
     gtk_scrolled_window_set_min_content_height (GTK_SCROLLED_WINDOW (sw), 250);
 
@@ -261,9 +264,9 @@ static void do_search (MenuPlugin *m, GdkEventKey *event)
     g_signal_connect (m->srch, "changed", G_CALLBACK (filter_changed), m);
     g_signal_connect (m->srch, "key-press-event", G_CALLBACK (handle_search_keypress), m);
 
-    GtkTreeModelSort *slist = GTK_TREE_MODEL_SORT (gtk_tree_model_sort_new_with_model (GTK_TREE_MODEL (m->applist)));
+    slist = GTK_TREE_MODEL_SORT (gtk_tree_model_sort_new_with_model (GTK_TREE_MODEL (m->applist)));
     gtk_tree_sortable_set_sort_column_id (GTK_TREE_SORTABLE (slist), 1, GTK_SORT_ASCENDING);
-    GtkTreeModelFilter *flist = GTK_TREE_MODEL_FILTER (gtk_tree_model_filter_new (GTK_TREE_MODEL (slist), NULL));
+    flist = GTK_TREE_MODEL_FILTER (gtk_tree_model_filter_new (GTK_TREE_MODEL (slist), NULL));
     gtk_tree_model_filter_set_visible_func (flist, (GtkTreeModelFilterVisibleFunc) filter_apps, m, NULL);
 
     m->stv = gtk_tree_view_new_with_model (GTK_TREE_MODEL (flist));
