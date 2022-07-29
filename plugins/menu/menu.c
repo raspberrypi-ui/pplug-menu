@@ -247,28 +247,43 @@ static void do_search (MenuPlugin *m, GdkEventKey *event)
     GtkWidget *box, *sw;
     gint x, y;
 
-    if (m->menu) gtk_widget_hide (m->menu);
+    // get the height of the menu and then hide it
+    if (m->menu)
+    {
+        y = gtk_widget_get_allocated_height (m->menu);
+        gtk_widget_hide (m->menu);
+    }
+    else y = 250;
+
+    // create the window
     m->swin = gtk_window_new (GTK_WINDOW_TOPLEVEL);
     gtk_window_set_decorated (GTK_WINDOW (m->swin), FALSE);
     gtk_window_set_type_hint (GTK_WINDOW (m->swin), GDK_WINDOW_TYPE_HINT_POPUP_MENU);
     g_signal_connect (m->swin, "map-event", G_CALLBACK (handle_search_mapped), NULL);
     g_signal_connect (m->swin, "button-press-event", G_CALLBACK (handle_search_button_press), m);
 
+    // add a box
     box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
     gtk_container_add (GTK_CONTAINER (m->swin), box);
-    sw = gtk_scrolled_window_new (NULL, NULL);
-    gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (sw), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
-    gtk_scrolled_window_set_min_content_height (GTK_SCROLLED_WINDOW (sw), 250);
 
+    // create the search entry
     m->srch = gtk_search_entry_new ();
     g_signal_connect (m->srch, "changed", G_CALLBACK (handle_search_changed), m);
     g_signal_connect (m->srch, "key-press-event", G_CALLBACK (handle_search_keypress), m);
+    gtk_box_pack_start (GTK_BOX (box), m->srch, FALSE, FALSE, 0);
 
+    // create a scrolled window to hold the tree view
+    sw = gtk_scrolled_window_new (NULL, NULL);
+    gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (sw), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+    gtk_box_pack_start (GTK_BOX (box), sw, FALSE, FALSE, 0);
+
+    // create the filtered list for the tree view
     slist = GTK_TREE_MODEL_SORT (gtk_tree_model_sort_new_with_model (GTK_TREE_MODEL (m->applist)));
     gtk_tree_sortable_set_sort_column_id (GTK_TREE_SORTABLE (slist), 1, GTK_SORT_ASCENDING);
     flist = GTK_TREE_MODEL_FILTER (gtk_tree_model_filter_new (GTK_TREE_MODEL (slist), NULL));
     gtk_tree_model_filter_set_visible_func (flist, (GtkTreeModelFilterVisibleFunc) filter_apps, m, NULL);
 
+    // create the tree view
     m->stv = gtk_tree_view_new_with_model (GTK_TREE_MODEL (flist));
     g_signal_connect (m->stv, "key-press-event", G_CALLBACK (handle_list_keypress), m);
     g_signal_connect (m->stv, "row-activated", G_CALLBACK (handle_list_select), m);
@@ -276,23 +291,25 @@ static void do_search (MenuPlugin *m, GdkEventKey *event)
     g_object_unref (slist);
     g_object_unref (flist);
 
+    // set up the tree view
     prend = gtk_cell_renderer_pixbuf_new ();
     trend = gtk_cell_renderer_text_new ();
-
     gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (m->stv), -1, NULL, prend, "pixbuf", 0, NULL);
     gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (m->stv), -1, NULL, trend, "text", 1, NULL);
     gtk_tree_view_set_headers_visible (GTK_TREE_VIEW (m->stv), FALSE);
     gtk_tree_view_set_enable_search (GTK_TREE_VIEW (m->stv), FALSE);
 
-    gtk_box_pack_start (GTK_BOX (box), m->srch, FALSE, FALSE, 0);
-    gtk_box_pack_start (GTK_BOX (box), sw, FALSE, FALSE, 0);
-
+    // realise the window to set sizes
     gtk_widget_show_all (m->swin);
     gtk_widget_hide (m->swin);
+
+    // size and move
+    gtk_scrolled_window_set_min_content_height (GTK_SCROLLED_WINDOW (sw), y - gtk_widget_get_allocated_height (m->srch));
     lxpanel_plugin_popup_set_position_helper (m->panel, m->plugin, m->swin, &x, &y);
     gdk_window_move (gtk_widget_get_window (m->swin), x, y);
     gtk_widget_show_all (m->swin);
 
+    // initialise the text entry
     gtk_widget_grab_focus (m->srch);
     gtk_window_present_with_time (GTK_WINDOW (m->swin), gdk_event_get_time ((GdkEvent *) event));
     char init[2] = {event->keyval, 0};
