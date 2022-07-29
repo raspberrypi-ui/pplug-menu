@@ -111,7 +111,7 @@ static gboolean filter_apps (GtkTreeModel *model, GtkTreeIter *iter, gpointer us
     return res;
 }
 
-void filter_changed (GtkEditable *wid, gpointer user_data)
+void handle_search_changed (GtkEditable *wid, gpointer user_data)
 {
     MenuPlugin *m = (MenuPlugin *) user_data;
     GtkTreePath *path = gtk_tree_path_new_from_indices (0, -1);
@@ -261,7 +261,7 @@ static void do_search (MenuPlugin *m, GdkEventKey *event)
     gtk_scrolled_window_set_min_content_height (GTK_SCROLLED_WINDOW (sw), 250);
 
     m->srch = gtk_search_entry_new ();
-    g_signal_connect (m->srch, "changed", G_CALLBACK (filter_changed), m);
+    g_signal_connect (m->srch, "changed", G_CALLBACK (handle_search_changed), m);
     g_signal_connect (m->srch, "key-press-event", G_CALLBACK (handle_search_keypress), m);
 
     slist = GTK_TREE_MODEL_SORT (gtk_tree_model_sort_new_with_model (GTK_TREE_MODEL (m->applist)));
@@ -273,6 +273,8 @@ static void do_search (MenuPlugin *m, GdkEventKey *event)
     g_signal_connect (m->stv, "key-press-event", G_CALLBACK (handle_list_keypress), m);
     g_signal_connect (m->stv, "row-activated", G_CALLBACK (handle_list_select), m);
     gtk_container_add (GTK_CONTAINER (sw), m->stv);
+    g_object_unref (slist);
+    g_object_unref (flist);
 
     prend = gtk_cell_renderer_pixbuf_new ();
     trend = gtk_cell_renderer_text_new ();
