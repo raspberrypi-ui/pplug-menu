@@ -69,7 +69,7 @@ typedef struct {
     GtkWidget *plugin, *img, *menu;
     GtkWidget *swin, *srch, *stv;
     GtkListStore *applist;
-    char *fname;
+    char *icon;
     int padding;
 
     MenuCache* menu_cache;
@@ -122,7 +122,7 @@ static gboolean filter_apps (GtkTreeModel *model, GtkTreeIter *iter, gpointer us
 
 static void append_to_entry (GtkWidget *entry, char val)
 {
-    int len = strlen (gtk_entry_get_text (entry));
+    int len = strlen (gtk_entry_get_text (GTK_ENTRY (entry)));
     if (val) gtk_editable_insert_text (GTK_EDITABLE (entry), &val, 1, &len);
     else if (len) gtk_editable_delete_text (GTK_EDITABLE (entry), (len - 1), -1);
     gtk_widget_grab_focus (entry);
@@ -768,11 +768,11 @@ static void menu_panel_configuration_changed (LXPanel *panel, GtkWidget *p)
     if (config_setting_lookup_int (m->settings, "padding", &val)) m->padding = val;
     if (config_setting_lookup_string (m->settings, "image", &fname))
     {
-        if (m->fname) g_free (m->fname);
-        m->fname = g_strdup (fname);
+        if (m->icon) g_free (m->icon);
+        m->icon = g_strdup (fname);
     }
 
-    lxpanel_plugin_set_taskbar_icon (m->panel, m->img, m->fname);
+    lxpanel_plugin_set_taskbar_icon (m->panel, m->img, m->icon);
     gtk_widget_set_size_request (m->img, panel_get_safe_icon_size (m->panel) + 2 * m->padding, -1);
 
     if (m->applist) gtk_list_store_clear (m->applist);
@@ -804,7 +804,7 @@ static void menu_destructor (gpointer user_data)
         menu_cache_unref (m->menu_cache);
     }
 
-    g_free (m->fname);
+    g_free (m->icon);
     g_free (m);
 }
 
@@ -860,9 +860,9 @@ static GtkWidget *menu_constructor (LXPanel *panel, config_setting_t *settings)
 
     /* Set up variables */
     if (config_setting_lookup_string (m->settings, "image", &fname))
-        m->fname = g_strdup (fname);
+        m->icon = g_strdup (fname);
     else
-        m->fname = g_strdup ("start-here");
+        m->icon = g_strdup ("start-here");
     if (config_setting_lookup_int (m->settings, "padding", &val))
         m->padding = val;
     else
@@ -895,15 +895,15 @@ static gboolean menu_apply_config (gpointer user_data)
 {
     MenuPlugin *m = lxpanel_plugin_get_data ((GtkWidget *) user_data);
 
-    if (m->fname) 
+    if (m->icon) 
     {
-        lxpanel_plugin_set_taskbar_icon (m->panel, m->img, m->fname);
+        lxpanel_plugin_set_taskbar_icon (m->panel, m->img, m->icon);
         if (m->padding) gtk_widget_set_size_request (m->img, panel_get_safe_icon_size (m->panel) + 2 * m->padding, -1);
     }
-    config_group_set_string (m->settings, "image", m->fname);
+    config_group_set_string (m->settings, "image", m->icon);
     config_group_set_int (m->settings, "padding", m->padding);
 
-    lxpanel_plugin_set_taskbar_icon (m->panel, m->img, m->fname);
+    lxpanel_plugin_set_taskbar_icon (m->panel, m->img, m->icon);
     gtk_widget_set_size_request (m->img, panel_get_safe_icon_size (m->panel) + 2 * m->padding, -1);
 
     return FALSE;
@@ -912,10 +912,10 @@ static gboolean menu_apply_config (gpointer user_data)
 /* Handler to create configure dialog */
 static GtkWidget *menu_configure (LXPanel *panel, GtkWidget *p)
 {
-    MenuPlugin *menu = lxpanel_plugin_get_data (p);
+    MenuPlugin *m = lxpanel_plugin_get_data (p);
     return lxpanel_generic_config_dlg (_("Menu"), panel, menu_apply_config, p,
-                                       _("Icon"), &menu->fname, CONF_TYPE_STR,
-                                       _("Padding"), &menu->padding, CONF_TYPE_INT,
+                                       _("Icon"), &m->icon, CONF_TYPE_STR,
+                                       _("Padding"), &m->padding, CONF_TYPE_INT,
                                        NULL);
 }
 
