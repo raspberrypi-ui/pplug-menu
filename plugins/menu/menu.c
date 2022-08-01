@@ -303,10 +303,11 @@ static void do_search (MenuPlugin *m, GdkEventKey *event)
     lxpanel_plugin_popup_set_position_helper (m->panel, m->plugin, m->swin, &x, &y);
     gdk_window_move (gtk_widget_get_window (m->swin), x, y);
     gtk_widget_show_all (m->swin);
+    gtk_window_present_with_time (GTK_WINDOW (m->swin), gdk_event_get_time ((GdkEvent *) event));
+    gtk_widget_grab_focus (m->srch);
+    gtk_widget_hide (m->menu);
 
     /* initialise the text entry */
-    gtk_widget_grab_focus (m->srch);
-    gtk_window_present_with_time (GTK_WINDOW (m->swin), gdk_event_get_time ((GdkEvent *) event));
     char init[2] = {event->keyval, 0};
     gtk_entry_set_text (GTK_ENTRY (m->srch), init);
     gtk_editable_set_position (GTK_EDITABLE (m->srch), -1);
