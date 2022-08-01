@@ -64,17 +64,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "plugin.h"
 
 typedef struct {
+    LXPanel *panel;
+    config_setting_t *settings;
     GtkWidget *plugin, *img, *menu;
     GtkWidget *swin, *srch, *stv;
     GtkListStore *applist;
     char *fname;
     int padding;
-    guint show_system_menu_idle;
-    LXPanel *panel;
-    config_setting_t *settings;
 
     MenuCache* menu_cache;
-    guint visibility_flags;
     gpointer reload_notify;
     FmDndSrc *ds;
 } MenuPlugin;
@@ -496,7 +494,7 @@ static int sys_menu_load_submenu (MenuPlugin* m, MenuCacheDir* dir, GtkWidget* m
     for (l = children; l; l = l->next)
     {
         MenuCacheItem* item = MENU_CACHE_ITEM (l->data);
-        if ((menu_cache_item_get_type (item) != MENU_CACHE_TYPE_APP) || (menu_cache_app_get_is_visible (MENU_CACHE_APP (item), m->visibility_flags)))
+        if ((menu_cache_item_get_type (item) != MENU_CACHE_TYPE_APP) || (menu_cache_app_get_is_visible (MENU_CACHE_APP (item), SHOW_IN_LXDE)))
         {
             GtkWidget *mi = create_system_menu_item (item, m);
             count++;
@@ -605,7 +603,6 @@ static void read_system_menu (GtkMenu *menu, MenuPlugin *m, config_setting_t *s)
             g_warning ("error loading applications menu");
             return;
         }
-        m->visibility_flags = SHOW_IN_LXDE;
         m->reload_notify = menu_cache_add_reload_notify (m->menu_cache, handle_reload_menu, m);
         sys_menu_insert_items (m, menu, -1);
     }
@@ -791,8 +788,6 @@ static void menu_panel_configuration_changed (LXPanel *panel, GtkWidget *p)
 static void menu_destructor (gpointer user_data)
 {
     MenuPlugin *m = (MenuPlugin *) user_data;
-
-    if (m->show_system_menu_idle) g_source_remove (m->show_system_menu_idle);
 
     g_signal_handlers_disconnect_matched (m->ds, G_SIGNAL_MATCH_FUNC, 0, 0, NULL, handle_menu_item_data_get, NULL);
     g_object_unref (G_OBJECT (m->ds));
