@@ -97,6 +97,17 @@ static Command commands[] = {
 };
 
 
+void destroy_search (MenuPlugin *m)
+{
+    g_signal_handlers_disconnect_matched (m->swin, G_SIGNAL_MATCH_DATA, 0, 0, NULL, NULL, m);
+    g_signal_handlers_disconnect_matched (m->srch, G_SIGNAL_MATCH_DATA, 0, 0, NULL, NULL, m);
+    g_signal_handlers_disconnect_matched (m->stv, G_SIGNAL_MATCH_DATA, 0, 0, NULL, NULL, m);
+    gtk_widget_destroy (m->srch);
+    gtk_widget_destroy (m->stv);
+    gtk_widget_destroy (m->swin);
+    m->swin = NULL;
+}
+
 static gboolean filter_apps (GtkTreeModel *model, GtkTreeIter *iter, gpointer user_data)
 {
     MenuPlugin *m = (MenuPlugin *) user_data;
@@ -125,8 +136,7 @@ gboolean handle_list_keypress (GtkWidget *widget, GdkEventKey *event, gpointer u
 
     if (event->keyval == GDK_KEY_Escape)
     {
-        gtk_widget_destroy (m->swin);
-        m->swin = NULL;
+        destroy_search (m);
         return TRUE;
     }
 
@@ -182,8 +192,7 @@ gboolean handle_search_keypress (GtkWidget *widget, GdkEventKey *event, gpointer
                                     fm_path_unref (fpath);
                                 }
 
-        case GDK_KEY_Escape :   gtk_widget_destroy (m->swin);
-                                m->swin = NULL;
+        case GDK_KEY_Escape :   destroy_search (m);
                                 return TRUE;
 
         case GDK_KEY_Down :     path = gtk_tree_path_new_from_indices (1, -1);
@@ -212,8 +221,7 @@ static void handle_list_select (GtkTreeView *tv, GtkTreePath *path, GtkTreeViewC
         fm_path_unref (fpath);
     }
 
-    gtk_widget_destroy (m->swin);
-    m->swin = NULL;
+    destroy_search (m);
 }
 
 static gboolean handle_search_mapped (GtkWidget *widget, GdkEvent *event, gpointer user_data)
@@ -230,8 +238,7 @@ static gboolean handle_search_button_press (GtkWidget *widget, GdkEventButton *e
     gtk_window_get_size (GTK_WINDOW (widget), &x, &y);
     if (event->x < 0 || event->y < 0 || event->x > x || event->y > y)
     {
-        gtk_widget_destroy (m->swin);
-        m->swin = NULL;
+        destroy_search (m);
         gdk_seat_ungrab (gdk_display_get_default_seat (gdk_display_get_default ()));
     }
     return FALSE;
@@ -252,7 +259,7 @@ static void do_search (MenuPlugin *m, GdkEventKey *event)
     m->swin = gtk_window_new (GTK_WINDOW_TOPLEVEL);
     gtk_window_set_decorated (GTK_WINDOW (m->swin), FALSE);
     gtk_window_set_type_hint (GTK_WINDOW (m->swin), GDK_WINDOW_TYPE_HINT_POPUP_MENU);
-    g_signal_connect (m->swin, "map-event", G_CALLBACK (handle_search_mapped), NULL);
+    g_signal_connect (m->swin, "map-event", G_CALLBACK (handle_search_mapped), m);
     g_signal_connect (m->swin, "button-press-event", G_CALLBACK (handle_search_button_press), m);
 
     /* add a box */
@@ -325,7 +332,16 @@ gboolean handle_key_presses (GtkWidget *widget, GdkEventKey *event, gpointer use
     if (event->keyval >= 97 && event->keyval <= 122 && event->state == 0 ||
         event->keyval >= 65 && event->keyval <= 90 && event->state == 1)
     {
-        do_search (m, event);
+        if (!m->swin) do_search (m, event);
+        else
+        {
+            char *buf = g_strdup_printf ("%s%c", gtk_entry_get_text (GTK_ENTRY (m->srch)), event->keyval);
+            gtk_entry_set_text (GTK_ENTRY (m->srch), buf);
+            g_free (buf);
+
+            gtk_widget_grab_focus (m->srch);
+            gtk_editable_set_position (GTK_EDITABLE (m->srch), -1);
+        }
         return TRUE;
     }
 
@@ -747,11 +763,7 @@ static void menu_show_menu (GtkWidget *p)
 {
     MenuPlugin *m = lxpanel_plugin_get_data (p);
 
-    if (m->swin)
-    {
-        gtk_widget_destroy (m->swin);
-        m->swin = NULL;
-    }
+    if (m->swin) destroy_search (m);
     else gtk_menu_popup_at_widget (GTK_MENU (m->menu), m->plugin, GDK_GRAVITY_NORTH_WEST, GDK_GRAVITY_NORTH_WEST, NULL);
 }
 
@@ -793,6 +805,7 @@ static void menu_destructor (gpointer user_data)
     g_object_unref (G_OBJECT (m->ds));
 
     if (m->menu) gtk_widget_destroy (m->menu);
+    if (m->swin) destroy_search (m);
     if (m->menu_cache)
     {
         menu_cache_remove_reload_notify (m->menu_cache, m->reload_notify);
