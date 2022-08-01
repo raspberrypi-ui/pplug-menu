@@ -313,9 +313,7 @@ static void do_search (MenuPlugin *m, GdkEventKey *event)
     gtk_widget_hide (m->menu);
 
     /* initialise the text entry */
-    char init[2] = {event->keyval, 0};
-    gtk_entry_set_text (GTK_ENTRY (m->srch), init);
-    gtk_editable_set_position (GTK_EDITABLE (m->srch), -1);
+    append_to_entry (m->srch, event->keyval);
 }
 
 /* Handler for keyboard events while menu is open */
