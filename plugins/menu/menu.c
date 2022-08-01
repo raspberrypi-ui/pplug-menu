@@ -97,13 +97,13 @@ static Command commands[] = {
 };
 
 
+/* Search box */
+
 void destroy_search (MenuPlugin *m)
 {
     g_signal_handlers_disconnect_matched (m->swin, G_SIGNAL_MATCH_DATA, 0, 0, NULL, NULL, m);
     g_signal_handlers_disconnect_matched (m->srch, G_SIGNAL_MATCH_DATA, 0, 0, NULL, NULL, m);
     g_signal_handlers_disconnect_matched (m->stv, G_SIGNAL_MATCH_DATA, 0, 0, NULL, NULL, m);
-    gtk_widget_destroy (m->srch);
-    gtk_widget_destroy (m->stv);
     gtk_widget_destroy (m->swin);
     m->swin = NULL;
 }
