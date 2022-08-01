@@ -148,8 +148,8 @@ static gboolean handle_list_keypress (GtkWidget *widget, GdkEventKey *event, gpo
         return TRUE;
     }
 
-    if (event->keyval >= 97 && event->keyval <= 122 && event->state == 0 ||
-        event->keyval >= 65 && event->keyval <= 90 && event->state == 1)
+    if (event->keyval >= 'a' && event->keyval <= 'z' && event->state == 0 ||
+        event->keyval >= 'A' && event->keyval <= 'Z' && event->state == 1)
     {
         append_to_entry (m->srch, event->keyval);
         return TRUE;
@@ -157,9 +157,9 @@ static gboolean handle_list_keypress (GtkWidget *widget, GdkEventKey *event, gpo
 
     if (event->keyval == GDK_KEY_BackSpace)
     {
-		int len = strlen (gtk_entry_get_text (GTK_ENTRY (m->srch)));
-		if (len)
-		{
+        int len = strlen (gtk_entry_get_text (GTK_ENTRY (m->srch)));
+        if (len)
+        {
             gtk_editable_delete_text (GTK_EDITABLE (m->srch), (len - 1), -1);
             gtk_widget_grab_focus (m->srch);
             gtk_editable_set_position (GTK_EDITABLE (m->srch), -1);
@@ -322,13 +322,13 @@ static gboolean handle_key_presses (GtkWidget *widget, GdkEventKey *event, gpoin
 {
     MenuPlugin *m = (MenuPlugin *) user_data;
 
-    if (event->keyval == 65515 && event->state == 0)
+    if (event->keyval == GDK_KEY_Super_L && event->state == 0)
     {
         gtk_menu_popdown (GTK_MENU (m->menu));
         return TRUE;
     }
-    if (event->keyval >= 97 && event->keyval <= 122 && event->state == 0 ||
-        event->keyval >= 65 && event->keyval <= 90 && event->state == 1)
+    if (event->keyval >= 'a' && event->keyval <= 'z' && event->state == 0 ||
+        event->keyval >= 'A' && event->keyval <= 'Z'1 && event->state == 1)
     {
         if (!m->swin) do_search (m, event);
         else append_to_entry (m->srch, event->keyval);
