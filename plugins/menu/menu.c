@@ -258,6 +258,7 @@ static void do_search (MenuPlugin *m, GdkEventKey *event)
     m->swin = gtk_window_new (GTK_WINDOW_TOPLEVEL);
     gtk_window_set_decorated (GTK_WINDOW (m->swin), FALSE);
     gtk_window_set_type_hint (GTK_WINDOW (m->swin), GDK_WINDOW_TYPE_HINT_POPUP_MENU);
+    gtk_window_set_skip_taskbar_hint (GTK_WINDOW (m->swin), TRUE);
     g_signal_connect (m->swin, "map-event", G_CALLBACK (handle_search_mapped), m);
     g_signal_connect (m->swin, "button-press-event", G_CALLBACK (handle_search_button_press), m);
 
@@ -305,9 +306,9 @@ static void do_search (MenuPlugin *m, GdkEventKey *event)
     /* size and move */
     gtk_scrolled_window_set_min_content_height (GTK_SCROLLED_WINDOW (sw), y - gtk_widget_get_allocated_height (m->srch));
     lxpanel_plugin_popup_set_position_helper (m->panel, m->plugin, m->swin, &x, &y);
-    gdk_window_move (gtk_widget_get_window (m->swin), x, y);
     gtk_widget_show_all (m->swin);
     gtk_window_present_with_time (GTK_WINDOW (m->swin), gdk_event_get_time ((GdkEvent *) event));
+    gdk_window_move (gtk_widget_get_window (m->swin), x, y);
     gtk_widget_grab_focus (m->srch);
     gtk_widget_hide (m->menu);
 
