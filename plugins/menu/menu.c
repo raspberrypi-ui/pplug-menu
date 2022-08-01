@@ -99,7 +99,7 @@ static Command commands[] = {
 
 /* Search box */
 
-void destroy_search (MenuPlugin *m)
+static void destroy_search (MenuPlugin *m)
 {
     g_signal_handlers_disconnect_matched (m->swin, G_SIGNAL_MATCH_DATA, 0, 0, NULL, NULL, m);
     g_signal_handlers_disconnect_matched (m->srch, G_SIGNAL_MATCH_DATA, 0, 0, NULL, NULL, m);
@@ -120,7 +120,15 @@ static gboolean filter_apps (GtkTreeModel *model, GtkTreeIter *iter, gpointer us
     return res;
 }
 
-void handle_search_changed (GtkEditable *wid, gpointer user_data)
+static void append_to_entry (GtkWidget *entry, char val)
+{
+    int pos = -1;
+    gtk_editable_insert_text (GTK_EDITABLE (entry), &val, 1, &pos);
+    gtk_widget_grab_focus (entry);
+    gtk_editable_set_position (GTK_EDITABLE (entry), -1);
+}
+
+static void handle_search_changed (GtkEditable *wid, gpointer user_data)
 {
     MenuPlugin *m = (MenuPlugin *) user_data;
     GtkTreePath *path = gtk_tree_path_new_from_indices (0, -1);
@@ -130,7 +138,7 @@ void handle_search_changed (GtkEditable *wid, gpointer user_data)
     gtk_tree_path_free (path);
 }
 
-gboolean handle_list_keypress (GtkWidget *widget, GdkEventKey *event, gpointer user_data)
+static gboolean handle_list_keypress (GtkWidget *widget, GdkEventKey *event, gpointer user_data)
 {
     MenuPlugin *m = (MenuPlugin *) user_data;
 
@@ -143,12 +151,7 @@ gboolean handle_list_keypress (GtkWidget *widget, GdkEventKey *event, gpointer u
     if (event->keyval >= 97 && event->keyval <= 122 && event->state == 0 ||
         event->keyval >= 65 && event->keyval <= 90 && event->state == 1)
     {
-        char *buf = g_strdup_printf ("%s%c", gtk_entry_get_text (GTK_ENTRY (m->srch)), event->keyval);
-        gtk_entry_set_text (GTK_ENTRY (m->srch), buf);
-        g_free (buf);
-
-        gtk_widget_grab_focus (m->srch);
-        gtk_editable_set_position (GTK_EDITABLE (m->srch), -1);
+        append_to_entry (m->srch, event->keyval);
         return TRUE;
     }
 
@@ -171,7 +174,7 @@ gboolean handle_list_keypress (GtkWidget *widget, GdkEventKey *event, gpointer u
     return FALSE;
 }
 
-gboolean handle_search_keypress (GtkWidget *widget, GdkEventKey *event, gpointer user_data)
+static gboolean handle_search_keypress (GtkWidget *widget, GdkEventKey *event, gpointer user_data)
 {
     MenuPlugin *m = (MenuPlugin *) user_data;
     GtkTreeSelection *sel;
@@ -320,7 +323,7 @@ static void do_search (MenuPlugin *m, GdkEventKey *event)
 
 /* Handler for keyboard events while menu is open */
 
-gboolean handle_key_presses (GtkWidget *widget, GdkEventKey *event, gpointer user_data)
+static gboolean handle_key_presses (GtkWidget *widget, GdkEventKey *event, gpointer user_data)
 {
     MenuPlugin *m = (MenuPlugin *) user_data;
 
@@ -333,15 +336,7 @@ gboolean handle_key_presses (GtkWidget *widget, GdkEventKey *event, gpointer use
         event->keyval >= 65 && event->keyval <= 90 && event->state == 1)
     {
         if (!m->swin) do_search (m, event);
-        else
-        {
-            char *buf = g_strdup_printf ("%s%c", gtk_entry_get_text (GTK_ENTRY (m->srch)), event->keyval);
-            gtk_entry_set_text (GTK_ENTRY (m->srch), buf);
-            g_free (buf);
-
-            gtk_widget_grab_focus (m->srch);
-            gtk_editable_set_position (GTK_EDITABLE (m->srch), -1);
-        }
+        else append_to_entry (m->srch, event->keyval);
         return TRUE;
     }
 
@@ -638,6 +633,12 @@ static void handle_run_command (GtkWidget *widget, gpointer data)
     cmd ();
 }
 
+static void handle_menu_hidden (GtkWidget *self, gpointer user_data)
+{
+    MenuPlugin *m = (MenuPlugin *) user_data;
+    if (m->swin && !gtk_widget_is_visible (m->swin)) m->swin = NULL;
+}
+
 static GtkWidget *read_menu_item (MenuPlugin *m, config_setting_t *s)
 {
     const gchar *name, *fname, *action, *cmd;
@@ -702,7 +703,6 @@ static GtkWidget *read_menu_item (MenuPlugin *m, config_setting_t *s)
     return item;
 }
 
-
 /* Top level function to read in menu data from panel configuration */
 static gboolean create_menu (MenuPlugin *m)
 {
@@ -715,6 +715,7 @@ static gboolean create_menu (MenuPlugin *m)
     gtk_menu_set_reserve_toggle_size (GTK_MENU (m->menu), FALSE);
     gtk_container_set_border_width (GTK_CONTAINER (m->menu), 0);
     g_signal_connect (m->menu, "key-press-event", G_CALLBACK (handle_key_presses), m);
+    g_signal_connect (m->menu, "hide", G_CALLBACK (handle_menu_hidden), m);
 
     list = config_setting_add (m->settings, "", PANEL_CONF_TYPE_LIST);
     for (i = 0; (s = config_setting_get_elem (list, i)) != NULL; i++)
@@ -787,6 +788,7 @@ static void menu_panel_configuration_changed (LXPanel *panel, GtkWidget *p)
     if (m->applist) gtk_list_store_clear (m->applist);
 
     if (m->menu) gtk_widget_destroy (m->menu);
+    if (m->swin) destroy_search (m);
     if (m->menu_cache)
     {
         menu_cache_remove_reload_notify (m->menu_cache, m->reload_notify);
