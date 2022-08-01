@@ -754,7 +754,7 @@ static void menu_show_menu (GtkWidget *p)
         gtk_widget_destroy (m->swin);
         m->swin = NULL;
     }
-    else gtk_menu_popup_at_widget (GTK_MENU (m->menu), m->plugin, GDK_GRAVITY_NORTH_WEST, GDK_GRAVITY_NORTH_WEST, ev);
+    else gtk_menu_popup_at_widget (GTK_MENU (m->menu), m->plugin, GDK_GRAVITY_NORTH_WEST, GDK_GRAVITY_NORTH_WEST, NULL);
 }
 
 /* Handler for system config changed message from panel */
