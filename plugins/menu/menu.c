@@ -157,17 +157,13 @@ static gboolean handle_list_keypress (GtkWidget *widget, GdkEventKey *event, gpo
 
     if (event->keyval == GDK_KEY_BackSpace)
     {
-        char *buf = g_strdup_printf ("%s", gtk_entry_get_text (GTK_ENTRY (m->srch)));
-        int len = strlen (buf);
-        if (len)
-        {
-            buf[len - 1] = 0;
-            gtk_entry_set_text (GTK_ENTRY (m->srch), buf);
-
+		int len = strlen (gtk_entry_get_text (GTK_ENTRY (m->srch)));
+		if (len)
+		{
+            gtk_editable_delete_text (GTK_EDITABLE (m->srch), (len - 1), -1);
             gtk_widget_grab_focus (m->srch);
             gtk_editable_set_position (GTK_EDITABLE (m->srch), -1);
         }
-        g_free (buf);
         return TRUE;
     }
 
