@@ -122,8 +122,9 @@ static gboolean filter_apps (GtkTreeModel *model, GtkTreeIter *iter, gpointer us
 
 static void append_to_entry (GtkWidget *entry, char val)
 {
-    int pos = -1;
-    gtk_editable_insert_text (GTK_EDITABLE (entry), &val, 1, &pos);
+    int len = strlen (gtk_entry_get_text (entry));
+    if (val) gtk_editable_insert_text (GTK_EDITABLE (entry), &val, 1, &len);
+    else if (len) gtk_editable_delete_text (GTK_EDITABLE (entry), (len - 1), -1);
     gtk_widget_grab_focus (entry);
     gtk_editable_set_position (GTK_EDITABLE (entry), -1);
 }
@@ -157,13 +158,7 @@ static gboolean handle_list_keypress (GtkWidget *widget, GdkEventKey *event, gpo
 
     if (event->keyval == GDK_KEY_BackSpace)
     {
-        int len = strlen (gtk_entry_get_text (GTK_ENTRY (m->srch)));
-        if (len)
-        {
-            gtk_editable_delete_text (GTK_EDITABLE (m->srch), (len - 1), -1);
-            gtk_widget_grab_focus (m->srch);
-            gtk_editable_set_position (GTK_EDITABLE (m->srch), -1);
-        }
+        append_to_entry (m->srch, 0);
         return TRUE;
     }
 
@@ -328,7 +323,7 @@ static gboolean handle_key_presses (GtkWidget *widget, GdkEventKey *event, gpoin
         return TRUE;
     }
     if (event->keyval >= 'a' && event->keyval <= 'z' && event->state == 0 ||
-        event->keyval >= 'A' && event->keyval <= 'Z'1 && event->state == 1)
+        event->keyval >= 'A' && event->keyval <= 'Z' && event->state == 1)
     {
         if (!m->swin) do_search (m, event);
         else append_to_entry (m->srch, event->keyval);
