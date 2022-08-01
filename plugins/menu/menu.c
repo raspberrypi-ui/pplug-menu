@@ -248,12 +248,7 @@ static void do_search (MenuPlugin *m, GdkEventKey *event)
     gint x, y;
 
     /* get the height of the menu and then hide it */
-    if (m->menu)
-    {
-        y = gtk_widget_get_allocated_height (m->menu);
-        gtk_widget_hide (m->menu);
-    }
-    else y = 250;
+    y = gtk_widget_get_allocated_height (m->menu);
 
     /* create the window */
     m->swin = gtk_window_new (GTK_WINDOW_TOPLEVEL);
@@ -736,17 +731,6 @@ static gboolean create_menu (MenuPlugin *m)
     return TRUE;
 }
 
-static gboolean show_system_menu_idle (gpointer user_data)
-{
-    MenuPlugin *m = (MenuPlugin *) user_data;
-
-    if (g_source_is_destroyed (g_main_current_source ())) return FALSE;
-
-    gtk_menu_popup_at_widget (GTK_MENU (m->menu), m->plugin, GDK_GRAVITY_NORTH_WEST, GDK_GRAVITY_NORTH_WEST, NULL);
-    m->show_system_menu_idle = 0;
-    return FALSE;
-}
-
 /* Handler for menu button click */
 static gboolean menu_button_press_event (GtkWidget *widget, GdkEventButton *event, LXPanel *panel)
 {
@@ -770,8 +754,7 @@ static void menu_show_menu (GtkWidget *p)
         gtk_widget_destroy (m->swin);
         m->swin = NULL;
     }
-    else if (m->show_system_menu_idle == 0)
-        m->show_system_menu_idle = g_timeout_add (200, show_system_menu_idle, m);
+    else gtk_menu_popup_at_widget (GTK_MENU (m->menu), m->plugin, GDK_GRAVITY_NORTH_WEST, GDK_GRAVITY_NORTH_WEST, ev);
 }
 
 /* Handler for system config changed message from panel */
