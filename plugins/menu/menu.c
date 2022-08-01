@@ -877,6 +877,9 @@ static GtkWidget *menu_constructor (LXPanel *panel, config_setting_t *settings)
         return NULL;
     }
 
+    /* Watch the icon theme and reload the menu if it changes */
+    g_signal_connect (gtk_icon_theme_get_default (), "changed", G_CALLBACK (handle_reload_menu), m);
+
     /* Show the widget and return */
     gtk_widget_show_all (m->plugin);
     return m->plugin;
