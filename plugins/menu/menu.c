@@ -67,10 +67,12 @@ typedef struct {
     LXPanel *panel;
     config_setting_t *settings;
     GtkWidget *plugin, *img, *menu;
-    GtkWidget *swin, *srch, *stv;
+    GtkWidget *swin, *srch, *stv, *scr;
     GtkListStore *applist;
     char *icon;
     int padding;
+    int height;
+    int rheight;
 
     MenuCache* menu_cache;
     gpointer reload_notify;
@@ -129,6 +131,30 @@ static void append_to_entry (GtkWidget *entry, char val)
     gtk_editable_set_position (GTK_EDITABLE (entry), -1);
 }
 
+static void resize_search (MenuPlugin *m)
+{
+    /* update the stored row height if current height is bigger */
+    GdkRectangle rect;
+    GtkTreePath *path = gtk_tree_path_new_from_indices (0, -1);
+    gtk_tree_view_get_cell_area (GTK_TREE_VIEW (m->stv), path, NULL, &rect);
+    gtk_tree_path_free (path);
+    if (rect.height > m->rheight) m->rheight = rect.height;
+
+    /* calculate the height in pixels from the number of rows */
+    int nrows = gtk_tree_model_iter_n_children (gtk_tree_view_get_model (GTK_TREE_VIEW (m->stv)), NULL);
+    nrows *= (m->rheight + 2);
+    if (nrows > m->height)
+    {
+        nrows = m->height;
+        gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (m->scr), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+    }
+    else gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (m->scr), GTK_POLICY_NEVER, GTK_POLICY_NEVER);
+
+    /* set the size of the scrolled window and then redraw the window */
+    gtk_widget_set_size_request (m->scr, -1, nrows);
+    gtk_window_resize (GTK_WINDOW (m->swin), 1, 1);
+}
+
 static void handle_search_changed (GtkEditable *wid, gpointer user_data)
 {
     MenuPlugin *m = (MenuPlugin *) user_data;
@@ -137,6 +163,8 @@ static void handle_search_changed (GtkEditable *wid, gpointer user_data)
     gtk_tree_model_filter_refilter (GTK_TREE_MODEL_FILTER (gtk_tree_view_get_model (GTK_TREE_VIEW (m->stv))));
     gtk_tree_view_set_cursor (GTK_TREE_VIEW (m->stv), path, NULL, FALSE);
     gtk_tree_path_free (path);
+
+    resize_search (m);
 }
 
 static gboolean handle_list_keypress (GtkWidget *widget, GdkEventKey *event, gpointer user_data)
@@ -243,11 +271,8 @@ static void do_search (MenuPlugin *m, GdkEventKey *event)
     GtkCellRenderer *prend, *trend;
     GtkTreeModelSort *slist;
     GtkTreeModelFilter *flist;
-    GtkWidget *box, *sw;
+    GtkWidget *box;
     gint x, y;
-
-    /* get the height of the menu and then hide it */
-    y = gtk_widget_get_allocated_height (m->menu);
 
     /* create the window */
     m->swin = gtk_window_new (GTK_WINDOW_TOPLEVEL);
@@ -268,9 +293,8 @@ static void do_search (MenuPlugin *m, GdkEventKey *event)
     gtk_box_pack_start (GTK_BOX (box), m->srch, FALSE, FALSE, 0);
 
     /* create a scrolled window to hold the tree view */
-    sw = gtk_scrolled_window_new (NULL, NULL);
-    gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (sw), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
-    gtk_box_pack_start (GTK_BOX (box), sw, FALSE, FALSE, 0);
+    m->scr = gtk_scrolled_window_new (NULL, NULL);
+    gtk_box_pack_start (GTK_BOX (box), m->scr, FALSE, FALSE, 0);
 
     /* create the filtered list for the tree view */
     slist = GTK_TREE_MODEL_SORT (gtk_tree_model_sort_new_with_model (GTK_TREE_MODEL (m->applist)));
@@ -282,7 +306,7 @@ static void do_search (MenuPlugin *m, GdkEventKey *event)
     m->stv = gtk_tree_view_new_with_model (GTK_TREE_MODEL (flist));
     g_signal_connect (m->stv, "key-press-event", G_CALLBACK (handle_list_keypress), m);
     g_signal_connect (m->stv, "row-activated", G_CALLBACK (handle_list_select), m);
-    gtk_container_add (GTK_CONTAINER (sw), m->stv);
+    gtk_container_add (GTK_CONTAINER (m->scr), m->stv);
     g_object_unref (slist);
     g_object_unref (flist);
 
@@ -298,8 +322,10 @@ static void do_search (MenuPlugin *m, GdkEventKey *event)
     gtk_widget_show_all (m->swin);
     gtk_widget_hide (m->swin);
 
+    /* set desired height of search window */
+    m->height = gtk_widget_get_allocated_height (m->menu) - gtk_widget_get_allocated_height (m->srch);
+
     /* size and move */
-    gtk_scrolled_window_set_min_content_height (GTK_SCROLLED_WINDOW (sw), y - gtk_widget_get_allocated_height (m->srch));
     lxpanel_plugin_popup_set_position_helper (m->panel, m->plugin, m->swin, &x, &y);
     gtk_widget_show_all (m->swin);
     gtk_window_present_with_time (GTK_WINDOW (m->swin), gdk_event_get_time ((GdkEvent *) event));
@@ -309,6 +335,10 @@ static void do_search (MenuPlugin *m, GdkEventKey *event)
 
     /* initialise the text entry */
     append_to_entry (m->srch, event->keyval);
+
+    /* resize window */
+    m->rheight = 0;
+    resize_search (m);
 }
 
 /* Handler for keyboard events while menu is open */
