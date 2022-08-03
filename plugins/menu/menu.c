@@ -73,7 +73,6 @@ typedef struct {
     int padding;
     int height;
     int rheight;
-    gboolean bottom;
     gboolean fixed;
 
     MenuCache* menu_cache;
@@ -297,7 +296,7 @@ static void do_search (MenuPlugin *m, GdkEventKey *event)
     gtk_window_set_skip_taskbar_hint (GTK_WINDOW (m->swin), TRUE);
     g_signal_connect (m->swin, "map-event", G_CALLBACK (handle_search_mapped), m);
     g_signal_connect (m->swin, "button-press-event", G_CALLBACK (handle_search_button_press), m);
-    if (!m->fixed && m->bottom) g_signal_connect (m->swin, "size-allocate", G_CALLBACK (handle_search_resize), m);
+    if (!m->fixed && panel_is_at_bottom (m->panel)) g_signal_connect (m->swin, "size-allocate", G_CALLBACK (handle_search_resize), m);
 
     /* add a box */
     box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
@@ -312,9 +311,9 @@ static void do_search (MenuPlugin *m, GdkEventKey *event)
     m->scr = gtk_scrolled_window_new (NULL, NULL);
 
     /* put in box in the appropriate order */
-    if (!m->fixed && m->bottom) gtk_box_pack_start (GTK_BOX (box), m->scr, FALSE, FALSE, 0);
+    if (!m->fixed && panel_is_at_bottom (m->panel)) gtk_box_pack_start (GTK_BOX (box), m->scr, FALSE, FALSE, 0);
     gtk_box_pack_start (GTK_BOX (box), m->srch, FALSE, FALSE, 0);
-    if (m->fixed || !m->bottom) gtk_box_pack_start (GTK_BOX (box), m->scr, FALSE, FALSE, 0);
+    if (m->fixed || !panel_is_at_bottom (m->panel)) gtk_box_pack_start (GTK_BOX (box), m->scr, FALSE, FALSE, 0);
 
     /* create the filtered list for the tree view */
     slist = GTK_TREE_MODEL_SORT (gtk_tree_model_sort_new_with_model (GTK_TREE_MODEL (m->applist)));
@@ -814,9 +813,6 @@ static void menu_panel_configuration_changed (LXPanel *panel, GtkWidget *p)
     MenuPlugin *m = lxpanel_plugin_get_data (p);
     const char *fname;
     int val;
-
-    if (panel_is_at_bottom (panel)) m->bottom = TRUE;
-    else m->bottom = FALSE;
 
     if (config_setting_lookup_int (m->settings, "padding", &val)) m->padding = val;
     if (config_setting_lookup_string (m->settings, "image", &fname))
