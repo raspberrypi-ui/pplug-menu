@@ -1,0 +1,72 @@
+# Czech translations for lxpanel package.
+# Copyright (C) 2009 THE lxpanel'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the lxpanel package.
+# Michal Várady <miko.vaji@gmail.com>, 2009.
+# Pavel Fric <pavelfric@seznam.cz>, 2016.
+msgid ""
+msgstr ""
+"Project-Id-Version: lxpanel 0.3.99\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-08-03 13:44+0100\n"
+"PO-Revision-Date: 2016-11-01 00:05+0100\n"
+"Last-Translator: Pavel Fric <pavelfric@seznam.cz>\n"
+"Language-Team: Czech <kde-i18n-doc@kde.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
+"X-Generator: Lokalize 1.5\n"
+"X-Pootle-Revision: 134\n"
+"X-Pootle-Path: /cs/lxpanel/po/cs.po\n"
+"X-POOTLE-MTIME: 1427405508.000000\n"
+
+#: ../plugins/menu/menu.c:97
+msgid "Run"
+msgstr "Spustit"
+
+#: ../plugins/menu/menu.c:98
+msgid "Restart"
+msgstr "Restartovat"
+
+#: ../plugins/menu/menu.c:99
+msgid "Logout"
+msgstr "Odhlásit se"
+
+#: ../plugins/menu/menu.c:448
+msgid "Add to desktop"
+msgstr "Přidat na pracovní plochu"
+
+#: ../plugins/menu/menu.c:455
+msgid "Properties"
+msgstr "Vlastnosti"
+
+#: ../plugins/menu/menu.c:888
+msgid "Click here to open applications menu"
+msgstr ""
+
+#: ../plugins/menu/menu.c:974
+msgid "Menu"
+msgstr "Nabídka"
+
+#: ../plugins/menu/menu.c:975
+msgid "Icon"
+msgstr "Ikona"
+
+#: ../plugins/menu/menu.c:976
+msgid "Padding"
+msgstr ""
+
+#: ../plugins/menu/menu.c:977
+msgid "Fixed Size"
+msgstr ""
+
+#: ../plugins/menu/menu.c:985
+msgid "Menu with Search"
+msgstr ""
+
+#: ../plugins/menu/menu.c:986
+#, fuzzy
+msgid "Searchable Application Menu"
+msgstr "Nabídka aplikací"
+

@@ -1,0 +1,72 @@
+# CHinese simplified translation of lxpanel.
+# Copyright (C) 2008-2016 the lxpanel's authors
+# This file is distributed under the same license as the lxpanel package.
+# ideal <05281253@bjtu.edu.cn>, 2008.
+# Yinghua Wang <wantinghard@gmail.com>, 2016.
+msgid ""
+msgstr ""
+"Project-Id-Version: lxpanel 0.3.8.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-08-03 13:44+0100\n"
+"PO-Revision-Date: 2016-10-25 09:35+0800\n"
+"Last-Translator: Yinghua Wang <wantinghard@gmail.com>\n"
+"Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Pootle 2.6.0-rc2\n"
+"X-Pootle-Revision: 0\n"
+"X-Pootle-Path: /zh_CN/lxpanel/po/zh_CN.po\n"
+"X-POOTLE-MTIME: 1417570650.000000\n"
+
+#: ../plugins/menu/menu.c:97
+msgid "Run"
+msgstr "运行"
+
+#: ../plugins/menu/menu.c:98
+msgid "Restart"
+msgstr "重新启动"
+
+#: ../plugins/menu/menu.c:99
+msgid "Logout"
+msgstr "注销"
+
+#: ../plugins/menu/menu.c:448
+msgid "Add to desktop"
+msgstr "添加到菜单"
+
+#: ../plugins/menu/menu.c:455
+msgid "Properties"
+msgstr "属性"
+
+#: ../plugins/menu/menu.c:888
+msgid "Click here to open applications menu"
+msgstr ""
+
+#: ../plugins/menu/menu.c:974
+msgid "Menu"
+msgstr "菜单"
+
+#: ../plugins/menu/menu.c:975
+msgid "Icon"
+msgstr "图标"
+
+#: ../plugins/menu/menu.c:976
+msgid "Padding"
+msgstr ""
+
+#: ../plugins/menu/menu.c:977
+msgid "Fixed Size"
+msgstr ""
+
+#: ../plugins/menu/menu.c:985
+msgid "Menu with Search"
+msgstr ""
+
+#: ../plugins/menu/menu.c:986
+#, fuzzy
+msgid "Searchable Application Menu"
+msgstr "应用程序菜单"
+

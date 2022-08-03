@@ -1,0 +1,71 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-08-03 13:44+0100\n"
+"PO-Revision-Date: 2014-12-02 11:44+0000\n"
+"Last-Translator: system user <>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Pootle 2.7.0-alpha1\n"
+"X-Pootle-Revision: 0\n"
+"X-Pootle-Path: /km/lxpanel/po/km.po\n"
+"X-POOTLE-MTIME: 1417520680.000000\n"
+
+#: ../plugins/menu/menu.c:97
+#, fuzzy
+msgid "Run"
+msgstr "រត់"
+
+#: ../plugins/menu/menu.c:98
+msgid "Restart"
+msgstr "ចាប់ផ្ដើម​ឡើងវិញ"
+
+#: ../plugins/menu/menu.c:99
+msgid "Logout"
+msgstr "ចាកចេញ"
+
+#: ../plugins/menu/menu.c:448
+msgid "Add to desktop"
+msgstr ""
+
+#: ../plugins/menu/menu.c:455
+msgid "Properties"
+msgstr ""
+
+#: ../plugins/menu/menu.c:888
+msgid "Click here to open applications menu"
+msgstr ""
+
+#: ../plugins/menu/menu.c:974
+msgid "Menu"
+msgstr ""
+
+#: ../plugins/menu/menu.c:975
+msgid "Icon"
+msgstr ""
+
+#: ../plugins/menu/menu.c:976
+msgid "Padding"
+msgstr ""
+
+#: ../plugins/menu/menu.c:977
+msgid "Fixed Size"
+msgstr ""
+
+#: ../plugins/menu/menu.c:985
+msgid "Menu with Search"
+msgstr ""
+
+#: ../plugins/menu/menu.c:986
+msgid "Searchable Application Menu"
+msgstr ""
+

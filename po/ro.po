@@ -1,0 +1,71 @@
+# Romanian translation for LXPanel
+# Copyright (C) 2012 THE LXPanel'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the LXPanel package.
+# Mișu Moldovan <dumol@l10n.ro>, 2012.
+msgid ""
+msgstr ""
+"Project-Id-Version: LXPanel 0.5.8\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-08-03 13:44+0100\n"
+"PO-Revision-Date: 2012-10-09 12:57+0200\n"
+"Last-Translator: Mișu <dumol@l10n.ro>\n"
+"Language-Team: Romanian <diacritice@googlegroups.com>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < "
+"20)) ? 1 : 2);;\n"
+"X-Generator: Pootle 2.0.5\n"
+"X-Pootle-Revision: 0\n"
+"X-Pootle-Path: /ro/lxpanel/po/ro.po\n"
+
+#: ../plugins/menu/menu.c:97
+msgid "Run"
+msgstr "Pornire"
+
+#: ../plugins/menu/menu.c:98
+msgid "Restart"
+msgstr "Repornire"
+
+#: ../plugins/menu/menu.c:99
+msgid "Logout"
+msgstr "Ieșire"
+
+#: ../plugins/menu/menu.c:448
+msgid "Add to desktop"
+msgstr "Adaugă pe desktop"
+
+#: ../plugins/menu/menu.c:455
+msgid "Properties"
+msgstr "Proprietăți"
+
+#: ../plugins/menu/menu.c:888
+msgid "Click here to open applications menu"
+msgstr ""
+
+#: ../plugins/menu/menu.c:974
+msgid "Menu"
+msgstr "Meniu"
+
+#: ../plugins/menu/menu.c:975
+msgid "Icon"
+msgstr "Iconiță"
+
+#: ../plugins/menu/menu.c:976
+msgid "Padding"
+msgstr ""
+
+#: ../plugins/menu/menu.c:977
+msgid "Fixed Size"
+msgstr ""
+
+#: ../plugins/menu/menu.c:985
+msgid "Menu with Search"
+msgstr ""
+
+#: ../plugins/menu/menu.c:986
+#, fuzzy
+msgid "Searchable Application Menu"
+msgstr "Meniu cu programe"
+

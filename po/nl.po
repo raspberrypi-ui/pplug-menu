@@ -1,0 +1,72 @@
+# Dutch translation of the lxpanel package.
+# Copyright (C) the author of the lxpanel package.
+# This file is distributed under the same license as the 
+# lxpanel package.
+# Pjotr, 2011-2016.
+msgid ""
+msgstr ""
+"Project-Id-Version: lxpanel\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-08-03 13:44+0100\n"
+"PO-Revision-Date: 2018-05-25 11:05+0000\n"
+"Last-Translator: Pjotr <pjotrvertaalt@gmail.com>\n"
+"Language-Team: Dutch\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Pootle 2.8\n"
+"X-Pootle-Revision: 0\n"
+"X-Pootle-Path: /nl/lxpanel/po/nl.po\n"
+"X-POOTLE-MTIME: 1527246312.241216\n"
+
+#: ../plugins/menu/menu.c:97
+msgid "Run"
+msgstr "Opdracht uitvoeren..."
+
+#: ../plugins/menu/menu.c:98
+msgid "Restart"
+msgstr "Herstarten"
+
+#: ../plugins/menu/menu.c:99
+msgid "Logout"
+msgstr "Afmelden"
+
+#: ../plugins/menu/menu.c:448
+msgid "Add to desktop"
+msgstr "Toevoegen aan bureaublad"
+
+#: ../plugins/menu/menu.c:455
+msgid "Properties"
+msgstr "Eigenschappen"
+
+#: ../plugins/menu/menu.c:888
+msgid "Click here to open applications menu"
+msgstr ""
+
+#: ../plugins/menu/menu.c:974
+msgid "Menu"
+msgstr "Menu"
+
+#: ../plugins/menu/menu.c:975
+msgid "Icon"
+msgstr "Pictogram"
+
+#: ../plugins/menu/menu.c:976
+msgid "Padding"
+msgstr ""
+
+#: ../plugins/menu/menu.c:977
+msgid "Fixed Size"
+msgstr ""
+
+#: ../plugins/menu/menu.c:985
+msgid "Menu with Search"
+msgstr ""
+
+#: ../plugins/menu/menu.c:986
+#, fuzzy
+msgid "Searchable Application Menu"
+msgstr "Toepassingenmenu"
+

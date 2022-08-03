@@ -1,0 +1,70 @@
+# Translation of lxpanel to Norwegian Nynorsk
+# Copyright © 2009 Karl Ove Hufthammer <karl@huftis.org>
+# This file is distributed under the same license as the lxpanel package.
+# Karl Ove Hufthammer <karl@huftis.org>, 2009.
+msgid ""
+msgstr ""
+"Project-Id-Version: lxpanel\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-08-03 13:44+0100\n"
+"PO-Revision-Date: 2009-12-31 00:14+0100\n"
+"Last-Translator: Karl Ove Hufthammer <karl@huftis.org>\n"
+"Language-Team: Norwegian Nynorsk <i18n-nn@lister.ping.uio.no>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Lokalize 1.0\n"
+"X-Pootle-Revision: 0\n"
+"X-Pootle-Path: /nn/lxpanel/po/nn.po\n"
+
+#: ../plugins/menu/menu.c:97
+msgid "Run"
+msgstr "Køyr"
+
+#: ../plugins/menu/menu.c:98
+msgid "Restart"
+msgstr "Start på nytt"
+
+#: ../plugins/menu/menu.c:99
+msgid "Logout"
+msgstr "Logg ut"
+
+#: ../plugins/menu/menu.c:448
+msgid "Add to desktop"
+msgstr "Legg til skrivebord"
+
+#: ../plugins/menu/menu.c:455
+msgid "Properties"
+msgstr "Eigenskapar"
+
+#: ../plugins/menu/menu.c:888
+msgid "Click here to open applications menu"
+msgstr ""
+
+#: ../plugins/menu/menu.c:974
+msgid "Menu"
+msgstr "Meny"
+
+#: ../plugins/menu/menu.c:975
+msgid "Icon"
+msgstr "Ikon"
+
+#: ../plugins/menu/menu.c:976
+msgid "Padding"
+msgstr ""
+
+#: ../plugins/menu/menu.c:977
+msgid "Fixed Size"
+msgstr ""
+
+#: ../plugins/menu/menu.c:985
+msgid "Menu with Search"
+msgstr ""
+
+#: ../plugins/menu/menu.c:986
+#, fuzzy
+msgid "Searchable Application Menu"
+msgstr "Programmeny"
+

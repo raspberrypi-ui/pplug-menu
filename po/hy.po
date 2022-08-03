@@ -1,0 +1,70 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: LxPanel\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-08-03 13:44+0100\n"
+"PO-Revision-Date: 2012-10-24 14:43+0200\n"
+"Last-Translator: Avag <info@armath.am>\n"
+"Language-Team: Armenian\n"
+"Language: hy\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Pootle 2.0.5\n"
+"X-Poedit-Language: Armenian\n"
+"X-Poedit-SourceCharset: utf-8\n"
+"X-Poedit-Country: Armenia\n"
+"X-Pootle-Path: /hy/lxpanel/po/hy.po\n"
+"X-Pootle-Revision: 0\n"
+
+#: ../plugins/menu/menu.c:97
+msgid "Run"
+msgstr "Գործարկել..."
+
+#: ../plugins/menu/menu.c:98
+msgid "Restart"
+msgstr "Վերագործարկել"
+
+#: ../plugins/menu/menu.c:99
+msgid "Logout"
+msgstr "Անջատել..."
+
+#: ../plugins/menu/menu.c:448
+msgid "Add to desktop"
+msgstr "Ավելացնել աշխատասեղանին"
+
+#: ../plugins/menu/menu.c:455
+msgid "Properties"
+msgstr "Հատկություններ"
+
+#: ../plugins/menu/menu.c:888
+msgid "Click here to open applications menu"
+msgstr "Սեղմել այստեղ՝ ծրագրերի մենյուն բացելու համար"
+
+#: ../plugins/menu/menu.c:974
+msgid "Menu"
+msgstr "Մենյու"
+
+#: ../plugins/menu/menu.c:975
+msgid "Icon"
+msgstr "Մանրապատկեր"
+
+#: ../plugins/menu/menu.c:976
+msgid "Padding"
+msgstr ""
+
+#: ../plugins/menu/menu.c:977
+msgid "Fixed Size"
+msgstr ""
+
+#: ../plugins/menu/menu.c:985
+msgid "Menu with Search"
+msgstr ""
+
+#: ../plugins/menu/menu.c:986
+#, fuzzy
+msgid "Searchable Application Menu"
+msgstr "Ծրագրերի մենյու"
+

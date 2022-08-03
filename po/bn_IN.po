@@ -1,0 +1,70 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-08-03 13:44+0100\n"
+"PO-Revision-Date: 2009-12-08 18:15+0100\n"
+"Last-Translator: Sankarshan <sankarshan.mukhopadhyay@gmail.com>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Pootle 1.1.0\n"
+"X-Pootle-Revision: 0\n"
+"X-Pootle-Path: /bn_IN/lxpanel/po/bn_IN.po\n"
+
+#: ../plugins/menu/menu.c:97
+msgid "Run"
+msgstr "চালু করুন"
+
+#: ../plugins/menu/menu.c:98
+msgid "Restart"
+msgstr "পুনরায় চালু করুন"
+
+#: ../plugins/menu/menu.c:99
+msgid "Logout"
+msgstr "লগ-আউট"
+
+#: ../plugins/menu/menu.c:448
+msgid "Add to desktop"
+msgstr "ডেস্কটপে যোগ করুন"
+
+#: ../plugins/menu/menu.c:455
+msgid "Properties"
+msgstr "বৈশিষ্ট্য"
+
+#: ../plugins/menu/menu.c:888
+msgid "Click here to open applications menu"
+msgstr ""
+
+#: ../plugins/menu/menu.c:974
+msgid "Menu"
+msgstr "মেনু"
+
+#: ../plugins/menu/menu.c:975
+msgid "Icon"
+msgstr "আইকন"
+
+#: ../plugins/menu/menu.c:976
+msgid "Padding"
+msgstr ""
+
+#: ../plugins/menu/menu.c:977
+msgid "Fixed Size"
+msgstr ""
+
+#: ../plugins/menu/menu.c:985
+msgid "Menu with Search"
+msgstr ""
+
+#: ../plugins/menu/menu.c:986
+#, fuzzy
+msgid "Searchable Application Menu"
+msgstr "অ্যাপ্লিকেশন মেনু"
+
