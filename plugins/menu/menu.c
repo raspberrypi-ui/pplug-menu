@@ -74,6 +74,7 @@ typedef struct {
     int height;
     int rheight;
     gboolean bottom;
+    gboolean fixed;
 
     MenuCache* menu_cache;
     gpointer reload_notify;
@@ -134,24 +135,27 @@ static void append_to_entry (GtkWidget *entry, char val)
 
 static void resize_search (MenuPlugin *m)
 {
-    /* update the stored row height if current height is bigger */
+    GtkTreePath *path;
     GdkRectangle rect;
-    GtkTreePath *path = gtk_tree_path_new_from_indices (0, -1);
-    gtk_tree_view_get_cell_area (GTK_TREE_VIEW (m->stv), path, NULL, &rect);
-    gtk_tree_path_free (path);
-    if (rect.height > m->rheight) m->rheight = rect.height;
+    int nrows;
 
-    /* calculate the height in pixels from the number of rows */
-    int nrows = gtk_tree_model_iter_n_children (gtk_tree_view_get_model (GTK_TREE_VIEW (m->stv)), NULL);
-    nrows *= (m->rheight + 2);
-    if (nrows > m->height)
+    if (m->fixed) nrows = m->height;
+    else
     {
-        nrows = m->height;
-        gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (m->scr), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+        /* update the stored row height if current height is bigger */
+        path = gtk_tree_path_new_from_indices (0, -1);
+        gtk_tree_view_get_cell_area (GTK_TREE_VIEW (m->stv), path, NULL, &rect);
+        gtk_tree_path_free (path);
+        if (rect.height > m->rheight) m->rheight = rect.height;
+
+        /* calculate the height in pixels from the number of rows */
+        nrows = gtk_tree_model_iter_n_children (gtk_tree_view_get_model (GTK_TREE_VIEW (m->stv)), NULL);
+        nrows *= (m->rheight + 2);
+        if (nrows > m->height) nrows = m->height;
     }
-    else gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (m->scr), GTK_POLICY_NEVER, GTK_POLICY_NEVER);
 
     /* set the size of the scrolled window and then redraw the window */
+    gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (m->scr), GTK_POLICY_NEVER, nrows < m->height ? GTK_POLICY_NEVER : GTK_POLICY_AUTOMATIC);
     gtk_widget_set_size_request (m->scr, -1, nrows);
     gtk_window_resize (GTK_WINDOW (m->swin), 1, 1);
 }
@@ -293,7 +297,7 @@ static void do_search (MenuPlugin *m, GdkEventKey *event)
     gtk_window_set_skip_taskbar_hint (GTK_WINDOW (m->swin), TRUE);
     g_signal_connect (m->swin, "map-event", G_CALLBACK (handle_search_mapped), m);
     g_signal_connect (m->swin, "button-press-event", G_CALLBACK (handle_search_button_press), m);
-    if (m->bottom) g_signal_connect (m->swin, "size-allocate", G_CALLBACK (handle_search_resize), m);
+    if (!m->fixed && m->bottom) g_signal_connect (m->swin, "size-allocate", G_CALLBACK (handle_search_resize), m);
 
     /* add a box */
     box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
@@ -308,9 +312,9 @@ static void do_search (MenuPlugin *m, GdkEventKey *event)
     m->scr = gtk_scrolled_window_new (NULL, NULL);
 
     /* put in box in the appropriate order */
-    if (m->bottom) gtk_box_pack_start (GTK_BOX (box), m->scr, FALSE, FALSE, 0);
+    if (!m->fixed && m->bottom) gtk_box_pack_start (GTK_BOX (box), m->scr, FALSE, FALSE, 0);
     gtk_box_pack_start (GTK_BOX (box), m->srch, FALSE, FALSE, 0);
-    if (!m->bottom) gtk_box_pack_start (GTK_BOX (box), m->scr, FALSE, FALSE, 0);
+    if (m->fixed || !m->bottom) gtk_box_pack_start (GTK_BOX (box), m->scr, FALSE, FALSE, 0);
 
     /* create the filtered list for the tree view */
     slist = GTK_TREE_MODEL_SORT (gtk_tree_model_sort_new_with_model (GTK_TREE_MODEL (m->applist)));
@@ -916,6 +920,10 @@ static GtkWidget *menu_constructor (LXPanel *panel, config_setting_t *settings)
         m->padding = val;
     else
         m->padding = 4;
+    if (config_setting_lookup_int (m->settings, "fixed", &val) && val == 1)
+        m->fixed = TRUE;
+    else
+        m->fixed = FALSE;
 
     m->applist = gtk_list_store_new (3, GDK_TYPE_PIXBUF, G_TYPE_STRING, G_TYPE_STRING);
     m->ds = fm_dnd_src_new (NULL);
@@ -951,6 +959,7 @@ static gboolean menu_apply_config (gpointer user_data)
     }
     config_group_set_string (m->settings, "image", m->icon);
     config_group_set_int (m->settings, "padding", m->padding);
+    config_group_set_int (m->settings, "fixed", m->fixed);
 
     lxpanel_plugin_set_taskbar_icon (m->panel, m->img, m->icon);
     gtk_widget_set_size_request (m->img, panel_get_safe_icon_size (m->panel) + 2 * m->padding, -1);
@@ -965,6 +974,7 @@ static GtkWidget *menu_configure (LXPanel *panel, GtkWidget *p)
     return lxpanel_generic_config_dlg (_("Menu"), panel, menu_apply_config, p,
                                        _("Icon"), &m->icon, CONF_TYPE_STR,
                                        _("Padding"), &m->padding, CONF_TYPE_INT,
+                                       _("Fixed Size"), &m->fixed, CONF_TYPE_BOOL,
                                        NULL);
 }
 
