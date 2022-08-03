@@ -210,6 +210,7 @@ static gboolean handle_search_keypress (GtkWidget *widget, GdkEventKey *event, g
 
     switch (event->keyval)
     {
+        case GDK_KEY_KP_Enter :
         case GDK_KEY_Return :   sel = gtk_tree_view_get_selection (GTK_TREE_VIEW (m->stv));
                                 if (gtk_tree_selection_get_selected (sel, &model, &iter))
                                 {
