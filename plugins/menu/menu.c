@@ -203,6 +203,7 @@ static gboolean handle_search_keypress (GtkWidget *widget, GdkEventKey *event, g
     GtkTreePath *path;
     gchar *str;
     FmPath *fpath;
+    int nrows;
 
     switch (event->keyval)
     {
@@ -219,6 +220,13 @@ static gboolean handle_search_keypress (GtkWidget *widget, GdkEventKey *event, g
                                 return TRUE;
 
         case GDK_KEY_Down :     path = gtk_tree_path_new_from_indices (1, -1);
+                                gtk_tree_view_set_cursor (GTK_TREE_VIEW (m->stv), path, NULL, FALSE);
+                                gtk_tree_path_free (path);
+                                gtk_widget_grab_focus (m->stv);
+                                return TRUE;
+
+        case GDK_KEY_Up :       nrows = gtk_tree_model_iter_n_children (gtk_tree_view_get_model (GTK_TREE_VIEW (m->stv)), NULL);
+                                path = gtk_tree_path_new_from_indices (nrows - 1, -1);
                                 gtk_tree_view_set_cursor (GTK_TREE_VIEW (m->stv), path, NULL, FALSE);
                                 gtk_tree_path_free (path);
                                 gtk_widget_grab_focus (m->stv);
