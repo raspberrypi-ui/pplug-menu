@@ -181,8 +181,8 @@ static gboolean handle_list_keypress (GtkWidget *widget, GdkEventKey *event, gpo
         return TRUE;
     }
 
-    if (event->keyval >= 'a' && event->keyval <= 'z' && event->state == 0 ||
-        event->keyval >= 'A' && event->keyval <= 'Z' && event->state == 1)
+    if ((event->keyval >= 'a' && event->keyval <= 'z' && event->state == 0) ||
+        (event->keyval >= 'A' && event->keyval <= 'Z' && event->state == 1))
     {
         append_to_entry (m->srch, event->keyval);
         return TRUE;
@@ -372,8 +372,8 @@ static gboolean handle_key_presses (GtkWidget *widget, GdkEventKey *event, gpoin
         gtk_menu_popdown (GTK_MENU (m->menu));
         return TRUE;
     }
-    if (event->keyval >= 'a' && event->keyval <= 'z' && event->state == 0 ||
-        event->keyval >= 'A' && event->keyval <= 'Z' && event->state == 1)
+    if ((event->keyval >= 'a' && event->keyval <= 'z' && event->state == 0) ||
+        (event->keyval >= 'A' && event->keyval <= 'Z' && event->state == 1))
     {
         if (!m->swin) do_search (m, event);
         else append_to_entry (m->srch, event->keyval);
@@ -746,8 +746,8 @@ static GtkWidget *read_menu_item (MenuPlugin *m, config_setting_t *s)
 /* Top level function to read in menu data from panel configuration */
 static gboolean create_menu (MenuPlugin *m)
 {
-    GtkWidget *mi, *menu;
-    const gchar *name, *fname, *str;
+    GtkWidget *mi;
+    const gchar *str;
     config_setting_t *list, *s;
     guint i;
 
