@@ -1,3 +1,9 @@
+lxplug-menu (0.2) bullseye; urgency=medium
+
+  * Ignore all keyboard modifiers
+
+ -- Simon Long <simon@raspberrypi.com>  Thu, 08 Sep 2022 12:00:22 +0100
+
 lxplug-menu (0.1) bullseye; urgency=medium
 
   * Initial release.
