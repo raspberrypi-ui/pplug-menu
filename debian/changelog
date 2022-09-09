@@ -1,3 +1,9 @@
+lxplug-menu (0.3) bullseye; urgency=medium
+
+  * Allow menu key to close menu
+
+ -- Simon Long <simon@raspberrypi.com>  Fri, 09 Sep 2022 08:34:37 +0100
+
 lxplug-menu (0.2) bullseye; urgency=medium
 
   * Ignore all keyboard modifiers

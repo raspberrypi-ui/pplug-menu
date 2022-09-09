@@ -367,7 +367,7 @@ static gboolean handle_key_presses (GtkWidget *widget, GdkEventKey *event, gpoin
 {
     MenuPlugin *m = (MenuPlugin *) user_data;
 
-    if (event->keyval == GDK_KEY_Super_L && event->state == 0)
+    if (event->keyval == GDK_KEY_Super_L)
     {
         gtk_menu_popdown (GTK_MENU (m->menu));
         return TRUE;
