@@ -111,8 +111,6 @@ static void destroy_search (MenuPlugin *m)
     m->swin = NULL;
 }
 
-
-
 static gboolean filter_apps (GtkTreeModel *model, GtkTreeIter *iter, gpointer user_data)
 {
     MenuPlugin *m = (MenuPlugin *) user_data;
