@@ -111,17 +111,19 @@ static void destroy_search (MenuPlugin *m)
     m->swin = NULL;
 }
 
+
+
 static gboolean filter_apps (GtkTreeModel *model, GtkTreeIter *iter, gpointer user_data)
 {
     MenuPlugin *m = (MenuPlugin *) user_data;
     gboolean res = FALSE;
     char *str, *pstr = NULL;
-    GtkTreeIter *prev = iter;
+    GtkTreeIter prev = *iter;
 
     gtk_tree_model_get (model, iter, 1, &str, -1);
-    if (gtk_tree_model_iter_previous (model, prev)) gtk_tree_model_get (model, prev, 1, &pstr, -1);
-    if (str && pstr && !strcmp (str, pstr)) return FALSE;
-    if (strcasestr (str, gtk_entry_get_text (GTK_ENTRY (m->srch)))) res = TRUE;
+    if (gtk_tree_model_iter_previous (model, &prev)) gtk_tree_model_get (model, &prev, 1, &pstr, -1);
+    if ((!pstr || strcmp (str, pstr)) && strcasestr (str, gtk_entry_get_text (GTK_ENTRY (m->srch)))) res = TRUE;
+    if (pstr) g_free (pstr);
     g_free (str);
     return res;
 }
