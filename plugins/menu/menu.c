@@ -796,7 +796,7 @@ static gboolean menu_button_press_event (GtkWidget *widget, GdkEventButton *even
 
     if (event->button == 1)
     {
-        gtk_menu_popup_at_widget (GTK_MENU (m->menu), widget, GDK_GRAVITY_NORTH_WEST, GDK_GRAVITY_NORTH_WEST, NULL);
+        gtk_menu_popup_at_widget (GTK_MENU (m->menu), widget, GDK_GRAVITY_SOUTH_WEST, GDK_GRAVITY_NORTH_WEST, NULL);
         return TRUE;
     }
     return FALSE;
@@ -808,7 +808,7 @@ static void menu_show_menu (GtkWidget *p)
     MenuPlugin *m = lxpanel_plugin_get_data (p);
 
     if (m->swin) destroy_search (m);
-    else gtk_menu_popup_at_widget (GTK_MENU (m->menu), m->plugin, GDK_GRAVITY_NORTH_WEST, GDK_GRAVITY_NORTH_WEST, NULL);
+    else gtk_menu_popup_at_widget (GTK_MENU (m->menu), m->plugin, GDK_GRAVITY_SOUTH_WEST, GDK_GRAVITY_NORTH_WEST, NULL);
 }
 
 /* Handler for system config changed message from panel */

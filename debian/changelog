@@ -1,3 +1,9 @@
+lxplug-menu (0.5) bookworm; urgency=medium
+
+  * Fix menu position
+
+ -- Simon Long <simon@raspberrypi.com>  Fri, 22 Nov 2024 14:30:57 +0000
+
 lxplug-menu (0.4) bullseye; urgency=medium
 
   * Filter duplicate items from search list
