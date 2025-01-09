@@ -65,6 +65,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define wrap_set_menu_icon(plugin,image,icon) lxpanel_plugin_set_menu_icon(plugin->panel,image,icon)
 #define wrap_set_taskbar_icon(plugin,image,icon) lxpanel_plugin_set_taskbar_icon(plugin->panel,image,icon)
 #define wrap_show_menu(plugin,menu) gtk_menu_popup_at_widget(GTK_MENU(menu),plugin,GDK_GRAVITY_SOUTH_WEST,GDK_GRAVITY_NORTH_WEST,NULL)
+#define wrap_icon_size(plugin) panel_get_safe_icon_size(plugin->panel)
+#define wrap_is_at_bottom(plugin) panel_is_at_bottom(plugin->panel)
 #else
 #include "lxutils.h"
 #define lxpanel_notify(panel,msg) lxpanel_notify(msg)
@@ -74,6 +76,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define wrap_set_menu_icon(plugin,image,icon) set_menu_icon(image,icon,plugin->icon_size)
 #define wrap_set_taskbar_icon(plugin,image,icon) set_taskbar_icon(image,icon,plugin->icon_size)
 #define wrap_show_menu(plugin,menu) show_menu_with_kbd(plugin,menu)
+#define wrap_icon_size(plugin) (plugin->icon_size)
+#define wrap_is_at_bottom(plugin) (plugin->bottom)
 #endif
 
 #include "menu.h"
@@ -81,9 +85,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "launcher.h"
 #endif
 
-#ifndef LXPLUG
 static gboolean longpress;
 
+#ifndef LXPLUG
 static void handle_menu_item_activate (GtkMenuItem *mi, MenuPlugin *);
 
 const char *logout_cmd = "lxde-pi-shutdown-helper";
@@ -130,7 +134,6 @@ static Command commands[] = {
     { NULL, NULL },
 };
 
-
 /* Open a specified path in a file manager. */
 static gboolean _open_dir_in_file_manager (GAppLaunchContext* ctx, GList* folder_infos,
                                           gpointer, GError** err)
@@ -154,7 +157,6 @@ static gboolean _open_dir_in_file_manager (GAppLaunchContext* ctx, GList* folder
     g_object_unref(app);
     return ret;
 }
-
 
 /* Search box */
 
@@ -199,16 +201,14 @@ static void resize_search (MenuPlugin *m)
 {
     GtkTreePath *path;
     GdkRectangle rect;
-    int nrows, height;
+    int nrows, height = m->height;
 
     if (m->fixed)
     {
-#ifdef LXPLUG
-        nrows = m->height;
-#else
-        height = m->height - gtk_widget_get_allocated_height (m->srch);
-        nrows = height;
+#ifndef LXPLUG
+        height -= gtk_widget_get_allocated_height (m->srch);
 #endif
+        nrows = height;
     }
     else
     {
@@ -227,20 +227,12 @@ static void resize_search (MenuPlugin *m)
         /* calculate the height in pixels from the number of rows */
         nrows = gtk_tree_model_iter_n_children (gtk_tree_view_get_model (GTK_TREE_VIEW (m->stv)), NULL);
         nrows *= (m->rheight + 2);
-#ifdef LXPLUG
-        if (nrows > m->height) nrows = m->height;
-#else
         if (nrows > height) nrows = height;
-#endif
     }
 
     /* set the size of the scrolled window and then redraw the window */
-#ifdef LXPLUG
-    gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (m->scr), GTK_POLICY_NEVER, nrows < m->height ? GTK_POLICY_NEVER : GTK_POLICY_AUTOMATIC);
-#else
     gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (m->scr), GTK_POLICY_NEVER, nrows < height ? GTK_POLICY_NEVER : GTK_POLICY_AUTOMATIC);
 
-#endif
     gtk_widget_set_size_request (m->scr, -1, nrows);
 #ifdef LXPLUG
     gtk_window_resize (GTK_WINDOW (m->swin), 1, 1);
@@ -306,11 +298,7 @@ static gboolean handle_search_keypress (GtkWidget *, GdkEventKey *event, gpointe
                                 {
                                     gtk_tree_model_get (model, &iter, 2, &str, -1);
                                     fpath = fm_path_new_for_str (str);
-#ifdef LXPLUG
-                                    lxpanel_launch_path (m->panel, fpath);
-#else
                                     fm_launch_path_simple (NULL, NULL, fpath, _open_dir_in_file_manager, NULL);
-#endif
                                     fm_path_unref (fpath);
                                 }
 
@@ -344,16 +332,13 @@ static void handle_list_select (GtkTreeView *tv, GtkTreePath *path, GtkTreeViewC
     {
         gtk_tree_model_get (mod, &iter, 2, &str, -1);
         fpath = fm_path_new_for_str (str);
-#ifdef LXPLUG
-        lxpanel_launch_path (m->panel, fpath);
-#else
         fm_launch_path_simple (NULL, NULL, fpath, _open_dir_in_file_manager, NULL);
-#endif
         fm_path_unref (fpath);
     }
 
     destroy_search (m);
 }
+
 #ifdef LXPLUG
 static gboolean handle_search_mapped (GtkWidget *widget, GdkEvent *event, gpointer user_data)
 {
@@ -392,11 +377,7 @@ static void search_destroyed (GtkWidget *, gpointer data)
 }
 #endif
 
-#ifdef LXPLUG
-static void do_search (MenuPlugin *m, GdkEventKey *event)
-#else
 static void create_search (MenuPlugin *m)
-#endif
 {
     GtkCellRenderer *prend, *trend;
     GtkTreeModelSort *slist;
@@ -430,15 +411,10 @@ static void create_search (MenuPlugin *m)
     m->scr = gtk_scrolled_window_new (NULL, NULL);
 
     /* put in box in the appropriate order */
-#ifdef LXPLUG
-    if (!m->fixed && panel_is_at_bottom (m->panel)) gtk_box_pack_start (GTK_BOX (box), m->scr, FALSE, FALSE, 0);
+    if (!m->fixed && wrap_is_at_bottom (m)) gtk_box_pack_start (GTK_BOX (box), m->scr, FALSE, FALSE, 0);
     gtk_box_pack_start (GTK_BOX (box), m->srch, FALSE, FALSE, 0);
-    if (m->fixed || !panel_is_at_bottom (m->panel)) gtk_box_pack_start (GTK_BOX (box), m->scr, FALSE, FALSE, 0);
-#else
-    if (!m->fixed && m->bottom) gtk_box_pack_start (GTK_BOX (box), m->scr, FALSE, FALSE, 0);
-    gtk_box_pack_start (GTK_BOX (box), m->srch, FALSE, FALSE, 0);
-    if (m->fixed || !m->bottom) gtk_box_pack_start (GTK_BOX (box), m->scr, FALSE, FALSE, 0);
-#endif
+    if (m->fixed || !wrap_is_at_bottom (m)) gtk_box_pack_start (GTK_BOX (box), m->scr, FALSE, FALSE, 0);
+
     /* create the filtered list for the tree view */
     slist = GTK_TREE_MODEL_SORT (gtk_tree_model_sort_new_with_model (GTK_TREE_MODEL (m->applist)));
     gtk_tree_sortable_set_sort_column_id (GTK_TREE_SORTABLE (slist), 1, GTK_SORT_ASCENDING);
@@ -472,13 +448,10 @@ static void create_search (MenuPlugin *m)
     /* size and move */
     lxpanel_plugin_popup_set_position_helper (m->panel, m->plugin, m->swin, &x, &y);
     gtk_widget_show_all (m->swin);
-    gtk_window_present_with_time (GTK_WINDOW (m->swin), gdk_event_get_time ((GdkEvent *) event));
+    gtk_window_present (GTK_WINDOW (m->swin));
     gdk_window_move (gtk_widget_get_window (m->swin), x, y);
     gtk_widget_grab_focus (m->srch);
     gtk_widget_hide (m->menu);
-
-    /* initialise the text entry */
-    append_to_entry (m->srch, event->keyval);
 #else
     /* realise */
     g_signal_connect (m->swin, "destroy", G_CALLBACK (search_destroyed), m);
@@ -492,40 +465,13 @@ static void create_search (MenuPlugin *m)
 #endif
 }
 
-/* Handler for keyboard events while menu is open */
-#ifdef LXPLUG
-static gboolean handle_key_presses (GtkWidget *widget, GdkEventKey *event, gpointer user_data)
-{
-    MenuPlugin *m = (MenuPlugin *) user_data;
-
-    if (event->keyval == GDK_KEY_Super_L)
-    {
-        gtk_menu_popdown (GTK_MENU (m->menu));
-        return TRUE;
-    }
-    if ((event->keyval >= 'a' && event->keyval <= 'z') ||
-        (event->keyval >= 'A' && event->keyval <= 'Z'))
-    {
-        if (!m->swin) do_search (m, event);
-        else append_to_entry (m->srch, event->keyval);
-        return TRUE;
-    }
-
-    return FALSE;
-}
-#endif
-
 /* Handlers for system menu items */
 
 static void handle_menu_item_activate (GtkMenuItem *mi, MenuPlugin *m)
 {
     FmFileInfo *fi = g_object_get_qdata (G_OBJECT (mi), sys_menu_item_quark);
 
-#ifdef LXPLUG
-    lxpanel_launch_path (m->panel, fm_file_info_get_path (fi));
-#else
     fm_launch_path_simple (NULL, NULL, fm_file_info_get_path (fi), _open_dir_in_file_manager, NULL);
-#endif
 }
 
 static void handle_menu_item_add_to_desktop (GtkMenuItem *, GtkWidget* mi)
@@ -537,6 +483,7 @@ static void handle_menu_item_add_to_desktop (GtkMenuItem *, GtkWidget* mi)
     fm_link_files (NULL, files, fm_path_get_desktop ());
     fm_path_list_unref (files);
 }
+
 #ifndef LXPLUG
 static void handle_menu_item_add_to_launcher (GtkMenuItem *, GtkWidget* mi)
 {
@@ -544,6 +491,7 @@ static void handle_menu_item_add_to_launcher (GtkMenuItem *, GtkWidget* mi)
     add_to_launcher (fm_file_info_get_name (fi));
 }
 #endif
+
 static void handle_menu_item_properties (GtkMenuItem *, GtkWidget* mi)
 {
     FmFileInfo *fi = g_object_get_qdata (G_OBJECT (mi), sys_menu_item_quark);
@@ -567,7 +515,7 @@ static void handle_menu_item_data_get (FmDndSrc *ds, GtkWidget *mi)
 
     fm_dnd_src_set_file (ds, fi);
 }
-#ifndef LXPLUG
+
 static void show_context_menu (GtkWidget* mi)
 {
     GtkWidget *item, *menu;
@@ -578,9 +526,11 @@ static void show_context_menu (GtkWidget* mi)
     g_signal_connect (item, "activate", G_CALLBACK (handle_menu_item_add_to_desktop), mi);
     gtk_menu_shell_append (GTK_MENU_SHELL (menu), item);
 
+#ifndef LXPLUG
     item = gtk_menu_item_new_with_label (_("Add to Launcher"));
     g_signal_connect (item, "activate", G_CALLBACK (handle_menu_item_add_to_launcher), mi);
     gtk_menu_shell_append (GTK_MENU_SHELL (menu), item);
+#endif
 
     item = gtk_separator_menu_item_new ();
     gtk_menu_shell_append (GTK_MENU_SHELL (menu), item);
@@ -600,12 +550,10 @@ static void show_context_menu (GtkWidget* mi)
     g_signal_connect (mi, "deselect", G_CALLBACK (handle_restore_submenu), item);
     gtk_widget_show_all (menu);
 }
-#endif
+
 static gboolean handle_menu_item_button_press (GtkWidget* mi, GdkEventButton* evt, MenuPlugin* m)
 {
-#ifndef LXPLUG
     longpress = FALSE;
-#endif
     if (evt->button == 1)
     {
         /* allow drag on clicked item */
@@ -619,34 +567,52 @@ static gboolean handle_menu_item_button_press (GtkWidget* mi, GdkEventButton* ev
 
         /* don't make duplicates */
         if (g_signal_handler_find (mi, G_SIGNAL_MATCH_FUNC, 0, 0, NULL, handle_restore_submenu, NULL)) return FALSE;
-#ifdef LXPLUG
-        menu = gtk_menu_new ();
-
-        item = gtk_menu_item_new_with_label (_("Add to desktop"));
-        g_signal_connect (item, "activate", G_CALLBACK (handle_menu_item_add_to_desktop), mi);
-        gtk_menu_shell_append (GTK_MENU_SHELL (menu), item);
-
-        item = gtk_separator_menu_item_new ();
-        gtk_menu_shell_append (GTK_MENU_SHELL (menu), item);
-
-        item = gtk_menu_item_new_with_label (_("Properties"));
-        g_signal_connect (item, "activate", G_CALLBACK (handle_menu_item_properties), mi);
-        gtk_menu_shell_append (GTK_MENU_SHELL (menu), item);
-
-        item = gtk_menu_item_get_submenu (GTK_MENU_ITEM (mi)); /* reuse it */
-        if (item)
-        {
-            /* set object data to keep reference on the submenu we preserve */
-            g_object_set_data_full (G_OBJECT (mi), "PanelMenuItemSubmenu", g_object_ref (item), g_object_unref);
-            gtk_menu_popdown (GTK_MENU (item));
-        }
-        gtk_menu_item_set_submenu (GTK_MENU_ITEM (mi), menu);
-        g_signal_connect (mi, "deselect", G_CALLBACK (handle_restore_submenu), item);
-        gtk_widget_show_all (menu);
-#else
         show_context_menu (mi);
-#endif
     }
+    return FALSE;
+}
+
+/* Handler for keyboard events while menu is open */
+
+static gboolean handle_key_presses (GtkWidget *, GdkEventKey *event, gpointer user_data)
+{
+    MenuPlugin *m = (MenuPlugin *) user_data;
+
+    if ((event->keyval >= 'a' && event->keyval <= 'z') ||
+        (event->keyval >= 'A' && event->keyval <= 'Z'))
+    {
+#ifndef LXPLUG
+        gtk_widget_hide (m->menu);
+#endif
+        if (!m->swin) create_search (m);
+        gtk_entry_set_text (GTK_ENTRY (m->srch), "");
+        append_to_entry (m->srch, event->keyval);
+        return TRUE;
+    }
+
+#ifdef LXPLUG
+    if (event->keyval == GDK_KEY_Super_L)
+    {
+        gtk_menu_popdown (GTK_MENU (m->menu));
+        return TRUE;
+    }
+#else
+    if (event->keyval == GDK_KEY_Return)
+    {
+        GtkWidget *menu = gtk_menu_shell_get_selected_item (GTK_MENU_SHELL (m->menu));
+        GtkWidget *submenu = gtk_menu_item_get_submenu (GTK_MENU_ITEM (menu));
+        if (submenu)
+        {
+            GtkWidget *subitem = gtk_menu_shell_get_selected_item (GTK_MENU_SHELL (submenu));
+            if (subitem)
+            {
+                handle_menu_item_activate (GTK_MENU_ITEM (subitem), m);
+                gtk_widget_hide (m->menu);
+                return TRUE;
+            }
+        }
+    }
+#endif
     return FALSE;
 }
 
@@ -667,52 +633,12 @@ static gboolean handle_menu_item_button_release (GtkWidget* mi, GdkEventButton*,
     return TRUE;
 }
 
-
-/* Handler for keyboard events while menu is open */
-
-static gboolean handle_key_presses (GtkWidget *, GdkEventKey *event, gpointer user_data)
-{
-    MenuPlugin *m = (MenuPlugin *) user_data;
-
-    if ((event->keyval >= 'a' && event->keyval <= 'z') ||
-        (event->keyval >= 'A' && event->keyval <= 'Z'))
-    {
-        gtk_widget_hide (m->menu);
-        create_search (m);
-        gtk_entry_set_text (GTK_ENTRY (m->srch), "");
-        append_to_entry (m->srch, event->keyval);
-        return TRUE;
-    }
-
-    if (event->keyval == GDK_KEY_Return)
-    {
-        GtkWidget *menu = gtk_menu_shell_get_selected_item (GTK_MENU_SHELL (m->menu));
-        GtkWidget *submenu = gtk_menu_item_get_submenu (GTK_MENU_ITEM (menu));
-        if (submenu)
-        {
-            GtkWidget *subitem = gtk_menu_shell_get_selected_item (GTK_MENU_SHELL (submenu));
-            if (subitem)
-            {
-                handle_menu_item_activate (GTK_MENU_ITEM (subitem), m);
-                gtk_widget_hide (m->menu);
-                return TRUE;
-            }
-        }
-    }
-
-    return FALSE;
-}
-
-
-/* Functions to create system menu items */
-
 static void handle_menu_item_gesture_pressed (GtkGestureLongPress *, gdouble, gdouble, GtkWidget *)
 {
     longpress = TRUE;
 }
-
-
 #endif
+
 /* Functions to create system menu items */
 
 static GtkWidget *create_system_menu_item (MenuCacheItem *item, MenuPlugin *m)
@@ -1021,13 +947,8 @@ static GtkWidget *read_menu_item (MenuPlugin *m, char *fname, char *cmd)
     if (fname)
     {
         img = gtk_image_new ();
-#ifdef LXPLUG
-        pixbuf = gtk_icon_theme_load_icon (panel_get_icon_theme (m->panel), fname,
-            panel_get_safe_icon_size (m->panel), GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
-#else
         pixbuf = gtk_icon_theme_load_icon (gtk_icon_theme_get_default (), fname,
-            m->icon_size, GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
-#endif
+            wrap_icon_size (m), GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
         if (pixbuf)
         {
             gtk_image_set_from_pixbuf (GTK_IMAGE (img), pixbuf);
@@ -1261,11 +1182,9 @@ static GtkWidget *menu_constructor (LXPanel *panel, config_setting_t *settings)
     int val;
     const char *fname;
 
-#ifdef ENABLE_NLS
     setlocale (LC_ALL, "");
     bindtextdomain (GETTEXT_PACKAGE, PACKAGE_LOCALE_DIR);
     bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
-#endif
 
     /* Allocate top level widget and set into plugin widget pointer. */
     m->panel = panel;
@@ -1351,7 +1270,7 @@ void menu_init (MenuPlugin *m)
 #ifdef LXPLUG
         return NULL;
 #else
-	return;
+        return;
 #endif
     }
 
