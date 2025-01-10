@@ -66,18 +66,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #endif
 
 #include "menu.h"
+
 #ifndef LXPLUG
 #include "launcher.h"
 #endif
 
 static gboolean longpress;
-
-#ifndef LXPLUG
-static void handle_menu_item_activate (GtkMenuItem *mi, MenuPlugin *);
-
-const char *logout_cmd = "lxde-pi-shutdown-helper";
-#endif
-
 
 GQuark sys_menu_item_quark = 0;
 
@@ -89,28 +83,13 @@ typedef struct {
 
 extern void gtk_run (void);
 #ifdef LXPLUG
-extern void restart (void);
 extern void logout (void);
 #else
-void restart (void) {};
-void mlogout (void)
-{
-    const char* l_logout_cmd = logout_cmd;
-    /* If LXSession is running, _LXSESSION_PID will be set */
-    if( ! l_logout_cmd && getenv("_LXSESSION_PID") )
-        l_logout_cmd = "lxsession-logout";
-
-    if( l_logout_cmd )
-        fm_launch_command_simple(NULL, NULL, 0, l_logout_cmd, NULL);
-    else
-        fm_show_error(NULL, NULL, _("Logout command is not set"));
-}
-
+void mlogout (void) { fm_launch_command_simple (NULL, NULL, 0, "lxde-pi-shutdown-helper", NULL); }
 #endif
 
 static Command commands[] = {
     { "run", N_("Run"), gtk_run },
-    { "restart", N_("Restart"), restart },
 #ifdef LXPLUG
     { "logout", N_("Logout"), logout },
 #else
@@ -828,33 +807,17 @@ static void handle_menu_hidden (GtkWidget *, gpointer user_data)
 }
 #endif
 
-#ifdef LXPLUG
-static GtkWidget *read_menu_item (MenuPlugin *m, config_setting_t *s)
-#else
 static GtkWidget *read_menu_item (MenuPlugin *m, char *fname, char *cmd)
-#endif
 {
     const gchar *name = NULL;
     Command *cmd_entry = NULL;
     GtkWidget *item, *box, *label, *img;
     GdkPixbuf *pixbuf;
-#ifdef LXPLUG
-    const gchar *fname = NULL, *cmd = NULL;
-#endif
 
-#ifdef LXPLUG
-    config_setting_lookup_string (s, "name", &name);
-    config_setting_lookup_string (s, "image", &fname);
-    if (config_setting_lookup_string (s, "command", &cmd))
+    for (cmd_entry = commands; cmd_entry->name; cmd_entry++)
     {
-#endif
-        for (cmd_entry = commands; cmd_entry->name; cmd_entry++)
-        {
-            if (!g_ascii_strcasecmp (cmd, cmd_entry->name)) break;
-        }
-#ifdef LXPLUG
+        if (!g_ascii_strcasecmp (cmd, cmd_entry->name)) break;
     }
-#endif
 
     item = gtk_menu_item_new ();
     box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, MENU_ICON_SPACE);
@@ -895,7 +858,7 @@ static GtkWidget *read_menu_item (MenuPlugin *m, char *fname, char *cmd)
 void handle_popped_up (GtkMenu *menu, gpointer, gpointer, gboolean, gboolean, MenuPlugin *)
 {
     GdkRectangle rect;
-    GtkWidget *win = gtk_widget_get_toplevel (GTK_WIDGET(menu));
+    GtkWidget *win = gtk_widget_get_toplevel (GTK_WIDGET (menu));
     GdkWindow *gwin = gtk_widget_get_window (win);
     GdkMonitor *mon = gdk_display_get_monitor_at_window (gdk_display_get_default (), gwin);
     gdk_monitor_get_geometry (mon, &rect);
@@ -909,11 +872,6 @@ void handle_popped_up (GtkMenu *menu, gpointer, gpointer, gboolean, gboolean, Me
 static gboolean create_menu (MenuPlugin *m)
 {
     GtkWidget *mi;
-#ifdef LXPLUG
-    const gchar *str;
-    config_setting_t *list, *s;
-    guint i;
-#endif
 
     m->menu = gtk_menu_new ();
     gtk_menu_set_reserve_toggle_size (GTK_MENU (m->menu), FALSE);
@@ -921,36 +879,9 @@ static gboolean create_menu (MenuPlugin *m)
     g_signal_connect (m->menu, "key-press-event", G_CALLBACK (handle_key_presses), m);
 #ifdef LXPLUG
     g_signal_connect (m->menu, "hide", G_CALLBACK (handle_menu_hidden), m);
-
-    list = config_setting_add (m->settings, "", PANEL_CONF_TYPE_LIST);
-    for (i = 0; (s = config_setting_get_elem (list, i)) != NULL; i++)
-    {
-        str = config_setting_get_name (s);
-        if (!g_ascii_strcasecmp (str, "item")) mi = read_menu_item (m, s);
-        else if (!g_ascii_strcasecmp (str, "separator")) mi = gtk_separator_menu_item_new ();
-        else if (!g_ascii_strcasecmp (str, "system")) 
-        {
-            read_system_menu (GTK_MENU (m->menu), m);
-            continue;
-        }
-        else 
-        {
-            g_warning ("menu: unknown block %s", str);
-            return FALSE;
-        }
-
-        if (!mi) 
-        {
-            g_warning ("menu: can't create menu item");
-            return FALSE;
-        }
-        gtk_widget_set_name (mi, "sysmenu");
-        gtk_widget_show (mi);
-        gtk_menu_shell_append (GTK_MENU_SHELL (m->menu), mi);
-    }
 #else
     g_signal_connect (m->menu, "popped-up", G_CALLBACK (handle_popped_up), m);
-
+#endif
     read_system_menu (GTK_MENU (m->menu), m);
 
     mi = gtk_separator_menu_item_new ();
@@ -967,7 +898,7 @@ static gboolean create_menu (MenuPlugin *m)
     gtk_widget_set_name (mi, "sysmenu");
     gtk_widget_show (mi);
     gtk_menu_shell_append (GTK_MENU_SHELL (m->menu), mi);
-#endif
+
     return TRUE;
 }
 
@@ -1042,7 +973,111 @@ void menu_show_menu (MenuPlugin *m)
 }
 #endif
 
+void menu_init (MenuPlugin *m)
+{
+#ifndef LXPLUG
+    fm_gtk_init (NULL);
+    fm_init (NULL);
+#endif
+
+    /* Allocate icon as a child of top level */
+    m->img = gtk_image_new ();
+    gtk_container_add (GTK_CONTAINER (m->plugin), m->img);
+    gtk_widget_set_tooltip_text (m->img, _("Click here to open applications menu"));
+
+    /* Set up button */
+    gtk_button_set_relief (GTK_BUTTON (m->plugin), GTK_RELIEF_NONE);
+#ifndef LXPLUG
+    g_signal_connect (m->plugin, "clicked", G_CALLBACK (menu_button_press_event), m);
+
+    /* Set up long press */
+    m->gesture = gtk_gesture_long_press_new (m->plugin);
+    gtk_gesture_single_set_touch_only (GTK_GESTURE_SINGLE (m->gesture), touch_only);
+    g_signal_connect (m->gesture, "pressed", G_CALLBACK (menu_gesture_pressed), m);
+    g_signal_connect (m->gesture, "end", G_CALLBACK (menu_gesture_end), m);
+    gtk_event_controller_set_propagation_phase (GTK_EVENT_CONTROLLER (m->gesture), GTK_PHASE_BUBBLE);
+
+    m->icon = g_strdup ("start-here");
+    m->padding = 4;
+#else
+    const char *fname;
+    int val;
+
+    /* Set up variables */
+    if (config_setting_lookup_string (m->settings, "image", &fname))
+        m->icon = g_strdup (fname);
+    else
+        m->icon = g_strdup ("start-here");
+    if (config_setting_lookup_int (m->settings, "padding", &val))
+        m->padding = val;
+    else
+        m->padding = 4;
+    if (config_setting_lookup_int (m->settings, "fixed", &val) && val == 1)
+        m->fixed = TRUE;
+    else
+        m->fixed = FALSE;
+#endif
+    m->applist = gtk_list_store_new (3, GDK_TYPE_PIXBUF, G_TYPE_STRING, G_TYPE_STRING);
+    m->ds = fm_dnd_src_new (NULL);
+    m->swin = NULL;
+    m->menu_cache = NULL;
+
+    /* Load the menu configuration */
+    create_menu (m);
+
+    /* Watch the icon theme and reload the menu if it changes */
+    g_signal_connect (gtk_icon_theme_get_default (), "changed", G_CALLBACK (handle_reload_menu), m);
+
+    /* Show the widget and return */
+    gtk_widget_show_all (m->plugin);
+}
+
+/* Plugin destructor */
+void menu_destructor (gpointer user_data)
+{
+    MenuPlugin *m = (MenuPlugin *) user_data;
+
+    g_signal_handlers_disconnect_matched (m->ds, G_SIGNAL_MATCH_FUNC, 0, 0, NULL, handle_menu_item_data_get, NULL);
+    g_object_unref (G_OBJECT (m->ds));
+
+    if (m->menu) gtk_widget_destroy (m->menu);
+    if (m->swin) destroy_search (m);
+    if (m->menu_cache)
+    {
+        menu_cache_remove_reload_notify (m->menu_cache, m->reload_notify);
+        menu_cache_unref (m->menu_cache);
+    }
+#ifndef LXPLUG
+    if (m->gesture) g_object_unref (m->gesture);
+    if (m->migesture) g_object_unref (m->migesture);
+#endif
+
+    g_free (m->icon);
+    g_free (m);
+}
+
 #ifdef LXPLUG
+/* Plugin constructor */
+static GtkWidget *menu_constructor (LXPanel *panel, config_setting_t *settings)
+{
+    /* Allocate and initialize plugin context */
+    MenuPlugin *m = g_new0 (MenuPlugin, 1);
+
+    setlocale (LC_ALL, "");
+    bindtextdomain (GETTEXT_PACKAGE, PACKAGE_LOCALE_DIR);
+    bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+
+    /* Allocate top level widget and set into plugin widget pointer. */
+    m->panel = panel;
+    m->settings = settings;
+    m->plugin = gtk_button_new ();
+    lxpanel_plugin_set_data (m->plugin, m, menu_destructor);
+
+    menu_init (m);
+
+    return m->plugin;
+}
+
 /* Handler for system config changed message from panel */
 static void menu_panel_configuration_changed (LXPanel *, GtkWidget *p)
 {
@@ -1072,143 +1107,7 @@ static void menu_panel_configuration_changed (LXPanel *, GtkWidget *p)
     }
     create_menu (m);
 }
-#endif
-/* Plugin destructor */
-void menu_destructor (gpointer user_data)
-{
-    MenuPlugin *m = (MenuPlugin *) user_data;
 
-    g_signal_handlers_disconnect_matched (m->ds, G_SIGNAL_MATCH_FUNC, 0, 0, NULL, handle_menu_item_data_get, NULL);
-    g_object_unref (G_OBJECT (m->ds));
-
-    if (m->menu) gtk_widget_destroy (m->menu);
-    if (m->swin) destroy_search (m);
-    if (m->menu_cache)
-    {
-        menu_cache_remove_reload_notify (m->menu_cache, m->reload_notify);
-        menu_cache_unref (m->menu_cache);
-    }
-#ifndef LXPLUG
-    if (m->gesture) g_object_unref (m->gesture);
-    if (m->migesture) g_object_unref (m->migesture);
-#endif
-
-    g_free (m->icon);
-    g_free (m);
-}
-
-/* Plugin constructor */
-#ifdef LXPLUG
-static GtkWidget *menu_constructor (LXPanel *panel, config_setting_t *settings)
-{
-    /* Allocate and initialize plugin context */
-    MenuPlugin *m = g_new0 (MenuPlugin, 1);
-    config_setting_t *s;
-    int val;
-    const char *fname;
-
-    setlocale (LC_ALL, "");
-    bindtextdomain (GETTEXT_PACKAGE, PACKAGE_LOCALE_DIR);
-    bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
-
-    /* Allocate top level widget and set into plugin widget pointer. */
-    m->panel = panel;
-    m->settings = settings;
-    m->plugin = gtk_button_new ();
-    lxpanel_plugin_set_data (m->plugin, m, menu_destructor);
-#else
-void menu_init (MenuPlugin *m)
-{
-    fm_gtk_init (NULL);
-    fm_init (NULL);
-#endif
-    /* Allocate icon as a child of top level */
-    m->img = gtk_image_new ();
-    gtk_container_add (GTK_CONTAINER (m->plugin), m->img);
-    gtk_widget_set_tooltip_text (m->img, _("Click here to open applications menu"));
-
-    /* Set up button */
-    gtk_button_set_relief (GTK_BUTTON (m->plugin), GTK_RELIEF_NONE);
-#ifndef LXPLUG
-    g_signal_connect (m->plugin, "clicked", G_CALLBACK (menu_button_press_event), m);
-
-    /* Set up long press */
-    m->gesture = gtk_gesture_long_press_new (m->plugin);
-    gtk_gesture_single_set_touch_only (GTK_GESTURE_SINGLE (m->gesture), touch_only);
-    g_signal_connect (m->gesture, "pressed", G_CALLBACK (menu_gesture_pressed), m);
-    g_signal_connect (m->gesture, "end", G_CALLBACK (menu_gesture_end), m);
-    gtk_event_controller_set_propagation_phase (GTK_EVENT_CONTROLLER (m->gesture), GTK_PHASE_BUBBLE);
-
-    m->icon = g_strdup ("start-here");
-    m->padding = 4;
-
-#else
-
-    /* Check if configuration exists */
-    settings = config_setting_add (settings, "", PANEL_CONF_TYPE_LIST);
-    if (config_setting_get_elem (settings, 0) == NULL)
-    {
-        /* Create default menu if not */
-        config_group_set_string (m->settings, "image", "start-here");
-        config_group_set_int (m->settings, "padding", 4);
-
-        config_setting_add (settings, "system", PANEL_CONF_TYPE_GROUP);
-
-        config_setting_add (settings, "separator", PANEL_CONF_TYPE_GROUP);
-        s = config_setting_add (settings, "item", PANEL_CONF_TYPE_GROUP);
-        config_group_set_string (s, "command", "run");
-        config_group_set_string (s, "image", "system-run");
-
-        config_setting_add (settings, "separator", PANEL_CONF_TYPE_GROUP);
-        s = config_setting_add (settings, "item", PANEL_CONF_TYPE_GROUP);
-        config_group_set_string (s, "command", "logout");
-        config_group_set_string (s, "image", "system-shutdown");
-    }
-
-    /* Set up variables */
-    if (config_setting_lookup_string (m->settings, "image", &fname))
-        m->icon = g_strdup (fname);
-    else
-        m->icon = g_strdup ("start-here");
-    if (config_setting_lookup_int (m->settings, "padding", &val))
-        m->padding = val;
-    else
-        m->padding = 4;
-    if (config_setting_lookup_int (m->settings, "fixed", &val) && val == 1)
-        m->fixed = TRUE;
-    else
-        m->fixed = FALSE;
-#endif
-    m->applist = gtk_list_store_new (3, GDK_TYPE_PIXBUF, G_TYPE_STRING, G_TYPE_STRING);
-    m->ds = fm_dnd_src_new (NULL);
-    m->swin = NULL;
-#ifndef LXPLUG
-    m->menu_cache = NULL;
-#endif
-    /* Load the menu configuration */
-    if (!create_menu (m))
-    {
-        g_warning ("menu: plugin init failed");
-        gtk_widget_destroy (m->img);
-        gtk_widget_destroy (m->menu);
-        gtk_widget_destroy (m->plugin);
-#ifdef LXPLUG
-        return NULL;
-#else
-        return;
-#endif
-    }
-
-    /* Watch the icon theme and reload the menu if it changes */
-    g_signal_connect (gtk_icon_theme_get_default (), "changed", G_CALLBACK (handle_reload_menu), m);
-
-    /* Show the widget and return */
-    gtk_widget_show_all (m->plugin);
-#ifdef LXPLUG
-    return m->plugin;
-#endif
-}
-#ifdef LXPLUG
 /* Handler to make changes from configure dialog */
 static gboolean menu_apply_config (gpointer user_data)
 {
