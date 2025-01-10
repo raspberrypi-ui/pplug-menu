@@ -355,19 +355,16 @@ static void create_search (MenuPlugin *m)
     g_signal_connect (m->swin, "destroy", G_CALLBACK (search_destroyed), m);
 
     m->rheight = 0;
-    m->height = gtk_widget_get_allocated_height (m->menu);
 
-#ifdef LXPLUG
-    /* set desired height of search window */
-    if (!m->fixed && panel_is_at_bottom (m->panel)) g_signal_connect (m->swin, "size-allocate", G_CALLBACK (handle_search_resize), m);
-#endif
     /* realise */
     wrap_popup_at_button (m, m->swin, m->plugin);
+    resize_search (m);
 
 #ifdef LXPLUG
     gtk_widget_hide (m->menu);
-    /* resize window */
-    resize_search (m);
+
+    /* resize window as needed */
+    if (!m->fixed && panel_is_at_bottom (m->panel)) g_signal_connect (m->swin, "size-allocate", G_CALLBACK (handle_search_resize), m);
 #endif
 }
 
@@ -771,7 +768,6 @@ static void read_system_menu (GtkMenu *menu, MenuPlugin *m)
     }
 }
 
-
 /* Functions to create individual menu items from panel config */
 
 static void handle_run_command (GtkWidget *, gpointer data)
@@ -779,14 +775,6 @@ static void handle_run_command (GtkWidget *, gpointer data)
     void (*cmd) (void) = (void *) data;
     cmd ();
 }
-
-#ifdef LXPLUG
-static void handle_menu_hidden (GtkWidget *, gpointer user_data)
-{
-    MenuPlugin *m = (MenuPlugin *) user_data;
-    if (m->swin && !gtk_widget_is_visible (m->swin)) m->swin = NULL;
-}
-#endif
 
 static GtkWidget *read_menu_item (MenuPlugin *m, char *disp_name, char *icon, void (*cmd)(void))
 {
@@ -815,7 +803,13 @@ static GtkWidget *read_menu_item (MenuPlugin *m, char *disp_name, char *icon, vo
     return item;
 }
 
-#ifndef LXPLUG
+#ifdef LXPLUG
+static void handle_menu_hidden (GtkWidget *, gpointer user_data)
+{
+    MenuPlugin *m = (MenuPlugin *) user_data;
+    if (m->swin && !gtk_widget_is_visible (m->swin)) m->swin = NULL;
+}
+#else
 void handle_popped_up (GtkMenu *menu, gpointer, gpointer, gboolean, gboolean, MenuPlugin *)
 {
     GdkRectangle rect;
@@ -973,6 +967,10 @@ void menu_init (MenuPlugin *m)
         m->fixed = TRUE;
     else
         m->fixed = FALSE;
+    if (config_setting_lookup_int (m->settings, "height", &val))
+        m->height = val;
+    else
+        m->height = 300;
 #endif
     m->applist = gtk_list_store_new (3, GDK_TYPE_PIXBUF, G_TYPE_STRING, G_TYPE_STRING);
     m->ds = fm_dnd_src_new (NULL);
@@ -1078,6 +1076,7 @@ static gboolean menu_apply_config (gpointer user_data)
     config_group_set_string (m->settings, "image", m->icon);
     config_group_set_int (m->settings, "padding", m->padding);
     config_group_set_int (m->settings, "fixed", m->fixed);
+    config_group_set_int (m->settings, "height", m->height);
 
     lxpanel_plugin_set_taskbar_icon (m->panel, m->img, m->icon);
     gtk_widget_set_size_request (m->img, panel_get_safe_icon_size (m->panel) + 2 * m->padding, -1);
@@ -1093,6 +1092,7 @@ static GtkWidget *menu_configure (LXPanel *panel, GtkWidget *p)
                                        _("Icon"), &m->icon, CONF_TYPE_STR,
                                        _("Padding"), &m->padding, CONF_TYPE_INT,
                                        _("Fixed Size"), &m->fixed, CONF_TYPE_BOOL,
+                                       _("Search Window Height"), &m->height, CONF_TYPE_INT,
                                        NULL);
 }
 
