@@ -148,9 +148,6 @@ static gboolean _open_dir_in_file_manager (GAppLaunchContext* ctx, GList* folder
 static void destroy_search (MenuPlugin *m)
 {
 #ifdef LXPLUG
-    g_signal_handlers_disconnect_matched (m->swin, G_SIGNAL_MATCH_DATA, 0, 0, NULL, NULL, m);
-    g_signal_handlers_disconnect_matched (m->srch, G_SIGNAL_MATCH_DATA, 0, 0, NULL, NULL, m);
-    g_signal_handlers_disconnect_matched (m->stv, G_SIGNAL_MATCH_DATA, 0, 0, NULL, NULL, m);
     gtk_widget_destroy (m->swin);
 #else
     close_popup ();
@@ -325,26 +322,6 @@ static void handle_list_select (GtkTreeView *tv, GtkTreePath *path, GtkTreeViewC
 }
 
 #ifdef LXPLUG
-static gboolean handle_search_mapped (GtkWidget *widget, GdkEvent *event, gpointer user_data)
-{
-    gdk_seat_grab (gdk_display_get_default_seat (gdk_display_get_default ()), gtk_widget_get_window (widget), GDK_SEAT_CAPABILITY_ALL_POINTING, TRUE, NULL, NULL, NULL, NULL);
-    return FALSE;
-}
-
-static gboolean handle_search_button_press (GtkWidget *widget, GdkEventButton *event, gpointer user_data)
-{
-    MenuPlugin *m = (MenuPlugin *) user_data;
-    int x, y;
-
-    gtk_window_get_size (GTK_WINDOW (widget), &x, &y);
-    if (event->x < 0 || event->y < 0 || event->x > x || event->y > y)
-    {
-        destroy_search (m);
-        gdk_seat_ungrab (gdk_display_get_default_seat (gdk_display_get_default ()));
-    }
-    return FALSE;
-}
-
 static void handle_search_resize (GtkWidget *self, GtkAllocation *alloc, gpointer user_data)
 {
     MenuPlugin *m = (MenuPlugin *) user_data;
@@ -353,14 +330,16 @@ static void handle_search_resize (GtkWidget *self, GtkAllocation *alloc, gpointe
     lxpanel_plugin_popup_set_position_helper (m->panel, m->plugin, m->swin, &x, &y);
     gdk_window_move (gtk_widget_get_window (m->swin), x, y);
 }
+#endif
 
-#else
 static void search_destroyed (GtkWidget *, gpointer data)
 {
     MenuPlugin *m = (MenuPlugin *) data;
+    g_signal_handlers_disconnect_matched (m->swin, G_SIGNAL_MATCH_DATA, 0, 0, NULL, NULL, m);
+    g_signal_handlers_disconnect_matched (m->srch, G_SIGNAL_MATCH_DATA, 0, 0, NULL, NULL, m);
+    g_signal_handlers_disconnect_matched (m->stv, G_SIGNAL_MATCH_DATA, 0, 0, NULL, NULL, m);
     m->swin = NULL;
 }
-#endif
 
 static void create_search (MenuPlugin *m)
 {
@@ -372,16 +351,7 @@ static void create_search (MenuPlugin *m)
 
     /* create the window */
     m->swin = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-#ifdef LXPLUG
-    gtk_window_set_decorated (GTK_WINDOW (m->swin), FALSE);
-    gtk_window_set_type_hint (GTK_WINDOW (m->swin), GDK_WINDOW_TYPE_HINT_POPUP_MENU);
-    gtk_window_set_skip_taskbar_hint (GTK_WINDOW (m->swin), TRUE);
-    g_signal_connect (m->swin, "map-event", G_CALLBACK (handle_search_mapped), m);
-    g_signal_connect (m->swin, "button-press-event", G_CALLBACK (handle_search_button_press), m);
-    if (!m->fixed && panel_is_at_bottom (m->panel)) g_signal_connect (m->swin, "size-allocate", G_CALLBACK (handle_search_resize), m);
-#else
     gtk_widget_set_name (m->swin, "panelpopup");
-#endif
 
     /* add a box */
     box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
@@ -422,30 +392,21 @@ static void create_search (MenuPlugin *m)
     gtk_tree_view_set_headers_visible (GTK_TREE_VIEW (m->stv), FALSE);
     gtk_tree_view_set_enable_search (GTK_TREE_VIEW (m->stv), FALSE);
 
-#ifdef LXPLUG
-    /* realise the window to set sizes */
-    gtk_widget_show_all (m->swin);
-    gtk_widget_hide (m->swin);
-
-    /* set desired height of search window */
-    m->height = gtk_widget_get_allocated_height (m->menu) - gtk_widget_get_allocated_height (m->srch);
-
-    /* size and move */
-    lxpanel_plugin_popup_set_position_helper (m->panel, m->plugin, m->swin, &x, &y);
-    gtk_widget_show_all (m->swin);
-    gtk_window_present (GTK_WINDOW (m->swin));
-    gdk_window_move (gtk_widget_get_window (m->swin), x, y);
-    gtk_widget_grab_focus (m->srch);
-    gtk_widget_hide (m->menu);
-#else
-    /* realise */
     g_signal_connect (m->swin, "destroy", G_CALLBACK (search_destroyed), m);
-    popup_window_at_button (m->swin, m->plugin);
-#endif
 
-    /* resize window */
     m->rheight = 0;
+
 #ifdef LXPLUG
+    /* set desired height of search window */
+    if (!m->fixed && panel_is_at_bottom (m->panel)) g_signal_connect (m->swin, "size-allocate", G_CALLBACK (handle_search_resize), m);
+    m->height = gtk_widget_get_allocated_height (m->menu) - gtk_widget_get_allocated_height (m->srch);
+#endif
+    /* realise */
+    wrap_popup_at_button (m, m->swin, m->plugin);
+
+#ifdef LXPLUG
+    gtk_widget_hide (m->menu);
+    /* resize window */
     resize_search (m);
 #endif
 }
