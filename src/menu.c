@@ -183,18 +183,19 @@ static void resize_search (MenuPlugin *m)
 {
     GtkTreePath *path;
     GdkRectangle rect;
-    int nrows, height = m->height;
+    int nrows, height;
 
     if (m->fixed)
     {
-#ifndef LXPLUG
-        height -= gtk_widget_get_allocated_height (m->srch);
-#endif
+        height = m->height - gtk_widget_get_allocated_height (m->srch);
         nrows = height;
     }
     else
     {
-#ifndef LXPLUG
+#ifdef LXPLUG
+        gdk_monitor_get_geometry (gdk_display_get_monitor_at_window (gdk_display_get_default (), m->panel), &rect);
+        height = rect.height - gtk_widget_get_allocated_height (m->panel) - gtk_widget_get_allocated_height (m->srch);
+#else
         gdk_monitor_get_geometry (gtk_layer_get_monitor (GTK_WINDOW (m->swin)), &rect);
         height = (rect.height - gtk_layer_get_exclusive_zone (find_panel (m->plugin)))
             - gtk_widget_get_allocated_height (m->srch);
@@ -395,11 +396,11 @@ static void create_search (MenuPlugin *m)
     g_signal_connect (m->swin, "destroy", G_CALLBACK (search_destroyed), m);
 
     m->rheight = 0;
+    m->height = gtk_widget_get_allocated_height (m->menu);
 
 #ifdef LXPLUG
     /* set desired height of search window */
     if (!m->fixed && panel_is_at_bottom (m->panel)) g_signal_connect (m->swin, "size-allocate", G_CALLBACK (handle_search_resize), m);
-    m->height = gtk_widget_get_allocated_height (m->menu) - gtk_widget_get_allocated_height (m->srch);
 #endif
     /* realise */
     wrap_popup_at_button (m, m->swin, m->plugin);
