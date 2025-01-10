@@ -230,7 +230,7 @@ static gboolean handle_search_keypress (GtkWidget *, GdkEventKey *event, gpointe
     GtkTreePath *path;
     gchar *str;
     FmPath *fpath;
-    int nrows = 1;
+    int nrows;
 
     switch (event->keyval)
     {
@@ -243,16 +243,17 @@ static gboolean handle_search_keypress (GtkWidget *, GdkEventKey *event, gpointe
                                     fm_launch_path_simple (NULL, NULL, fpath, _open_dir_in_file_manager, NULL);
                                     fm_path_unref (fpath);
                                 }
+                                destroy_search (m);
+                                return TRUE;
 
 #ifdef LXPLUG
         case GDK_KEY_Escape :   destroy_search (m);
-#else
-                                destroy_search (m);
-#endif
                                 return TRUE;
+#endif
 
-        case GDK_KEY_Up :       nrows = gtk_tree_model_iter_n_children (gtk_tree_view_get_model (GTK_TREE_VIEW (m->stv)), NULL) - 1;
-        case GDK_KEY_Down :     path = gtk_tree_path_new_from_indices (nrows, -1);
+        case GDK_KEY_Up :
+        case GDK_KEY_Down :     nrows = event->keyval == GDK_KEY_Down ? 1 : gtk_tree_model_iter_n_children (gtk_tree_view_get_model (GTK_TREE_VIEW (m->stv)), NULL) - 1;
+                                path = gtk_tree_path_new_from_indices (nrows, -1);
                                 gtk_tree_view_set_cursor (GTK_TREE_VIEW (m->stv), path, NULL, FALSE);
                                 gtk_tree_path_free (path);
                                 gtk_widget_grab_focus (m->stv);
