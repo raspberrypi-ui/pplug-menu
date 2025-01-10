@@ -921,18 +921,14 @@ void menu_update_display (MenuPlugin *m)
 static void menu_show_menu (GtkWidget *p)
 {
     MenuPlugin *m = lxpanel_plugin_get_data (p);
-
-    if (m->swin) destroy_search (m);
-    else gtk_menu_popup_at_widget (GTK_MENU (m->menu), m->plugin, GDK_GRAVITY_SOUTH_WEST, GDK_GRAVITY_NORTH_WEST, NULL);
-}
 #else
 void menu_show_menu (MenuPlugin *m)
 {
+#endif
     if (gtk_widget_is_visible (m->menu)) gtk_menu_popdown (GTK_MENU (m->menu));
     else if (m->swin && gtk_widget_is_visible (m->swin)) destroy_search (m);
-    else show_menu_with_kbd (m->plugin, m->menu);
+    else wrap_show_menu (m->plugin, m->menu);
 }
-#endif
 
 void menu_init (MenuPlugin *m)
 {
