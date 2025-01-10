@@ -75,28 +75,8 @@ static gboolean longpress;
 
 GQuark sys_menu_item_quark = 0;
 
-typedef struct {
-    char *name;
-    char *disp_name;
-    void (*cmd)(void);
-} Command;
-
 extern void gtk_run (void);
-#ifdef LXPLUG
-extern void logout (void);
-#else
 void mlogout (void) { fm_launch_command_simple (NULL, NULL, 0, "lxde-pi-shutdown-helper", NULL); }
-#endif
-
-static Command commands[] = {
-    { "run", N_("Run"), gtk_run },
-#ifdef LXPLUG
-    { "logout", N_("Logout"), logout },
-#else
-    { "logout", N_("Logout"), mlogout },
-#endif
-    { NULL, NULL, NULL },
-};
 
 /* Open a specified path in a file manager. */
 static gboolean _open_dir_in_file_manager (GAppLaunchContext* ctx, GList* folder_infos,
@@ -807,46 +787,26 @@ static void handle_menu_hidden (GtkWidget *, gpointer user_data)
 }
 #endif
 
-static GtkWidget *read_menu_item (MenuPlugin *m, char *fname, char *cmd)
+static GtkWidget *read_menu_item (MenuPlugin *m, char *disp_name, char *icon, void (*cmd)(void))
 {
-    const gchar *name = NULL;
-    Command *cmd_entry = NULL;
     GtkWidget *item, *box, *label, *img;
     GdkPixbuf *pixbuf;
-
-    for (cmd_entry = commands; cmd_entry->name; cmd_entry++)
-    {
-        if (!g_ascii_strcasecmp (cmd, cmd_entry->name)) break;
-    }
 
     item = gtk_menu_item_new ();
     box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, MENU_ICON_SPACE);
     gtk_container_add (GTK_CONTAINER (item), box);
     gtk_container_set_border_width (GTK_CONTAINER (item), 0);
 
-    if (cmd_entry && cmd_entry->name)
-    {
-        label = gtk_label_new (name ? name : _(cmd_entry->disp_name));
-        g_signal_connect (G_OBJECT (item), "activate", (GCallback) handle_run_command, cmd_entry->cmd);
-    }
-    else
-    {
-        gtk_widget_destroy (item);
-        gtk_widget_destroy (box);
-        return NULL;
-    }
+    label = gtk_label_new (disp_name);
+    g_signal_connect (G_OBJECT (item), "activate", (GCallback) handle_run_command, cmd);
 
-    if (fname)
+    img = gtk_image_new ();
+    pixbuf = gtk_icon_theme_load_icon (gtk_icon_theme_get_default (), icon, wrap_icon_size (m), GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
+    if (pixbuf)
     {
-        img = gtk_image_new ();
-        pixbuf = gtk_icon_theme_load_icon (gtk_icon_theme_get_default (), fname,
-            wrap_icon_size (m), GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
-        if (pixbuf)
-        {
-            gtk_image_set_from_pixbuf (GTK_IMAGE (img), pixbuf);
-            g_object_unref (pixbuf);
-            gtk_container_add (GTK_CONTAINER (box), img);
-        }
+        gtk_image_set_from_pixbuf (GTK_IMAGE (img), pixbuf);
+        g_object_unref (pixbuf);
+        gtk_container_add (GTK_CONTAINER (box), img);
     }
     gtk_container_add (GTK_CONTAINER (box), label);
     gtk_widget_show_all (box);
@@ -889,12 +849,12 @@ static gboolean create_menu (MenuPlugin *m)
     gtk_widget_show (mi);
     gtk_menu_shell_append (GTK_MENU_SHELL (m->menu), mi);
 
-    mi = read_menu_item (m, "system-run", "run");
+    mi = read_menu_item (m, _("Run"), "system-run", gtk_run);
     gtk_widget_set_name (mi, "sysmenu");
     gtk_widget_show (mi);
     gtk_menu_shell_append (GTK_MENU_SHELL (m->menu), mi);
 
-    mi = read_menu_item (m, "system-shutdown", "logout");
+    mi = read_menu_item (m, _("Logout"), "system-shutdown", mlogout);
     gtk_widget_set_name (mi, "sysmenu");
     gtk_widget_show (mi);
     gtk_menu_shell_append (GTK_MENU_SHELL (m->menu), mi);
