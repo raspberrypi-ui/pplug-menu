@@ -193,8 +193,8 @@ static void resize_search (MenuPlugin *m)
     else
     {
 #ifdef LXPLUG
-        gdk_monitor_get_geometry (gdk_display_get_monitor_at_window (gdk_display_get_default (), m->panel), &rect);
-        height = rect.height - gtk_widget_get_allocated_height (m->panel) - gtk_widget_get_allocated_height (m->srch);
+        gdk_monitor_get_geometry (gdk_display_get_monitor_at_window (gdk_display_get_default (), GDK_WINDOW (m->panel)), &rect);
+        height = rect.height - gtk_widget_get_allocated_height (GTK_WIDGET (&(m->panel->window))) - gtk_widget_get_allocated_height (m->srch);
 #else
         gdk_monitor_get_geometry (gtk_layer_get_monitor (GTK_WINDOW (m->swin)), &rect);
         height = (rect.height - gtk_layer_get_exclusive_zone (find_panel (m->plugin)))
@@ -323,7 +323,7 @@ static void handle_list_select (GtkTreeView *tv, GtkTreePath *path, GtkTreeViewC
 }
 
 #ifdef LXPLUG
-static void handle_search_resize (GtkWidget *self, GtkAllocation *alloc, gpointer user_data)
+static void handle_search_resize (GtkWidget *, GtkAllocation *, gpointer user_data)
 {
     MenuPlugin *m = (MenuPlugin *) user_data;
     int x, y;
@@ -348,7 +348,6 @@ static void create_search (MenuPlugin *m)
     GtkTreeModelSort *slist;
     GtkTreeModelFilter *flist;
     GtkWidget *box;
-    gint x, y;
 
     /* create the window */
     m->swin = gtk_window_new (GTK_WINDOW_TOPLEVEL);
@@ -414,7 +413,7 @@ static void create_search (MenuPlugin *m)
 
 /* Handlers for system menu items */
 
-static void handle_menu_item_activate (GtkMenuItem *mi, MenuPlugin *m)
+static void handle_menu_item_activate (GtkMenuItem *mi, MenuPlugin *)
 {
     FmFileInfo *fi = g_object_get_qdata (G_OBJECT (mi), sys_menu_item_quark);
 
@@ -510,8 +509,6 @@ static gboolean handle_menu_item_button_press (GtkWidget* mi, GdkEventButton* ev
     }
     else if (evt->button == 3)
     {
-        GtkWidget *item, *menu;
-
         /* don't make duplicates */
         if (g_signal_handler_find (mi, G_SIGNAL_MATCH_FUNC, 0, 0, NULL, handle_restore_submenu, NULL)) return FALSE;
         show_context_menu (mi);
@@ -828,11 +825,13 @@ static void handle_run_command (GtkWidget *, gpointer data)
     cmd ();
 }
 
-static void handle_menu_hidden (GtkWidget *self, gpointer user_data)
+#ifdef LXPLUG
+static void handle_menu_hidden (GtkWidget *, gpointer user_data)
 {
     MenuPlugin *m = (MenuPlugin *) user_data;
     if (m->swin && !gtk_widget_is_visible (m->swin)) m->swin = NULL;
 }
+#endif
 
 #ifdef LXPLUG
 static GtkWidget *read_menu_item (MenuPlugin *m, config_setting_t *s)
@@ -991,7 +990,7 @@ static gboolean create_menu (MenuPlugin *m)
 
 /* Handler for menu button click */
 #ifdef LXPLUG
-static gboolean menu_button_press_event (GtkWidget *widget, GdkEventButton *event, LXPanel *panel)
+static gboolean menu_button_press_event (GtkWidget *widget, GdkEventButton *event, LXPanel *)
 {
     MenuPlugin *m = lxpanel_plugin_get_data (widget);
 
@@ -1054,15 +1053,15 @@ static void menu_show_menu (GtkWidget *p)
 #else
 void menu_show_menu (MenuPlugin *m)
 {
-    //MenuPlugin *m = lxpanel_plugin_get_data (p);
     if (gtk_widget_is_visible (m->menu)) gtk_menu_popdown (GTK_MENU (m->menu));
     else if (m->swin && gtk_widget_is_visible (m->swin)) destroy_search (m);
     else show_menu_with_kbd (m->plugin, m->menu);
 }
 #endif
+
 #ifdef LXPLUG
 /* Handler for system config changed message from panel */
-static void menu_panel_configuration_changed (LXPanel *panel, GtkWidget *p)
+static void menu_panel_configuration_changed (LXPanel *, GtkWidget *p)
 {
     MenuPlugin *m = lxpanel_plugin_get_data (p);
     const char *fname;
@@ -1092,11 +1091,7 @@ static void menu_panel_configuration_changed (LXPanel *panel, GtkWidget *p)
 }
 #endif
 /* Plugin destructor */
-#ifdef LXPLUG
-static void menu_destructor (gpointer user_data)
-#else
 void menu_destructor (gpointer user_data)
-#endif
 {
     MenuPlugin *m = (MenuPlugin *) user_data;
 
