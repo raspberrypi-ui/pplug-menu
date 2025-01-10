@@ -116,7 +116,7 @@ static Command commands[] = {
 #else
     { "logout", N_("Logout"), mlogout },
 #endif
-    { NULL, NULL },
+    { NULL, NULL, NULL },
 };
 
 /* Open a specified path in a file manager. */
@@ -814,11 +814,6 @@ static void read_system_menu (GtkMenu *menu, MenuPlugin *m)
 
 /* Functions to create individual menu items from panel config */
 
-static void handle_spawn_app (GtkWidget *, gpointer data)
-{
-    if (data) fm_launch_command_simple (NULL, NULL, 0, data, NULL);
-}
-
 static void handle_run_command (GtkWidget *, gpointer data)
 {
     void (*cmd) (void) = (void *) data;
@@ -839,22 +834,17 @@ static GtkWidget *read_menu_item (MenuPlugin *m, config_setting_t *s)
 static GtkWidget *read_menu_item (MenuPlugin *m, char *fname, char *cmd)
 #endif
 {
-#ifdef LXPLUG
-    const gchar *name, *fname, *action, *cmd;
-#else
-    const gchar *name = NULL, *action = NULL;
-#endif
+    const gchar *name = NULL;
     Command *cmd_entry = NULL;
-    char *tmp;
     GtkWidget *item, *box, *label, *img;
     GdkPixbuf *pixbuf;
+#ifdef LXPLUG
+    const gchar *fname = NULL, *cmd = NULL;
+#endif
 
 #ifdef LXPLUG
-    name = fname = action = cmd = NULL;
     config_setting_lookup_string (s, "name", &name);
     config_setting_lookup_string (s, "image", &fname);
-    config_setting_lookup_string (s, "action", &action);
-
     if (config_setting_lookup_string (s, "command", &cmd))
     {
 #endif
@@ -875,13 +865,6 @@ static GtkWidget *read_menu_item (MenuPlugin *m, char *fname, char *cmd)
     {
         label = gtk_label_new (name ? name : _(cmd_entry->disp_name));
         g_signal_connect (G_OBJECT (item), "activate", (GCallback) handle_run_command, cmd_entry->cmd);
-    }
-    else if (action)
-    {
-        label = gtk_label_new (name ? name : "");
-        tmp = g_strdup (action);
-        g_object_weak_ref (G_OBJECT (item), (GWeakNotify) g_free, tmp);
-        g_signal_connect (G_OBJECT (item), "activate", (GCallback) handle_spawn_app, tmp);
     }
     else
     {
