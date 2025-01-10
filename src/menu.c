@@ -361,8 +361,6 @@ static void create_search (MenuPlugin *m)
     resize_search (m);
 
 #ifdef LXPLUG
-    gtk_widget_hide (m->menu);
-
     /* resize window as needed */
     if (!m->fixed && panel_is_at_bottom (m->panel)) g_signal_connect (m->swin, "size-allocate", G_CALLBACK (handle_search_resize), m);
 #endif
@@ -482,9 +480,7 @@ static gboolean handle_key_presses (GtkWidget *, GdkEventKey *event, gpointer us
     if ((event->keyval >= 'a' && event->keyval <= 'z') ||
         (event->keyval >= 'A' && event->keyval <= 'Z'))
     {
-#ifndef LXPLUG
         gtk_widget_hide (m->menu);
-#endif
         if (!m->swin) create_search (m);
         gtk_entry_set_text (GTK_ENTRY (m->srch), "");
         append_to_entry (m->srch, event->keyval);
