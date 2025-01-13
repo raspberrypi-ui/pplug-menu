@@ -1,10 +1,10 @@
-/*
-Copyright (c) 2022 Raspberry Pi (Trading) Ltd.
+/*============================================================================
+Copyright (c) 2022-2025 Raspberry Pi Holdings Ltd.
 All rights reserved.
 
-Based on lxpanel menu.c module; copyrights as follows:
+Some code taken from the lxpanel project
 
-Copyright (C) 2006-2010 Hong Jen Yee (PCMan) <pcman.tw@gmail.com>
+Copyright (c) 2006-2010 Hong Jen Yee (PCMan) <pcman.tw@gmail.com>
             2006-2008 Jim Huang <jserv.tw@gmail.com>
             2008 Fred Chien <fred@lxde.org>
             2009 Ying-Chun Liu (PaulLiu) <grandpaul@gmail.com>
@@ -38,8 +38,7 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
-
+============================================================================*/
 
 #define _GNU_SOURCE
 
@@ -544,11 +543,6 @@ static GtkWidget *create_system_menu_item (MenuCacheItem *item, MenuPlugin *m)
     GdkPixbuf *icon;
     FmPath *path;
     FmFileInfo *fi;
-#ifdef LXPLUG
-    FmIcon *fm_icon;
-#else
-    const char *icon_name;
-#endif
     char *mpath;
 
     if (menu_cache_item_get_type (item) == MENU_CACHE_TYPE_SEP)
@@ -576,13 +570,13 @@ static GtkWidget *create_system_menu_item (MenuCacheItem *item, MenuPlugin *m)
         g_object_set_qdata_full (G_OBJECT (mi), sys_menu_item_quark, fi, (GDestroyNotify) fm_file_info_unref);
 
 #ifdef LXPLUG
-        fm_icon = fm_file_info_get_icon (fi);
+        FmIcon *fm_icon = fm_file_info_get_icon (fi);
         if (fm_icon == NULL) fm_icon = fm_icon_from_name ("application-x-executable");
         icon = fm_pixbuf_from_icon_with_fallback (fm_icon, panel_get_safe_icon_size (m->panel), "application-x-executable");
         gtk_image_set_from_pixbuf (GTK_IMAGE (img), icon);
 #else
         icon = NULL;
-        icon_name = menu_cache_item_get_icon (item);
+        const char *icon_name = menu_cache_item_get_icon (item);
         if (icon_name)
         {
             if (strstr (icon_name, "/"))
@@ -853,7 +847,11 @@ static gboolean create_menu (MenuPlugin *m)
     return TRUE;
 }
 
-/* Handler for menu button click */
+/*----------------------------------------------------------------------------*/
+/* wf-panel plugin functions                                                  */
+/*----------------------------------------------------------------------------*/
+
+/* Handler for button click */
 #ifdef LXPLUG
 static gboolean menu_button_press_event (GtkWidget *widget, GdkEventButton *event, LXPanel *)
 {
@@ -861,7 +859,7 @@ static gboolean menu_button_press_event (GtkWidget *widget, GdkEventButton *even
 
     if (event->button == 1)
     {
-        gtk_menu_popup_at_widget (GTK_MENU (m->menu), widget, GDK_GRAVITY_SOUTH_WEST, GDK_GRAVITY_NORTH_WEST, NULL);
+        wrap_show_menu (m->plugin, m->menu);
         return TRUE;
     }
     return FALSE;
@@ -869,10 +867,14 @@ static gboolean menu_button_press_event (GtkWidget *widget, GdkEventButton *even
 #else
 static void menu_button_press_event (GtkWidget *, MenuPlugin *m)
 {
-    if (pressed != PRESS_LONG) show_menu_with_kbd (m->plugin, m->menu);
+    if (pressed != PRESS_LONG)
+    {
+        wrap_show_menu (m->plugin, m->menu);
+    }
     pressed = PRESS_NONE;
 }
 
+/* Handler for long press gesture */
 static void menu_gesture_pressed (GtkGestureLongPress *, gdouble x, gdouble y, MenuPlugin *)
 {
     pressed = PRESS_LONG;
@@ -884,18 +886,22 @@ static void menu_gesture_end (GtkGestureLongPress *, GdkEventSequence *, MenuPlu
 {
     if (pressed == PRESS_LONG) pass_right_click (m->plugin, press_x, press_y);
 }
+#endif
 
+/* Handler for system config changed message from panel */
 void menu_update_display (MenuPlugin *m)
 {
-    GdkPixbuf *pixbuf = gtk_icon_theme_load_icon (gtk_icon_theme_get_default (), m->icon, m->icon_size, GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
+    GdkPixbuf *pixbuf = gtk_icon_theme_load_icon (gtk_icon_theme_get_default (), m->icon, wrap_icon_size (m), GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
     if (pixbuf)
     {
         gtk_image_set_from_pixbuf (GTK_IMAGE (m->img), pixbuf);
         g_object_unref (pixbuf);
     }
-    if (m->img) gtk_widget_set_size_request (m->img, m->icon_size + 2 * m->padding, -1);
+    if (m->img) gtk_widget_set_size_request (m->img, wrap_icon_size (m) + 2 * m->padding, -1);
 
+    if (m->applist) gtk_list_store_clear (m->applist);
     if (m->menu) gtk_widget_destroy (m->menu);
+    if (m->swin) destroy_search (m);
     if (m->menu_cache)
     {
         menu_cache_remove_reload_notify (m->menu_cache, m->reload_notify);
@@ -904,17 +910,10 @@ void menu_update_display (MenuPlugin *m)
     }
     create_menu (m);
 }
-#endif
 
-/* Handler for control message from system */
-#ifdef LXPLUG
-static void menu_show_menu (GtkWidget *p)
-{
-    MenuPlugin *m = lxpanel_plugin_get_data (p);
-#else
+/* Handler for control message */
 void menu_show_menu (MenuPlugin *m)
 {
-#endif
     if (gtk_widget_is_visible (m->menu)) gtk_menu_popdown (GTK_MENU (m->menu));
     else if (m->swin && gtk_widget_is_visible (m->swin)) destroy_search (m);
     else wrap_show_menu (m->plugin, m->menu);
@@ -943,18 +942,19 @@ void menu_init (MenuPlugin *m)
     g_signal_connect (m->gesture, "pressed", G_CALLBACK (menu_gesture_pressed), m);
     g_signal_connect (m->gesture, "end", G_CALLBACK (menu_gesture_end), m);
     gtk_event_controller_set_propagation_phase (GTK_EVENT_CONTROLLER (m->gesture), GTK_PHASE_BUBBLE);
-
-    m->icon = g_strdup ("start-here");
-    m->padding = 4;
-#else
-    const char *fname;
-    int val;
+#endif
 
     /* Set up variables */
-    if (config_setting_lookup_string (m->settings, "image", &fname))
-        m->icon = g_strdup (fname);
-    else
-        m->icon = g_strdup ("start-here");
+    m->icon = g_strdup ("start-here");
+    m->applist = gtk_list_store_new (3, GDK_TYPE_PIXBUF, G_TYPE_STRING, G_TYPE_STRING);
+    m->ds = fm_dnd_src_new (NULL);
+    m->swin = NULL;
+    m->menu_cache = NULL;
+
+#ifdef LXPLUG
+    /* Read settings */
+    int val;
+
     if (config_setting_lookup_int (m->settings, "padding", &val))
         m->padding = val;
     else
@@ -968,10 +968,6 @@ void menu_init (MenuPlugin *m)
     else
         m->height = 300;
 #endif
-    m->applist = gtk_list_store_new (3, GDK_TYPE_PIXBUF, G_TYPE_STRING, G_TYPE_STRING);
-    m->ds = fm_dnd_src_new (NULL);
-    m->swin = NULL;
-    m->menu_cache = NULL;
 
     /* Load the menu configuration */
     create_menu (m);
@@ -983,7 +979,6 @@ void menu_init (MenuPlugin *m)
     gtk_widget_show_all (m->plugin);
 }
 
-/* Plugin destructor */
 void menu_destructor (gpointer user_data)
 {
     MenuPlugin *m = (MenuPlugin *) user_data;
@@ -992,23 +987,32 @@ void menu_destructor (gpointer user_data)
     g_object_unref (G_OBJECT (m->ds));
 
     if (m->menu) gtk_widget_destroy (m->menu);
+#ifdef LXPLUG
     if (m->swin) destroy_search (m);
+#else
+    close_popup ();
+#endif
     if (m->menu_cache)
     {
         menu_cache_remove_reload_notify (m->menu_cache, m->reload_notify);
         menu_cache_unref (m->menu_cache);
     }
+    g_free (m->icon);
+
 #ifndef LXPLUG
     if (m->gesture) g_object_unref (m->gesture);
     if (m->migesture) g_object_unref (m->migesture);
 #endif
 
-    g_free (m->icon);
     g_free (m);
 }
 
+/*----------------------------------------------------------------------------*/
+/* LXPanel plugin functions                                                   */
+/*----------------------------------------------------------------------------*/
 #ifdef LXPLUG
-/* Plugin constructor */
+
+/* Constructor */
 static GtkWidget *menu_constructor (LXPanel *panel, config_setting_t *settings)
 {
     /* Allocate and initialize plugin context */
@@ -1033,59 +1037,38 @@ static GtkWidget *menu_constructor (LXPanel *panel, config_setting_t *settings)
 static void menu_panel_configuration_changed (LXPanel *, GtkWidget *p)
 {
     MenuPlugin *m = lxpanel_plugin_get_data (p);
-    const char *fname;
     int val;
 
     if (config_setting_lookup_int (m->settings, "padding", &val)) m->padding = val;
-    if (config_setting_lookup_string (m->settings, "image", &fname))
-    {
-        if (m->icon) g_free (m->icon);
-        m->icon = g_strdup (fname);
-    }
-
-    lxpanel_plugin_set_taskbar_icon (m->panel, m->img, m->icon);
-    gtk_widget_set_size_request (m->img, panel_get_safe_icon_size (m->panel) + 2 * m->padding, -1);
-
-    if (m->applist) gtk_list_store_clear (m->applist);
-
-    if (m->menu) gtk_widget_destroy (m->menu);
-    if (m->swin) destroy_search (m);
-    if (m->menu_cache)
-    {
-        menu_cache_remove_reload_notify (m->menu_cache, m->reload_notify);
-        menu_cache_unref (m->menu_cache);
-        m->menu_cache = NULL;
-    }
-    create_menu (m);
+    menu_update_display (m);
 }
 
-/* Handler to make changes from configure dialog */
+/* Handler for control message */
+static void menu_control (GtkWidget *p)
+{
+    MenuPlugin *m = lxpanel_plugin_get_data (p);
+    menu_show_menu (m);
+}
+
+/* Apply changes from config dialog */
 static gboolean menu_apply_config (gpointer user_data)
 {
-    MenuPlugin *m = lxpanel_plugin_get_data ((GtkWidget *) user_data);
+    MenuPlugin *m = lxpanel_plugin_get_data (GTK_WIDGET (user_data));
 
-    if (m->icon) 
-    {
-        lxpanel_plugin_set_taskbar_icon (m->panel, m->img, m->icon);
-        if (m->padding) gtk_widget_set_size_request (m->img, panel_get_safe_icon_size (m->panel) + 2 * m->padding, -1);
-    }
-    config_group_set_string (m->settings, "image", m->icon);
     config_group_set_int (m->settings, "padding", m->padding);
     config_group_set_int (m->settings, "fixed", m->fixed);
     config_group_set_int (m->settings, "height", m->height);
 
-    lxpanel_plugin_set_taskbar_icon (m->panel, m->img, m->icon);
     gtk_widget_set_size_request (m->img, panel_get_safe_icon_size (m->panel) + 2 * m->padding, -1);
 
     return FALSE;
 }
 
-/* Handler to create configure dialog */
+/* Display configuration dialog */
 static GtkWidget *menu_configure (LXPanel *panel, GtkWidget *p)
 {
     MenuPlugin *m = lxpanel_plugin_get_data (p);
     return lxpanel_generic_config_dlg (_("Menu"), panel, menu_apply_config, p,
-                                       _("Icon"), &m->icon, CONF_TYPE_STR,
                                        _("Padding"), &m->padding, CONF_TYPE_INT,
                                        _("Fixed Size"), &m->fixed, CONF_TYPE_BOOL,
                                        _("Search Window Height"), &m->height, CONF_TYPE_INT,
@@ -1094,7 +1077,7 @@ static GtkWidget *menu_configure (LXPanel *panel, GtkWidget *p)
 
 FM_DEFINE_MODULE (lxpanel_gtk, smenu)
 
-/* Plugin descriptor. */
+/* Plugin descriptor */
 LXPanelPluginInit fm_module_init_lxpanel_gtk = {
     .name = N_("Menu with Search"),
     .description = N_("Searchable Application Menu"),
@@ -1102,7 +1085,10 @@ LXPanelPluginInit fm_module_init_lxpanel_gtk = {
     .reconfigure = menu_panel_configuration_changed,
     .config = menu_configure,
     .button_press_event = menu_button_press_event,
-    .show_system_menu = menu_show_menu,
+    .show_system_menu = menu_control,
     .gettext_package = GETTEXT_PACKAGE
 };
 #endif
+
+/* End of file */
+/*----------------------------------------------------------------------------*/

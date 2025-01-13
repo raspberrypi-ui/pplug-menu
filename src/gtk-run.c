@@ -26,9 +26,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#define _GNU_SOURCE
 
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>

@@ -20,6 +20,7 @@ class WayfireSmenu : public WayfireWidget
 
     WfOption <int> icon_size {"panel/icon_size"};
     WfOption <std::string> bar_pos {"panel/position"};
+    WfOption <int> padding {"panel/smenu_padding"};
     WfOption <int> search_height {"panel/smenu_search_height"};
     WfOption <bool> search_fixed {"panel/smenu_search_fixed"};
     sigc::connection icon_timer;
@@ -35,6 +36,7 @@ class WayfireSmenu : public WayfireWidget
     void icon_size_changed_cb (void);
     void bar_pos_changed_cb (void);
     void search_param_changed_cb (void);
+    void padding_changed_cb (void);
     bool set_icon (void);
 };
 

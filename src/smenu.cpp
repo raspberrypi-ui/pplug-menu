@@ -5,7 +5,8 @@ extern "C" {
     WayfireWidget *create () { return new WayfireSmenu; }
     void destroy (WayfireWidget *w) { delete w; }
 
-    static constexpr conf_table_t conf_table[3] = {
+    static constexpr conf_table_t conf_table[4] = {
+        {CONF_INT,  "padding",          N_("Icon horizontal padding")},
         {CONF_INT,  "search_height",    N_("Search window height")},
         {CONF_BOOL, "search_fixed",     N_("Fix size of search window")},
         {CONF_NONE, NULL,               NULL}
@@ -33,6 +34,12 @@ void WayfireSmenu::search_param_changed_cb (void)
     m->fixed = search_fixed;
 }
 
+void WayfireSmenu::padding_changed_cb (void)
+{
+    m->padding = padding;
+    menu_update_display (m);
+}
+
 void WayfireSmenu::command (const char *cmd)
 {
     if (!g_strcmp0 (cmd, "menu")) menu_show_menu (m);
@@ -57,6 +64,7 @@ void WayfireSmenu::init (Gtk::HBox *container)
     m->icon_size = icon_size;
     m->height = search_height;
     m->fixed = search_fixed;
+    m->padding = padding;
     icon_timer = Glib::signal_idle().connect (sigc::mem_fun (*this, &WayfireSmenu::set_icon));
     bar_pos_changed_cb ();
 
@@ -68,6 +76,7 @@ void WayfireSmenu::init (Gtk::HBox *container)
     bar_pos.set_callback (sigc::mem_fun (*this, &WayfireSmenu::bar_pos_changed_cb));
     search_height.set_callback (sigc::mem_fun (*this, &WayfireSmenu::search_param_changed_cb));
     search_fixed.set_callback (sigc::mem_fun (*this, &WayfireSmenu::search_param_changed_cb));
+    padding.set_callback (sigc::mem_fun (*this, &WayfireSmenu::padding_changed_cb));
 }
 
 WayfireSmenu::~WayfireSmenu()
