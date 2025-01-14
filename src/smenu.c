@@ -40,21 +40,10 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ============================================================================*/
 
-#include <stdlib.h>
-#include <string.h>
 #include <locale.h>
-
-#include <gdk-pixbuf/gdk-pixbuf.h>
-#include <glib.h>
 #include <glib/gi18n.h>
-
 #include <menu-cache.h>
 #include <libfm/fm-gtk.h>
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <fcntl.h>
 
 #ifdef LXPLUG
 #include "plugin.h"
@@ -62,18 +51,34 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "lxutils.h"
 #endif
 
-#include "menu.h"
+#include "smenu.h"
 
 #ifndef LXPLUG
 #include "launcher.h"
 #endif
 
+/*----------------------------------------------------------------------------*/
+/* Typedefs and macros */
+/*----------------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------------*/
+/* Plug-in global data                                                        */
+/*----------------------------------------------------------------------------*/
+
 static gboolean longpress;
 
 GQuark sys_menu_item_quark = 0;
 
+/*----------------------------------------------------------------------------*/
+/* Prototypes                                                                 */
+/*----------------------------------------------------------------------------*/
+
 extern void gtk_run (void);
 void mlogout (void) { fm_launch_command_simple (NULL, NULL, 0, "lxde-pi-shutdown-helper", NULL); }
+
+/*----------------------------------------------------------------------------*/
+/* Function definitions                                                       */
+/*----------------------------------------------------------------------------*/
 
 /* Open a specified path in a file manager. */
 static gboolean _open_dir_in_file_manager (GAppLaunchContext* ctx, GList* folder_infos,

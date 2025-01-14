@@ -4,7 +4,7 @@ menu_cache = dependency('libmenu-cache')
 libfm = dependency('libfm-gtk3')
 
 lsources = files(
-  'menu.c',
+  'smenu.c',
   'gtk-run.c'
 )
 
