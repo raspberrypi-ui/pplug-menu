@@ -7,8 +7,8 @@ extern "C" {
 
     static constexpr conf_table_t conf_table[4] = {
         {CONF_INT,  "padding",          N_("Icon horizontal padding")},
+        {CONF_BOOL, "search_fixed",     N_("Fix height of search window")},
         {CONF_INT,  "search_height",    N_("Search window height")},
-        {CONF_BOOL, "search_fixed",     N_("Fix size of search window")},
         {CONF_NONE, NULL,               NULL}
     };
     const conf_table_t *config_params (void) { return conf_table; };

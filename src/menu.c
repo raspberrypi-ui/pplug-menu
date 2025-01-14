@@ -1067,9 +1067,9 @@ static GtkWidget *menu_configure (LXPanel *panel, GtkWidget *p)
 {
     MenuPlugin *m = lxpanel_plugin_get_data (p);
     return lxpanel_generic_config_dlg (_("Menu"), panel, menu_apply_config, p,
-                                       _("Padding"), &m->padding, CONF_TYPE_INT,
-                                       _("Fixed Size"), &m->fixed, CONF_TYPE_BOOL,
-                                       _("Search Window Height"), &m->height, CONF_TYPE_INT,
+                                       _("Icon horizontal padding"), &m->padding, CONF_TYPE_INT,
+                                       _("Fix height of search window"), &m->fixed, CONF_TYPE_BOOL,
+                                       _("Search window height"), &m->height, CONF_TYPE_INT,
                                        NULL);
 }
 
