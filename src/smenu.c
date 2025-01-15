@@ -927,7 +927,7 @@ void menu_init (MenuPlugin *m)
     g_signal_connect (m->plugin, "clicked", G_CALLBACK (menu_button_press_event), m);
 
     /* Set up long press */
-    m->gesture = add_long_press (m->plugin);
+    m->gesture = add_long_press (m->plugin, NULL, NULL);
 #endif
 
     /* Set up variables */
