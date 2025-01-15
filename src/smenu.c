@@ -876,19 +876,6 @@ static void menu_button_press_event (GtkWidget *, MenuPlugin *m)
     }
     pressed = PRESS_NONE;
 }
-
-/* Handler for long press gesture */
-static void menu_gesture_pressed (GtkGestureLongPress *, gdouble x, gdouble y, MenuPlugin *)
-{
-    pressed = PRESS_LONG;
-    press_x = x;
-    press_y = y;
-}
-
-static void menu_gesture_end (GtkGestureLongPress *, GdkEventSequence *, MenuPlugin *m)
-{
-    if (pressed == PRESS_LONG) pass_right_click (m->plugin, press_x, press_y);
-}
 #endif
 
 /* Handler for system config changed message from panel */
@@ -940,11 +927,7 @@ void menu_init (MenuPlugin *m)
     g_signal_connect (m->plugin, "clicked", G_CALLBACK (menu_button_press_event), m);
 
     /* Set up long press */
-    m->gesture = gtk_gesture_long_press_new (m->plugin);
-    gtk_gesture_single_set_touch_only (GTK_GESTURE_SINGLE (m->gesture), touch_only);
-    g_signal_connect (m->gesture, "pressed", G_CALLBACK (menu_gesture_pressed), m);
-    g_signal_connect (m->gesture, "end", G_CALLBACK (menu_gesture_end), m);
-    gtk_event_controller_set_propagation_phase (GTK_EVENT_CONTROLLER (m->gesture), GTK_PHASE_BUBBLE);
+    m->gesture = add_long_press (m->plugin);
 #endif
 
     /* Set up variables */
