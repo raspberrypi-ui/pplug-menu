@@ -855,28 +855,11 @@ static gboolean create_menu (MenuPlugin *m)
 /*----------------------------------------------------------------------------*/
 
 /* Handler for button click */
-#ifdef LXPLUG
-static gboolean menu_button_press_event (GtkWidget *widget, GdkEventButton *event, LXPanel *)
+static void menu_button_clicked (GtkWidget *, MenuPlugin *m)
 {
-    MenuPlugin *m = lxpanel_plugin_get_data (widget);
-
-    if (event->button == 1)
-    {
-        wrap_show_menu (m->plugin, m->menu);
-        return TRUE;
-    }
-    return FALSE;
+    CHECK_LONGPRESS
+    wrap_show_menu (m->plugin, m->menu);
 }
-#else
-static void menu_button_press_event (GtkWidget *, MenuPlugin *m)
-{
-    if (pressed != PRESS_LONG)
-    {
-        wrap_show_menu (m->plugin, m->menu);
-    }
-    pressed = PRESS_NONE;
-}
-#endif
 
 /* Handler for system config changed message from panel */
 void menu_update_display (MenuPlugin *m)
@@ -924,7 +907,7 @@ void menu_init (MenuPlugin *m)
     /* Set up button */
     gtk_button_set_relief (GTK_BUTTON (m->plugin), GTK_RELIEF_NONE);
 #ifndef LXPLUG
-    g_signal_connect (m->plugin, "clicked", G_CALLBACK (menu_button_press_event), m);
+    g_signal_connect (m->plugin, "clicked", G_CALLBACK (menu_button_clicked), m);
 
     /* Set up long press */
     m->gesture = add_long_press (m->plugin, NULL, NULL);
@@ -1019,10 +1002,22 @@ static GtkWidget *menu_constructor (LXPanel *panel, config_setting_t *settings)
     return m->plugin;
 }
 
-/* Handler for system config changed message from panel */
-static void menu_panel_configuration_changed (LXPanel *, GtkWidget *p)
+/* Handler for button press */
+static gboolean menu_button_press_event (GtkWidget *plugin, GdkEventButton *event, LXPanel *)
 {
-    MenuPlugin *m = lxpanel_plugin_get_data (p);
+    MenuPlugin *m = lxpanel_plugin_get_data (plugin);
+    if (event->button == 1)
+    {
+        menu_button_clicked (plugin, m);
+        return TRUE;
+    }
+    return FALSE;
+}
+
+/* Handler for system config changed message from panel */
+static void menu_panel_configuration_changed (LXPanel *, GtkWidget *plugin)
+{
+    MenuPlugin *m = lxpanel_plugin_get_data (plugin);
     int val;
 
     if (config_setting_lookup_int (m->settings, "padding", &val)) m->padding = val;
@@ -1030,9 +1025,9 @@ static void menu_panel_configuration_changed (LXPanel *, GtkWidget *p)
 }
 
 /* Handler for control message */
-static void menu_control (GtkWidget *p)
+static void menu_control (GtkWidget *plugin)
 {
-    MenuPlugin *m = lxpanel_plugin_get_data (p);
+    MenuPlugin *m = lxpanel_plugin_get_data (plugin);
     menu_show_menu (m);
 }
 
@@ -1051,10 +1046,11 @@ static gboolean menu_apply_config (gpointer user_data)
 }
 
 /* Display configuration dialog */
-static GtkWidget *menu_configure (LXPanel *panel, GtkWidget *p)
+static GtkWidget *menu_configure (LXPanel *panel, GtkWidget *plugin)
 {
-    MenuPlugin *m = lxpanel_plugin_get_data (p);
-    return lxpanel_generic_config_dlg (_("Menu"), panel, menu_apply_config, p,
+    MenuPlugin *m = lxpanel_plugin_get_data (plugin);
+
+    return lxpanel_generic_config_dlg (_("Menu"), panel, menu_apply_config, plugin,
                                        _("Icon horizontal padding"), &m->padding, CONF_TYPE_INT,
                                        _("Fix height of search window"), &m->fixed, CONF_TYPE_BOOL,
                                        _("Search window height"), &m->height, CONF_TYPE_INT,
