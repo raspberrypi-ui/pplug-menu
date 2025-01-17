@@ -40,6 +40,11 @@
 #include <libfm/fm-gtk.h>
 
 //#include "gtk-compat.h"
+#ifdef LXPLUG
+#include "plugin.h"
+#else
+#include "lxutils.h"
+#endif
 
 static GtkWidget* win = NULL; /* the run dialog */
 #ifndef DISABLE_MENU
