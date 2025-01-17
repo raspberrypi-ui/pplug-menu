@@ -1,32 +1,55 @@
-Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: pplug-menu
+Upstream-Contact: Simon Long <simon@raspberrypi.com>
+Source: https://github.com/raspberrypi-ui/pplug-menu/
 
 Files: *
-Copyright: Hong Jen Yee (PCMan)  <pcman.tw@gmail.com>
-           Jim Huang  <jserv.tw@gmail.com>
-           Greg McNew <gmcnew@gmail.com> (battery plugin)
-           Fred Chien <cfsghost@gmail.com>
-           Daniel Kesler <kesler.daniel@gmail.com>
-           Juergen Hoetzel <juergen@archlinux.org>
-           Marty Jack <martyj19@comcast.net>
-           Alexander Iliev <sasoiliev@mamul.org>
-           Andriy Grytsenko <andrej@rep.kiev.ua>
-           Giuseppe Penone <giuspen@gmail.com>
-           Piotr Sipika <piotr.sipika@gmail.com>
-           Federico Pelloni <federico.pelloni@gmail.com>
-           Simon Long <simon@raspberrypi.org>
-License: GPL-3
- This program is free software: you can redistribute it and/or modify
+Copyright: 2025 Simon Long <simon@raspberrypi.com>
+License: MIT
+
+Files: src/gtk-run.c
+Copyright (C) 2006-2010 Hong Jen Yee (PCMan) <pcman.tw@gmail.com>
+              2006-2008 Jim Huang <jserv.tw@gmail.com>
+              2008 Fred Chien <fred@lxde.org>
+              2009 Ying-Chun Liu (PaulLiu) <grandpaul@gmail.com>
+              2009-2010 Marty Jack <martyj19@comcast.net>
+              2012-2013 Henry Gebhardt <hsggebhardt@gmail.com>
+              2012 Piotr Sipika <Piotr.Sipika@gmail.com>
+              2014 Andriy Grytsenko <andrej@rep.kiev.ua>
+License: GPL-2+
+
+License: MIT
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ .
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
+ .
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
+
+License: GPL-2+
+ This package is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
+ the Free Software Foundation; either version 2 of the License, or
  (at your option) any later version.
  .
- This program is distributed in the hope that it will be useful,
+ This package is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details.
  .
  You should have received a copy of the GNU General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ along with this program. If not, see <http://www.gnu.org/licenses/>
  .
- The complete text of the GNU General Public License
- can be found in /usr/share/common-licenses/GPL-3 file.
+ On Debian systems, the complete text of the GNU General Public
+ License version 2 can be found in "/usr/share/common-licenses/GPL-2".
