@@ -894,6 +894,10 @@ void menu_show_menu (MenuPlugin *m)
 
 void menu_init (MenuPlugin *m)
 {
+    setlocale (LC_ALL, "");
+    bindtextdomain (GETTEXT_PACKAGE, PACKAGE_LOCALE_DIR);
+    bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+
 #ifndef LXPLUG
     fm_gtk_init (NULL);
     fm_init (NULL);
@@ -986,10 +990,6 @@ static GtkWidget *menu_constructor (LXPanel *panel, config_setting_t *settings)
 {
     /* Allocate and initialize plugin context */
     MenuPlugin *m = g_new0 (MenuPlugin, 1);
-
-    setlocale (LC_ALL, "");
-    bindtextdomain (GETTEXT_PACKAGE, PACKAGE_LOCALE_DIR);
-    bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 
     /* Allocate top level widget and set into plugin widget pointer. */
     m->panel = panel;
