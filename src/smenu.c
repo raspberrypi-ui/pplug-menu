@@ -611,9 +611,6 @@ static GtkWidget *create_system_menu_item (MenuCacheItem *item, MenuPlugin *m)
 
             gtk_widget_set_name (mi, "syssubmenu");
 #ifdef LXPLUG
-            const char *comment = menu_cache_item_get_comment (item);
-            if (comment) gtk_widget_set_tooltip_text (mi, comment);
-
             g_signal_connect (mi, "activate", G_CALLBACK (handle_menu_item_activate), m);
 #endif
         }
@@ -892,6 +889,12 @@ void menu_show_menu (MenuPlugin *m)
     else wrap_show_menu (m->plugin, m->menu);
 }
 
+/* Handler for padding update from variable watcher */
+void menu_set_padding (MenuPlugin *m)
+{
+    gtk_widget_set_size_request (m->img, panel_get_safe_icon_size (m->panel) + 2 * m->padding, -1);
+}
+
 void menu_init (MenuPlugin *m)
 {
     setlocale (LC_ALL, "");
@@ -923,24 +926,6 @@ void menu_init (MenuPlugin *m)
     m->ds = fm_dnd_src_new (NULL);
     m->swin = NULL;
     m->menu_cache = NULL;
-
-#ifdef LXPLUG
-    /* Read settings */
-    int val;
-
-    if (config_setting_lookup_int (m->settings, "padding", &val))
-        m->padding = val;
-    else
-        m->padding = 4;
-    if (config_setting_lookup_int (m->settings, "fixed", &val) && val == 1)
-        m->fixed = TRUE;
-    else
-        m->fixed = FALSE;
-    if (config_setting_lookup_int (m->settings, "height", &val))
-        m->height = val;
-    else
-        m->height = 300;
-#endif
 
     /* Load the menu configuration */
     create_menu (m);
@@ -997,6 +982,11 @@ static GtkWidget *menu_constructor (LXPanel *panel, config_setting_t *settings)
     m->plugin = gtk_button_new ();
     lxpanel_plugin_set_data (m->plugin, m, menu_destructor);
 
+    /* Read config */
+    if (!config_setting_lookup_int (m->settings, "padding", &m->padding)) m->padding = 4;
+    if (!config_setting_lookup_int (m->settings, "fixed", &m->fixed)) m->fixed = FALSE;
+    if (!config_setting_lookup_int (m->settings, "height", &m->height)) m->height = 300;
+
     menu_init (m);
 
     return m->plugin;
@@ -1018,9 +1008,6 @@ static gboolean menu_button_press_event (GtkWidget *plugin, GdkEventButton *even
 static void menu_panel_configuration_changed (LXPanel *, GtkWidget *plugin)
 {
     MenuPlugin *m = lxpanel_plugin_get_data (plugin);
-    int val;
-
-    if (config_setting_lookup_int (m->settings, "padding", &val)) m->padding = val;
     menu_update_display (m);
 }
 
@@ -1040,8 +1027,7 @@ static gboolean menu_apply_config (gpointer user_data)
     config_group_set_int (m->settings, "fixed", m->fixed);
     config_group_set_int (m->settings, "height", m->height);
 
-    gtk_widget_set_size_request (m->img, panel_get_safe_icon_size (m->panel) + 2 * m->padding, -1);
-
+    menu_set_padding (m);
     return FALSE;
 }
 

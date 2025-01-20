@@ -37,6 +37,7 @@ extern "C" {
 #include "smenu.h"
 extern void menu_init (MenuPlugin *m);
 extern void menu_update_display (MenuPlugin *m);
+extern void menu_set_padding (MenuPlugin *m);
 extern void menu_show_menu (MenuPlugin *m);
 extern void menu_destructor (gpointer user_data);
 }
@@ -47,10 +48,11 @@ class WayfireSmenu : public WayfireWidget
 
     WfOption <int> icon_size {"panel/icon_size"};
     WfOption <std::string> bar_pos {"panel/position"};
+    sigc::connection icon_timer;
+
     WfOption <int> padding {"panel/smenu_padding"};
     WfOption <int> search_height {"panel/smenu_search_height"};
     WfOption <bool> search_fixed {"panel/smenu_search_fixed"};
-    sigc::connection icon_timer;
 
     /* plugin */
     MenuPlugin *m;

@@ -59,12 +59,13 @@ void WayfireSmenu::search_param_changed_cb (void)
 {
     m->height = search_height;
     m->fixed = search_fixed;
+    // no need to do anything here - will update when next opened
 }
 
 void WayfireSmenu::padding_changed_cb (void)
 {
     m->padding = padding;
-    menu_update_display (m);
+    menu_set_padding (m);
 }
 
 void WayfireSmenu::command (const char *cmd)
@@ -101,6 +102,7 @@ void WayfireSmenu::init (Gtk::HBox *container)
     /* Setup callbacks */
     icon_size.set_callback (sigc::mem_fun (*this, &WayfireSmenu::icon_size_changed_cb));
     bar_pos.set_callback (sigc::mem_fun (*this, &WayfireSmenu::bar_pos_changed_cb));
+
     search_height.set_callback (sigc::mem_fun (*this, &WayfireSmenu::search_param_changed_cb));
     search_fixed.set_callback (sigc::mem_fun (*this, &WayfireSmenu::search_param_changed_cb));
     padding.set_callback (sigc::mem_fun (*this, &WayfireSmenu::padding_changed_cb));
