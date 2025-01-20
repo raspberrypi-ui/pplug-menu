@@ -1,69 +1,84 @@
+# English translations for wf-panel-pi package.
+# Copyright (C) 2024 Raspberry Pi Ltd
+# This file is distributed under the same license as the wf-panel-pi package.
+# Simon Long <simon@raspberrypi.com>, 2024.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: LxPanel\n"
+"Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-08-03 13:44+0100\n"
-"PO-Revision-Date: 2012-10-24 14:43+0200\n"
+"POT-Creation-Date: 2025-01-20 07:50+0000\n"
+"PO-Revision-Date: 2017-03-06 14:18+0000\n"
 "Last-Translator: Simon Long <simon@raspberrypi.com>\n"
-"Language-Team: English UK en_GB <yorvik.ubunto@googlemail.com>\n"
+"Language-Team: English (British)\n"
 "Language: en_GB\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Pootle 2.0.5\n"
-"X-Poedit-Language: English\n"
-"X-Poedit-SourceCharset: utf-8\n"
-"X-Poedit-Country: UNITED KINGDOM\n"
-"X-Pootle-Path: /en_GB/lxpanel/po/en_GB.po\n"
-"X-Pootle-Revision: 0\n"
 
-#: ../plugins/menu/menu.c:97
+#
+#: ../src/gtk-run.c:392 ../src/smenu.c:840
 msgid "Run"
 msgstr "Run..."
 
-#: ../plugins/menu/menu.c:98
-msgid "Restart"
-msgstr "Restart"
+#: ../src/gtk-run.c:396
+msgid "_Cancel"
+msgstr "_Cancel"
 
-#: ../plugins/menu/menu.c:99
-msgid "Logout"
-msgstr "Shutdown..."
+#: ../src/gtk-run.c:397
+msgid "_OK"
+msgstr "_OK"
 
-#: ../plugins/menu/menu.c:448
+#: ../src/gtk-run.c:413
+msgid "Enter the command you want to execute:"
+msgstr ""
+
+#: ../src/smenu.c:95
+msgid "No file manager is configured."
+msgstr ""
+
+#: ../src/smenu.c:428
 msgid "Add to desktop"
-msgstr "Add to desktop"
+msgstr "Add to Desktop"
 
-#: ../plugins/menu/menu.c:455
+#: ../src/smenu.c:433
+msgid "Add to Launcher"
+msgstr "Add to Launcher"
+
+#: ../src/smenu.c:441
 msgid "Properties"
 msgstr "Properties"
 
-#: ../plugins/menu/menu.c:888
+#: ../src/smenu.c:845
+msgid "Logout"
+msgstr "Shutdown..."
+
+#: ../src/smenu.c:909
 msgid "Click here to open applications menu"
 msgstr "Click here to open applications menu"
 
-#: ../plugins/menu/menu.c:974
+#: ../src/smenu.c:1053 ../src/smenu.cpp:42
 msgid "Menu"
 msgstr "Menu"
 
-#: ../plugins/menu/menu.c:975
-msgid "Icon"
-msgstr "Icon"
+#: ../src/smenu.c:1054 ../src/smenu.cpp:36
+msgid "Icon horizontal padding"
+msgstr ""
 
-#: ../plugins/menu/menu.c:976
-msgid "Padding"
-msgstr "Padding"
+#: ../src/smenu.c:1055 ../src/smenu.cpp:37
+#, fuzzy
+msgid "Fix height of search window"
+msgstr "Fix size of search window"
 
-#: ../plugins/menu/menu.c:977
-msgid "Fixed Size"
-msgstr "Fixed Size"
+#: ../src/smenu.c:1056 ../src/smenu.cpp:38
+msgid "Search window height"
+msgstr "Search window height"
 
-#: ../plugins/menu/menu.c:985
+#: ../src/smenu.c:1064
 msgid "Menu with Search"
 msgstr "Menu with Search"
 
-#: ../plugins/menu/menu.c:986
+#: ../src/smenu.c:1065
 msgid "Searchable Application Menu"
 msgstr "Searchable Application Menu"
-

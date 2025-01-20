@@ -1,2 +1,6 @@
 [encoding: UTF-8]
-plugins/menu/menu.c
+src/gtk-run.c
+src/smenu.c
+src/smenu.h
+src/smenu.cpp
+src/smenu.hpp
