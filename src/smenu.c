@@ -892,7 +892,7 @@ void menu_show_menu (MenuPlugin *m)
 /* Handler for padding update from variable watcher */
 void menu_set_padding (MenuPlugin *m)
 {
-    gtk_widget_set_size_request (m->img, panel_get_safe_icon_size (m->panel) + 2 * m->padding, -1);
+    gtk_widget_set_size_request (m->img, wrap_icon_size (m) + 2 * m->padding, -1);
 }
 
 void menu_init (MenuPlugin *m)
