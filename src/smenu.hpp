@@ -34,12 +34,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 extern "C" {
 #include <menu-cache.h>
 #include <libfm/fm-gtk.h>
+#include "lxutils.h"
 #include "smenu.h"
-extern void menu_init (MenuPlugin *m);
-extern void menu_update_display (MenuPlugin *m);
-extern void menu_set_padding (MenuPlugin *m);
-extern void menu_show_menu (MenuPlugin *m);
-extern void menu_destructor (gpointer user_data);
 }
 
 class WayfireSmenu : public WayfireWidget

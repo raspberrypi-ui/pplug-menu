@@ -25,6 +25,10 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ============================================================================*/
 
+/*----------------------------------------------------------------------------*/
+/* Typedefs and macros                                                        */
+/*----------------------------------------------------------------------------*/
+
 typedef struct 
 {
 #ifdef LXPLUG
@@ -54,6 +58,16 @@ typedef struct
     gpointer reload_notify;
     FmDndSrc *ds;
 } MenuPlugin;
+
+/*----------------------------------------------------------------------------*/
+/* Prototypes                                                                 */
+/*----------------------------------------------------------------------------*/
+
+extern void menu_init (MenuPlugin *m);
+extern void menu_update_display (MenuPlugin *m);
+extern void menu_set_padding (MenuPlugin *m);
+extern void menu_show_menu (MenuPlugin *m);
+extern void menu_destructor (gpointer user_data);
 
 /* End of file */
 /*----------------------------------------------------------------------------*/
