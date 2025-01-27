@@ -57,12 +57,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "launcher.h"
 #endif
 
+extern void gtk_run (void);
+
 /*----------------------------------------------------------------------------*/
 /* Typedefs and macros                                                        */
 /*----------------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------------*/
-/* Plug-in global data                                                        */
+/* Global data                                                                */
 /*----------------------------------------------------------------------------*/
 
 static gboolean longpress;
@@ -73,14 +75,51 @@ GQuark sys_menu_item_quark = 0;
 /* Prototypes                                                                 */
 /*----------------------------------------------------------------------------*/
 
-extern void gtk_run (void);
-void mlogout (void) { fm_launch_command_simple (NULL, NULL, 0, "lxde-pi-shutdown-helper", NULL); }
+static gboolean _open_dir_in_file_manager (GAppLaunchContext *ctx, GList *folder_infos, gpointer, GError **err);
+static void destroy_search (MenuPlugin *m);
+static gboolean filter_apps (GtkTreeModel *model, GtkTreeIter *iter, gpointer user_data);
+static void append_to_entry (GtkWidget *entry, char val);
+static void resize_search (MenuPlugin *m);
+static void handle_search_changed (GtkEditable *, gpointer user_data);
+static gboolean handle_list_keypress (GtkWidget *, GdkEventKey *event, gpointer user_data);
+static gboolean handle_search_keypress (GtkWidget *, GdkEventKey *event, gpointer user_data);
+static void handle_list_select (GtkTreeView *tv, GtkTreePath *path, GtkTreeViewColumn *, gpointer user_data);
+static void search_destroyed (GtkWidget *, gpointer data);
+static void create_search (MenuPlugin *m);
+static void handle_menu_item_activate (GtkMenuItem *mi, MenuPlugin *);
+static void handle_menu_item_properties (GtkMenuItem *, GtkWidget* mi);
+static void handle_restore_submenu (GtkMenuItem *mi, GtkWidget *submenu);
+static void handle_menu_item_data_get (FmDndSrc *ds, GtkWidget *mi);
+static void show_context_menu (GtkWidget* mi);
+static gboolean handle_menu_item_button_press (GtkWidget* mi, GdkEventButton* evt, MenuPlugin* m);
+static gboolean handle_key_presses (GtkWidget *, GdkEventKey *event, gpointer user_data);
+static GtkWidget *create_system_menu_item (MenuCacheItem *item, MenuPlugin *m);
+static int sys_menu_load_submenu (MenuPlugin* m, MenuCacheDir* dir, GtkWidget* menu, int pos);
+static void sys_menu_insert_items (MenuPlugin *m, GtkMenu *menu, int position);
+static void reload_system_menu (MenuPlugin *m, GtkMenu *menu);
+static void handle_reload_menu (MenuCache *, gpointer user_data);
+static void read_system_menu (GtkMenu *menu, MenuPlugin *m);
+static void handle_run_command (GtkWidget *, gpointer data);
+static GtkWidget *read_menu_item (MenuPlugin *m, char *disp_name, char *icon, void (*cmd)(void));
+static void mlogout (void);
+static gboolean create_menu (MenuPlugin *m);
+static void menu_button_clicked (GtkWidget *, MenuPlugin *m);
+#ifdef LXPLUG
+static void handle_search_resize (GtkWidget *, GtkAllocation *, gpointer user_data);
+static void handle_menu_hidden (GtkWidget *, gpointer user_data);
+#else
+static void handle_menu_item_add_to_launcher (GtkMenuItem *, GtkWidget* mi);
+static gboolean handle_menu_item_button_release (GtkWidget* mi, GdkEventButton*, MenuPlugin* m);
+static void handle_menu_item_gesture_pressed (GtkGestureLongPress *, gdouble, gdouble, GtkWidget *);
+static void handle_popped_up (GtkMenu *menu, gpointer, gpointer, gboolean, gboolean, MenuPlugin *);
+#endif
 
 /*----------------------------------------------------------------------------*/
 /* Function definitions                                                       */
 /*----------------------------------------------------------------------------*/
 
-/* Open a specified path in a file manager. */
+/* Open a specified path in a file manager */
+
 static gboolean _open_dir_in_file_manager (GAppLaunchContext* ctx, GList* folder_infos,
                                           gpointer, GError** err)
 {
@@ -800,7 +839,7 @@ static void handle_menu_hidden (GtkWidget *, gpointer user_data)
     if (m->swin && !gtk_widget_is_visible (m->swin)) m->swin = NULL;
 }
 #else
-void handle_popped_up (GtkMenu *menu, gpointer, gpointer, gboolean, gboolean, MenuPlugin *)
+static void handle_popped_up (GtkMenu *menu, gpointer, gpointer, gboolean, gboolean, MenuPlugin *)
 {
     GdkRectangle rect;
     GtkWidget *win = gtk_widget_get_toplevel (GTK_WIDGET (menu));
@@ -812,6 +851,11 @@ void handle_popped_up (GtkMenu *menu, gpointer, gpointer, gboolean, gboolean, Me
     gdk_window_resize (gwin, gdk_window_get_width (gwin), height);
 }
 #endif
+
+static void mlogout (void)
+{
+    fm_launch_command_simple (NULL, NULL, 0, "lxde-pi-shutdown-helper", NULL);
+}
 
 /* Top level function to read in menu data from panel configuration */
 static gboolean create_menu (MenuPlugin *m)

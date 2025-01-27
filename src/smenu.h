@@ -31,6 +31,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 typedef struct 
 {
+    GtkWidget *plugin;
+
 #ifdef LXPLUG
     LXPanel *panel;                 /* Back pointer to panel */
     config_setting_t *settings;     /* Plugin settings */
@@ -40,7 +42,7 @@ typedef struct
     GtkGesture *gesture;
     GtkGesture *migesture;
 #endif
-    GtkWidget *plugin;              /* Back pointer to the widget */
+
     GtkWidget *img;                 /* Taskbar icon */
     GtkWidget *menu;                /* Menu */
     GtkWidget *swin;                /* Search window popup */
