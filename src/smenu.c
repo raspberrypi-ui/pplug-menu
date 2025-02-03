@@ -959,9 +959,6 @@ void menu_init (MenuPlugin *m)
     gtk_button_set_relief (GTK_BUTTON (m->plugin), GTK_RELIEF_NONE);
 #ifndef LXPLUG
     g_signal_connect (m->plugin, "clicked", G_CALLBACK (menu_button_clicked), m);
-
-    /* Set up long press */
-    m->gesture = add_long_press (m->plugin, NULL, NULL);
 #endif
 
     /* Set up variables */
@@ -1002,7 +999,6 @@ void menu_destructor (gpointer user_data)
     g_free (m->icon);
 
 #ifndef LXPLUG
-    if (m->gesture) g_object_unref (m->gesture);
     if (m->migesture) g_object_unref (m->migesture);
 #endif
 

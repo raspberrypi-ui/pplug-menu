@@ -26,6 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ============================================================================*/
 
 #include <glibmm.h>
+#include "gtk-utils.hpp"
 #include "smenu.hpp"
 
 extern "C" {
@@ -95,6 +96,9 @@ void WayfireSmenu::init (Gtk::HBox *container)
     m->padding = padding;
     icon_timer = Glib::signal_idle().connect (sigc::mem_fun (*this, &WayfireSmenu::set_icon));
     bar_pos_changed_cb ();
+
+    /* Add long press for right click */
+    gesture = add_longpress_default (*plugin);
 
     /* Initialise the plugin */
     menu_init (m);
