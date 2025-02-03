@@ -1,72 +1,86 @@
-# Slovak translation of lxpanel
-# Copyright (C) 2006 lxde team
-# This file is distributed under the same license as the lxpanel package.
-# Ivan Masár <helix84@centrum.sk>, 2007, 2009, 2010.
+# Slovak translations for PACKAGE package.
+# Copyright (C) 2017 THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
 # Jose Riha <jose1711 gmail com>, 2020.
+#
 msgid ""
 msgstr ""
-"Project-Id-Version: lxpanel\n"
+"Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-08-03 13:44+0100\n"
-"PO-Revision-Date: 2020-12-21 01:36+0100\n"
+"POT-Creation-Date: 2025-02-03 11:07+0000\n"
+"PO-Revision-Date: 2025-01-31 22:27+0100\n"
 "Last-Translator: Jose Riha <jose1711@gmail.com>\n"
-"Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
-"Language: sk_SK\n"
+"Language-Team: Slovak\n"
+"Language: sk\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
-"X-Generator: Poedit 2.4.1\n"
-"X-Pootle-Revision: 0\n"
-"X-Pootle-Path: /sk/lxpanel/po/sk.po\n"
-"X-POOTLE-MTIME: 1550955553.433579\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 3.5\n"
 
-#: ../plugins/menu/menu.c:97
+#: ../src/gtk-run.c:392 ../src/smenu.c:881
 msgid "Run"
 msgstr "Spustiť"
 
-#: ../plugins/menu/menu.c:98
-msgid "Restart"
-msgstr "Reštartovať"
+#: ../src/gtk-run.c:396
+msgid "_Cancel"
+msgstr "_Zrušiť"
 
-#: ../plugins/menu/menu.c:99
-msgid "Logout"
-msgstr "Odhlásiť"
+#: ../src/gtk-run.c:397
+msgid "_OK"
+msgstr "_OK"
 
-#: ../plugins/menu/menu.c:448
+#: ../src/gtk-run.c:413
+msgid "Enter the command you want to execute:"
+msgstr "Zadajte príkaz, ktorý chcete spustiť:"
+
+#: ../src/smenu.c:134
+msgid "No file manager is configured."
+msgstr "Nie je nastavený žiaden správca súborov."
+
+#: ../src/smenu.c:467
 msgid "Add to desktop"
 msgstr "Pridať na plochu"
 
-#: ../plugins/menu/menu.c:455
+#: ../src/smenu.c:472
+msgid "Add to Launcher"
+msgstr ""
+
+#: ../src/smenu.c:480
 msgid "Properties"
 msgstr "Vlastnosti"
 
-#: ../plugins/menu/menu.c:888
+#: ../src/smenu.c:886
+msgid "Logout"
+msgstr "Odhlásiť"
+
+#: ../src/smenu.c:956
 msgid "Click here to open applications menu"
 msgstr "Kliknite sem pre ponuky programov"
 
-#: ../plugins/menu/menu.c:974
+#: ../src/smenu.c:1079 ../src/smenu.cpp:43
 msgid "Menu"
 msgstr "Ponuka"
 
-#: ../plugins/menu/menu.c:975
-msgid "Icon"
-msgstr "Ikona"
-
-#: ../plugins/menu/menu.c:976
-msgid "Padding"
-msgstr "Výplň"
-
-#: ../plugins/menu/menu.c:977
-msgid "Fixed Size"
+#: ../src/smenu.c:1080 ../src/smenu.cpp:37
+msgid "Icon horizontal padding"
 msgstr ""
 
-#: ../plugins/menu/menu.c:985
-msgid "Menu with Search"
+#: ../src/smenu.c:1081 ../src/smenu.cpp:38
+msgid "Fix height of search window"
 msgstr ""
 
-#: ../plugins/menu/menu.c:986
+#: ../src/smenu.c:1082 ../src/smenu.cpp:39
 #, fuzzy
-msgid "Searchable Application Menu"
-msgstr "Aplikačné menu"
+msgid "Search window height"
+msgstr "Statické okno"
 
+#: ../src/smenu.c:1090
+msgid "Menu with Search"
+msgstr "Ponuka s vyhľadávaním"
+
+#: ../src/smenu.c:1091
+msgid "Searchable Application Menu"
+msgstr "Prehľadávateľná ponuka aplikácie"
+
+#, c-format
