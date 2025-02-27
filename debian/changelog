@@ -1,3 +1,9 @@
+pplug-menu (0.7) bookworm; urgency=medium
+
+  * Clamp size of submenus
+
+ -- Simon Long <simon@raspberrypi.com>  Thu, 27 Feb 2025 13:22:01 +0000
+
 pplug-menu (0.6) bookworm; urgency=medium
 
   * First hybrid package version

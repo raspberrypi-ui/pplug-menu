@@ -696,6 +696,9 @@ static int sys_menu_load_submenu (MenuPlugin* m, MenuCacheDir* dir, GtkWidget* m
                 GtkWidget* sub = gtk_menu_new ();
                 gtk_menu_set_reserve_toggle_size (GTK_MENU (sub), FALSE);
                 g_signal_connect (sub, "key-press-event", G_CALLBACK (handle_key_presses), m);
+#ifndef LXPLUG
+                g_signal_connect (sub, "popped-up", G_CALLBACK (handle_popped_up), m);
+#endif
                 gint s_count = sys_menu_load_submenu (m, MENU_CACHE_DIR (item), sub, -1);
                 if (s_count)
                 {   
@@ -845,10 +848,14 @@ static void handle_popped_up (GtkMenu *menu, gpointer, gpointer, gboolean, gbool
     GtkWidget *win = gtk_widget_get_toplevel (GTK_WIDGET (menu));
     GdkWindow *gwin = gtk_widget_get_window (win);
     GdkMonitor *mon = gdk_display_get_monitor_at_window (gdk_display_get_default (), gwin);
-    gdk_monitor_get_geometry (mon, &rect);
+    gdk_monitor_get_workarea (mon, &rect);
     int height = gdk_window_get_height (gwin);
-    if (height > rect.height) height = rect.height;
-    gdk_window_resize (gwin, gdk_window_get_width (gwin), height);
+    int max_height = rect.height / gdk_window_get_scale_factor (gwin);
+    if (height > max_height)
+    {
+        height = max_height;
+        gdk_window_resize (gwin, gdk_window_get_width (gwin), height);
+    }
 }
 #endif
 
