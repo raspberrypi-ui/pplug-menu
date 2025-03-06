@@ -861,7 +861,10 @@ static void handle_popped_up (GtkMenu *menu, gpointer, gpointer, gboolean, gbool
 
 static void mlogout (void)
 {
-    fm_launch_command_simple (NULL, NULL, 0, "lxde-pi-shutdown-helper", NULL);
+    if (!system ("test -f /usr/bin/pishutdown"))
+        fm_launch_command_simple (NULL, NULL, 0, "pishutdown", NULL);
+    else
+        fm_launch_command_simple (NULL, NULL, 0, "lxde-pi-shutdown-helper", NULL);
 }
 
 /* Top level function to read in menu data from panel configuration */
