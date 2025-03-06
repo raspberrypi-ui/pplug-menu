@@ -1,14 +1,14 @@
 # Slovak translations for PACKAGE package.
 # Copyright (C) 2017 THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# Jose Riha <jose1711 gmail com>, 2020.
+# Jose Riha <jose1711 gmail com>, 2020, 2025.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-02-03 11:07+0000\n"
-"PO-Revision-Date: 2025-01-31 22:27+0100\n"
+"PO-Revision-Date: 2025-03-06 16:48+0100\n"
 "Last-Translator: Jose Riha <jose1711@gmail.com>\n"
 "Language-Team: Slovak\n"
 "Language: sk\n"
@@ -36,7 +36,7 @@ msgstr "Zadajte príkaz, ktorý chcete spustiť:"
 
 #: ../src/smenu.c:134
 msgid "No file manager is configured."
-msgstr "Nie je nastavený žiaden správca súborov."
+msgstr "Nie je nastavený žiadny správca súborov."
 
 #: ../src/smenu.c:467
 msgid "Add to desktop"
@@ -44,7 +44,7 @@ msgstr "Pridať na plochu"
 
 #: ../src/smenu.c:472
 msgid "Add to Launcher"
-msgstr ""
+msgstr "Pridať do Spúšťača"
 
 #: ../src/smenu.c:480
 msgid "Properties"
@@ -56,7 +56,7 @@ msgstr "Odhlásiť"
 
 #: ../src/smenu.c:956
 msgid "Click here to open applications menu"
-msgstr "Kliknite sem pre ponuky programov"
+msgstr "Kliknite sem pre otvorenie ponuky programov"
 
 #: ../src/smenu.c:1079 ../src/smenu.cpp:43
 msgid "Menu"
@@ -64,16 +64,15 @@ msgstr "Ponuka"
 
 #: ../src/smenu.c:1080 ../src/smenu.cpp:37
 msgid "Icon horizontal padding"
-msgstr ""
+msgstr "Horizontálna výplň ikon"
 
 #: ../src/smenu.c:1081 ../src/smenu.cpp:38
 msgid "Fix height of search window"
-msgstr ""
+msgstr "Pevná výška okna vyhľadávania"
 
 #: ../src/smenu.c:1082 ../src/smenu.cpp:39
-#, fuzzy
 msgid "Search window height"
-msgstr "Statické okno"
+msgstr "Výška okna vyhľadávania"
 
 #: ../src/smenu.c:1090
 msgid "Menu with Search"
