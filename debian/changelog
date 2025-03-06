@@ -1,3 +1,9 @@
+pplug-menu (0.8) bookworm; urgency=medium
+
+  * Make compatible with new pishutdown
+
+ -- Simon Long <simon@raspberrypi.com>  Thu, 06 Mar 2025 16:11:00 +0000
+
 pplug-menu (0.7) bookworm; urgency=medium
 
   * Clamp size of submenus

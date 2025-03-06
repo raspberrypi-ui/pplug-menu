@@ -14,13 +14,14 @@ Homepage: http://raspberrypi.com/
 Package: lxplug-menu
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends},
- lxpanel (>= 0.10.1-2+rpt21), lxpanel-data (>= 0.10.1-2+rpt21)
+ lxpanel (>= 0.10.1-2+rpt21), lxpanel-data (>= 0.10.1-2+rpt21),
+ pishutdown (>=0.31)
 Description: Menu plugin for lxpanel
  Plugin for lxpanel to add searchable main menu.
 
 Package: wfplug-menu
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends},
- wf-panel-pi (>=0.92)
+ wf-panel-pi (>=0.92), pishutdown (>=0.31)
 Description: Menu plugin for wf-panel-pi
  Plugin for wf-panel-pi to add searchable main menu.
