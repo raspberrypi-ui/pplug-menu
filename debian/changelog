@@ -1,3 +1,9 @@
+pplug-menu (0.9) bookworm; urgency=medium
+
+  * Modify icon initialisation; fix potential leak
+
+ -- Simon Long <simon@raspberrypi.com>  Fri, 28 Mar 2025 11:11:04 +0000
+
 pplug-menu (0.8) bookworm; urgency=medium
 
   * Make compatible with new pishutdown
