@@ -872,6 +872,7 @@ static gboolean create_menu (MenuPlugin *m)
 {
     GtkWidget *mi;
 
+    if (m->menu) gtk_widget_destroy (m->menu);
     m->menu = gtk_menu_new ();
     gtk_menu_set_reserve_toggle_size (GTK_MENU (m->menu), FALSE);
     gtk_container_set_border_width (GTK_CONTAINER (m->menu), 0);
@@ -915,7 +916,7 @@ static void menu_button_clicked (GtkWidget *, MenuPlugin *m)
 /* Handler for system config changed message from panel */
 void menu_update_display (MenuPlugin *m)
 {
-    GdkPixbuf *pixbuf = gtk_icon_theme_load_icon (gtk_icon_theme_get_default (), "rpi-logo", wrap_icon_size (m), GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
+    GdkPixbuf *pixbuf = gtk_icon_theme_load_icon (gtk_icon_theme_get_default (), "start-here", wrap_icon_size (m), GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
     if (pixbuf)
     {
         gtk_image_set_from_pixbuf (GTK_IMAGE (m->img), pixbuf);
@@ -963,7 +964,7 @@ void menu_init (MenuPlugin *m)
     /* Allocate icon as a child of top level */
     m->img = gtk_image_new ();
     gtk_container_add (GTK_CONTAINER (m->plugin), m->img);
-    wrap_set_taskbar_icon (m, m->img, "rpi-logo");
+    wrap_set_taskbar_icon (m, m->img, "start-here");
     gtk_widget_set_size_request (m->img, wrap_icon_size (m) + 2 * m->padding, -1);
     gtk_widget_set_tooltip_text (m->img, _("Click here to open applications menu"));
 
@@ -978,6 +979,7 @@ void menu_init (MenuPlugin *m)
     m->ds = fm_dnd_src_new (NULL);
     m->swin = NULL;
     m->menu_cache = NULL;
+    m->menu = NULL;
 
     /* Load the menu configuration */
     create_menu (m);
