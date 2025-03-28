@@ -915,7 +915,7 @@ static void menu_button_clicked (GtkWidget *, MenuPlugin *m)
 /* Handler for system config changed message from panel */
 void menu_update_display (MenuPlugin *m)
 {
-    GdkPixbuf *pixbuf = gtk_icon_theme_load_icon (gtk_icon_theme_get_default (), m->icon, wrap_icon_size (m), GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
+    GdkPixbuf *pixbuf = gtk_icon_theme_load_icon (gtk_icon_theme_get_default (), "rpi-logo", wrap_icon_size (m), GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
     if (pixbuf)
     {
         gtk_image_set_from_pixbuf (GTK_IMAGE (m->img), pixbuf);
@@ -963,6 +963,8 @@ void menu_init (MenuPlugin *m)
     /* Allocate icon as a child of top level */
     m->img = gtk_image_new ();
     gtk_container_add (GTK_CONTAINER (m->plugin), m->img);
+    wrap_set_taskbar_icon (m, m->img, "rpi-logo");
+    gtk_widget_set_size_request (m->img, wrap_icon_size (m) + 2 * m->padding, -1);
     gtk_widget_set_tooltip_text (m->img, _("Click here to open applications menu"));
 
     /* Set up button */
@@ -972,7 +974,6 @@ void menu_init (MenuPlugin *m)
 #endif
 
     /* Set up variables */
-    m->icon = g_strdup ("start-here");
     m->applist = gtk_list_store_new (3, GDK_TYPE_PIXBUF, G_TYPE_STRING, G_TYPE_STRING);
     m->ds = fm_dnd_src_new (NULL);
     m->swin = NULL;
@@ -1006,7 +1007,6 @@ void menu_destructor (gpointer user_data)
         menu_cache_remove_reload_notify (m->menu_cache, m->reload_notify);
         menu_cache_unref (m->menu_cache);
     }
-    g_free (m->icon);
 
 #ifndef LXPLUG
     if (m->migesture) g_object_unref (m->migesture);
