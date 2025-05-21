@@ -1,5 +1,5 @@
 /*============================================================================
-Copyright (c) 2024 Raspberry Pi Holdings Ltd.
+Copyright (c) 2024 Raspberry Pi
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -45,7 +45,6 @@ class WayfireSmenu : public WayfireWidget
     Glib::RefPtr<Gtk::GestureLongPress> gesture;
 
     WfOption <int> icon_size {"panel/icon_size"};
-    WfOption <std::string> bar_pos {"panel/position"};
     sigc::connection icon_timer;
 
     WfOption <int> padding {"panel/smenu_padding"};
@@ -61,7 +60,6 @@ class WayfireSmenu : public WayfireWidget
     void command (const char *cmd) override;
     virtual ~WayfireSmenu ();
     void icon_size_changed_cb (void);
-    void bar_pos_changed_cb (void);
     void search_param_changed_cb (void);
     void padding_changed_cb (void);
     bool set_icon (void);

@@ -1,5 +1,5 @@
 /*============================================================================
-Copyright (c) 2024 Raspberry Pi Holdings Ltd.
+Copyright (c) 2024 Raspberry Pi
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -33,21 +33,9 @@ extern "C" {
     WayfireWidget *create () { return new WayfireSmenu; }
     void destroy (WayfireWidget *w) { delete w; }
 
-    static constexpr conf_table_t conf_table[4] = {
-        {CONF_INT,  "padding",          N_("Icon horizontal padding")},
-        {CONF_BOOL, "search_fixed",     N_("Fix height of search window")},
-        {CONF_INT,  "search_height",    N_("Search window height")},
-        {CONF_NONE, NULL,               NULL}
-    };
     const conf_table_t *config_params (void) { return conf_table; };
-    const char *display_name (void) { return N_("Menu"); };
+    const char *display_name (void) { return N_(PLUGIN_TITLE); };
     const char *package_name (void) { return GETTEXT_PACKAGE; };
-}
-
-void WayfireSmenu::bar_pos_changed_cb (void)
-{
-    if ((std::string) bar_pos == "bottom") m->bottom = TRUE;
-    else m->bottom = FALSE;
 }
 
 void WayfireSmenu::icon_size_changed_cb (void)
@@ -95,7 +83,6 @@ void WayfireSmenu::init (Gtk::HBox *container)
     m->fixed = search_fixed;
     m->padding = padding;
     icon_timer = Glib::signal_idle().connect (sigc::mem_fun (*this, &WayfireSmenu::set_icon));
-    bar_pos_changed_cb ();
 
     /* Add long press for right click */
     gesture = add_longpress_default (*plugin);
@@ -105,7 +92,6 @@ void WayfireSmenu::init (Gtk::HBox *container)
 
     /* Setup callbacks */
     icon_size.set_callback (sigc::mem_fun (*this, &WayfireSmenu::icon_size_changed_cb));
-    bar_pos.set_callback (sigc::mem_fun (*this, &WayfireSmenu::bar_pos_changed_cb));
 
     search_height.set_callback (sigc::mem_fun (*this, &WayfireSmenu::search_param_changed_cb));
     search_fixed.set_callback (sigc::mem_fun (*this, &WayfireSmenu::search_param_changed_cb));

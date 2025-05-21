@@ -1,5 +1,5 @@
 /*============================================================================
-Copyright (c) 2022-2025 Raspberry Pi Holdings Ltd.
+Copyright (c) 2022-2025 Raspberry Pi
 All rights reserved.
 
 Some code taken from the lxpanel project
@@ -66,6 +66,13 @@ extern void gtk_run (void);
 /*----------------------------------------------------------------------------*/
 /* Global data                                                                */
 /*----------------------------------------------------------------------------*/
+
+conf_table_t conf_table[4] = {
+    {CONF_TYPE_INT,  "padding",          N_("Icon horizontal padding"),     NULL},
+    {CONF_TYPE_BOOL, "search_fixed",     N_("Fix height of search window"), NULL},
+    {CONF_TYPE_INT,  "search_height",    N_("Search window height"),        NULL},
+    {CONF_TYPE_NONE, NULL,               NULL,                              NULL}
+};
 
 static gboolean longpress;
 
@@ -1034,10 +1041,16 @@ static GtkWidget *menu_constructor (LXPanel *panel, config_setting_t *settings)
     m->plugin = gtk_button_new ();
     lxpanel_plugin_set_data (m->plugin, m, menu_destructor);
 
+    /* Set config defaults */
+    m->padding = 4;
+    m->fixed = FALSE;
+    m->height = 300;
+
     /* Read config */
-    if (!config_setting_lookup_int (m->settings, "padding", &m->padding)) m->padding = 4;
-    if (!config_setting_lookup_int (m->settings, "fixed", &m->fixed)) m->fixed = FALSE;
-    if (!config_setting_lookup_int (m->settings, "height", &m->height)) m->height = 300;
+    conf_table[0].value = (void *) &m->padding;
+    conf_table[1].value = (void *) &m->fixed;
+    conf_table[2].value = (void *) &m->height;
+    lxplug_read_settings (m->settings, conf_table);
 
     menu_init (m);
 
@@ -1075,9 +1088,7 @@ static gboolean menu_apply_config (gpointer user_data)
 {
     MenuPlugin *m = lxpanel_plugin_get_data (GTK_WIDGET (user_data));
 
-    config_group_set_int (m->settings, "padding", m->padding);
-    config_group_set_int (m->settings, "fixed", m->fixed);
-    config_group_set_int (m->settings, "height", m->height);
+    lxplug_write_settings (m->settings, conf_table);
 
     menu_set_padding (m);
     return FALSE;
@@ -1086,20 +1097,16 @@ static gboolean menu_apply_config (gpointer user_data)
 /* Display configuration dialog */
 static GtkWidget *menu_configure (LXPanel *panel, GtkWidget *plugin)
 {
-    MenuPlugin *m = lxpanel_plugin_get_data (plugin);
-
-    return lxpanel_generic_config_dlg (_("Menu"), panel, menu_apply_config, plugin,
-                                       _("Icon horizontal padding"), &m->padding, CONF_TYPE_INT,
-                                       _("Fix height of search window"), &m->fixed, CONF_TYPE_BOOL,
-                                       _("Search window height"), &m->height, CONF_TYPE_INT,
-                                       NULL);
+    return lxpanel_generic_config_dlg_new (_(PLUGIN_TITLE), panel,
+        menu_apply_config, plugin,
+        conf_table);
 }
 
 FM_DEFINE_MODULE (lxpanel_gtk, smenu)
 
 /* Plugin descriptor */
 LXPanelPluginInit fm_module_init_lxpanel_gtk = {
-    .name = N_("Menu with Search"),
+    .name = N_(PLUGIN_TITLE),
     .description = N_("Searchable Application Menu"),
     .new_instance = menu_constructor,
     .reconfigure = menu_panel_configuration_changed,
