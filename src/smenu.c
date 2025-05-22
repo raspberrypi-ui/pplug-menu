@@ -629,24 +629,24 @@ static GtkWidget *create_system_menu_item (MenuCacheItem *item, MenuPlugin *m)
         if (icon_name)
         {
             if (strstr (icon_name, "/"))
-                icon = gdk_pixbuf_new_from_file_at_size (icon_name, m->icon_size, m->icon_size, NULL);
+                icon = gdk_pixbuf_new_from_file_at_size (icon_name, get_icon_size (), get_icon_size (), NULL);
             else
             {
                 icon = gtk_icon_theme_load_icon (gtk_icon_theme_get_default (), icon_name,
-                    m->icon_size, GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
+                    get_icon_size (), GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
 
                 // fallback for packages using obsolete icon location
                 if (!icon)
                 {
                     char *fname = g_strdup_printf ("/usr/share/pixmaps/%s", icon_name);
-                    icon = gdk_pixbuf_new_from_file_at_size (fname, m->icon_size, m->icon_size, NULL);
+                    icon = gdk_pixbuf_new_from_file_at_size (fname, get_icon_size (), get_icon_size (), NULL);
                     g_free (fname);
                 }
             }
         }
         if (!icon)
             icon = gtk_icon_theme_load_icon (gtk_icon_theme_get_default (), "application-x-executable",
-                m->icon_size, GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
+                get_icon_size (), GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
         if (icon) gtk_image_set_from_pixbuf (GTK_IMAGE (img), icon);
 #endif
         if (menu_cache_item_get_type (item) == MENU_CACHE_TYPE_APP)

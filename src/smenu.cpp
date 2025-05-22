@@ -38,22 +38,16 @@ extern "C" {
     const char *package_name (void) { return GETTEXT_PACKAGE; };
 }
 
-void WayfireSmenu::icon_size_changed_cb (void)
-{
-    m->icon_size = icon_size;
-    menu_update_display (m);
-}
-
-void WayfireSmenu::search_param_changed_cb (void)
+void WayfireSmenu::read_settings (void)
 {
     m->height = search_height;
     m->fixed = search_fixed;
-    // no need to do anything here - will update when next opened
+    m->padding = padding;
 }
 
-void WayfireSmenu::padding_changed_cb (void)
+void WayfireSmenu::settings_changed_cb (void)
 {
-    m->padding = padding;
+    read_settings ();
     menu_set_padding (m);
 }
 
@@ -78,24 +72,19 @@ void WayfireSmenu::init (Gtk::HBox *container)
     /* Setup structure */
     m = g_new0 (MenuPlugin, 1);
     m->plugin = (GtkWidget *)((*plugin).gobj());
-    m->icon_size = icon_size;
-    m->height = search_height;
-    m->fixed = search_fixed;
-    m->padding = padding;
     icon_timer = Glib::signal_idle().connect (sigc::mem_fun (*this, &WayfireSmenu::set_icon));
 
     /* Add long press for right click */
     gesture = add_longpress_default (*plugin);
 
     /* Initialise the plugin */
+    read_settings ();
     menu_init (m);
 
     /* Setup callbacks */
-    icon_size.set_callback (sigc::mem_fun (*this, &WayfireSmenu::icon_size_changed_cb));
-
-    search_height.set_callback (sigc::mem_fun (*this, &WayfireSmenu::search_param_changed_cb));
-    search_fixed.set_callback (sigc::mem_fun (*this, &WayfireSmenu::search_param_changed_cb));
-    padding.set_callback (sigc::mem_fun (*this, &WayfireSmenu::padding_changed_cb));
+    search_height.set_callback (sigc::mem_fun (*this, &WayfireSmenu::settings_changed_cb));
+    search_fixed.set_callback (sigc::mem_fun (*this, &WayfireSmenu::settings_changed_cb));
+    padding.set_callback (sigc::mem_fun (*this, &WayfireSmenu::settings_changed_cb));
 }
 
 WayfireSmenu::~WayfireSmenu()

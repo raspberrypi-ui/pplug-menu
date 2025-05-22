@@ -44,7 +44,6 @@ class WayfireSmenu : public WayfireWidget
     std::unique_ptr <Gtk::Button> plugin;
     Glib::RefPtr<Gtk::GestureLongPress> gesture;
 
-    WfOption <int> icon_size {"panel/icon_size"};
     sigc::connection icon_timer;
 
     WfOption <int> padding {"panel/smenu_padding"};
@@ -59,10 +58,9 @@ class WayfireSmenu : public WayfireWidget
     void init (Gtk::HBox *container) override;
     void command (const char *cmd) override;
     virtual ~WayfireSmenu ();
-    void icon_size_changed_cb (void);
-    void search_param_changed_cb (void);
-    void padding_changed_cb (void);
     bool set_icon (void);
+    void read_settings (void);
+    void settings_changed_cb (void);
 };
 
 #endif /* end of include guard: WIDGETS_SMENU_HPP */
