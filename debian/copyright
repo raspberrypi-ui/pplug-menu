@@ -3,7 +3,7 @@ Upstream-Name: pplug-menu
 Source: https://github.com/raspberrypi-ui/pplug-menu/
 
 Files: *
-Copyright: 2025 Raspberry Pi Holdings Ltd.
+Copyright: 2025 Raspberry Pi
 License: BSD-3-Clause
 
 Files: src/gtk-run.c
