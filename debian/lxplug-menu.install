@@ -1,2 +1,2 @@
-usr/lib/${DEB_HOST_MULTIARCH}/lxpanel/plugins/smenu.so
-usr/share/locale/*/LC_MESSAGES/lxplug_smenu.mo
+usr/lib/${DEB_HOST_MULTIARCH}/lxpanel-pi/smenu.so
+usr/share/locale/*/LC_MESSAGES/lpplug_smenu.mo
