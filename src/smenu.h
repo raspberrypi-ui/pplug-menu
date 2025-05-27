@@ -68,7 +68,7 @@ extern conf_table_t conf_table[4];
 extern void menu_init (MenuPlugin *m);
 extern void menu_update_display (MenuPlugin *m);
 extern void menu_set_padding (MenuPlugin *m);
-extern void menu_show_menu (MenuPlugin *m);
+extern gboolean menu_control_msg (MenuPlugin *m, const char *cmd);
 extern void menu_destructor (gpointer user_data);
 
 /* End of file */

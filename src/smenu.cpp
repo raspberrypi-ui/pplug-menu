@@ -53,7 +53,7 @@ void WayfireSmenu::settings_changed_cb (void)
 
 void WayfireSmenu::command (const char *cmd)
 {
-    if (!g_strcmp0 (cmd, "menu")) menu_show_menu (m);
+    menu_control_msg (m, cmd);
 }
 
 bool WayfireSmenu::set_icon (void)

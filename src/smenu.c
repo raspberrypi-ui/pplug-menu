@@ -944,11 +944,17 @@ void menu_update_display (MenuPlugin *m)
 }
 
 /* Handler for control message */
-void menu_show_menu (MenuPlugin *m)
+gboolean menu_control_msg (MenuPlugin *m, const char *cmd)
 {
-    if (gtk_widget_is_visible (m->menu)) gtk_menu_popdown (GTK_MENU (m->menu));
-    else if (m->swin && gtk_widget_is_visible (m->swin)) destroy_search (m);
-    else wrap_show_menu (m->plugin, m->menu);
+    if (!strncmp (cmd, "menu", 4))
+    {
+        if (gtk_widget_is_visible (m->menu)) gtk_menu_popdown (GTK_MENU (m->menu));
+        else if (m->swin && gtk_widget_is_visible (m->swin)) destroy_search (m);
+        else wrap_show_menu (m->plugin, m->menu);
+        return TRUE;
+    }
+
+    return FALSE;
 }
 
 /* Handler for padding update from variable watcher */
@@ -1077,10 +1083,10 @@ static void menu_panel_configuration_changed (LXPanel *, GtkWidget *plugin)
 }
 
 /* Handler for control message */
-static void menu_control (GtkWidget *plugin)
+static gboolean menu_control (GtkWidget *plugin, const char *cmd)
 {
     MenuPlugin *m = lxpanel_plugin_get_data (plugin);
-    menu_show_menu (m);
+    return menu_control_msg (m, cmd);
 }
 
 /* Apply changes from config dialog */
@@ -1113,7 +1119,7 @@ LXPanelPluginInit fm_module_init_lxpanel_gtk = {
     .reconfigure = menu_panel_configuration_changed,
     .config = menu_configure,
     .button_press_event = menu_button_press_event,
-    .show_system_menu = menu_control,
+    .control = menu_control,
     .gettext_package = GETTEXT_PACKAGE
 };
 #endif
