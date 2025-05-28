@@ -1048,7 +1048,7 @@ static GtkWidget *menu_constructor (LXPanel *panel, config_setting_t *settings)
     lxpanel_plugin_set_data (m->plugin, m, menu_destructor);
 
     /* Set config defaults */
-    m->padding = 4;
+    m->padding = 6;
     m->fixed = FALSE;
     m->height = 300;
 

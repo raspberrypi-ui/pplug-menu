@@ -6,7 +6,7 @@
 	<_short>Searchable Menu</_short>
 	<option name="smenu_padding" type="int">
 		<_short>Icon Horizontal Padding</_short>
-		<default>4</default>
+		<default>6</default>
 	</option>
 	<option name="smenu_search_height" type="int">
 		<_short>Searchable Menu Search Window Height</_short>
