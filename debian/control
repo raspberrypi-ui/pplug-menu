@@ -11,12 +11,12 @@ Build-Depends:
 Standards-Version: 4.5.1
 Homepage: http://raspberrypi.com/
 
-Package: lxplug-menu
+Package: lpplug-menu
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends},
  lxpanel-pi, pishutdown (>=0.31)
-Description: Menu plugin for lxpanel
- Plugin for lxpanel to add searchable main menu.
+Description: Menu plugin for lxpanel-pi
+ Plugin for lxpanel-pi to add searchable main menu.
 
 Package: wfplug-menu
 Architecture: any
