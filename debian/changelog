@@ -1,3 +1,9 @@
+pplug-menu (1.2) trixie; urgency=medium
+
+  * Create menu each time it is used; fix memory leak
+
+ -- Simon Long <simon@raspberrypi.com>  Mon, 15 Sep 2025 13:55:47 +0100
+
 pplug-menu (1.1) trixie; urgency=medium
 
   * Add Chinese translation

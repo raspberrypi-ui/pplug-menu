@@ -528,7 +528,7 @@ static gboolean handle_key_presses (GtkWidget *, GdkEventKey *event, gpointer us
     if ((event->keyval >= 'a' && event->keyval <= 'z') ||
         (event->keyval >= 'A' && event->keyval <= 'Z'))
     {
-        gtk_widget_hide (m->menu);
+        gtk_menu_popdown (GTK_MENU (m->menu));
         if (!m->swin) create_search (m);
         gtk_entry_set_text (GTK_ENTRY (m->srch), "");
         append_to_entry (m->srch, event->keyval);
@@ -722,6 +722,8 @@ static int sys_menu_load_submenu (MenuPlugin* m, MenuCacheDir* dir, GtkWidget* m
             }
         }
     }
+
+    g_slist_free (children);
     return count;
 }
 
@@ -803,8 +805,8 @@ static void read_system_menu (GtkMenu *menu, MenuPlugin *m)
             return;
         }
         m->reload_notify = menu_cache_add_reload_notify (m->menu_cache, handle_reload_menu, m);
-        sys_menu_insert_items (m, menu, -1);
     }
+    sys_menu_insert_items (m, menu, -1);
 }
 
 /* Functions to create individual menu items from panel config */
@@ -917,6 +919,7 @@ static gboolean create_menu (MenuPlugin *m)
 static void menu_button_clicked (GtkWidget *, MenuPlugin *m)
 {
     CHECK_LONGPRESS
+    create_menu (m);
     wrap_show_menu (m->plugin, m->menu);
 }
 
@@ -940,7 +943,6 @@ void menu_update_display (MenuPlugin *m)
         menu_cache_unref (m->menu_cache);
         m->menu_cache = NULL;
     }
-    create_menu (m);
 }
 
 /* Handler for control message */
@@ -948,9 +950,13 @@ gboolean menu_control_msg (MenuPlugin *m, const char *cmd)
 {
     if (!strncmp (cmd, "menu", 4))
     {
-        if (gtk_widget_is_visible (m->menu)) gtk_menu_popdown (GTK_MENU (m->menu));
+        if (m->menu && gtk_widget_is_visible (m->menu)) gtk_menu_popdown (GTK_MENU (m->menu));
         else if (m->swin && gtk_widget_is_visible (m->swin)) destroy_search (m);
-        else wrap_show_menu (m->plugin, m->menu);
+        else
+        {
+            create_menu (m);
+            wrap_show_menu (m->plugin, m->menu);
+        }
         return TRUE;
     }
 
@@ -993,9 +999,6 @@ void menu_init (MenuPlugin *m)
     m->swin = NULL;
     m->menu_cache = NULL;
     m->menu = NULL;
-
-    /* Load the menu configuration */
-    create_menu (m);
 
     /* Watch the icon theme and reload the menu if it changes */
     g_signal_connect (gtk_icon_theme_get_default (), "changed", G_CALLBACK (handle_reload_menu), m);
