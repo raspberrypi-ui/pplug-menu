@@ -790,6 +790,8 @@ static void handle_reload_menu (MenuCache *, gpointer user_data)
     MenuPlugin *m = (MenuPlugin *) user_data;
 
     gtk_list_store_clear (m->applist);
+    /* don't reload the menu if it is on screen... */
+    if (m->menu && gtk_widget_is_visible (m->menu)) return;
     reload_system_menu (m, GTK_MENU (m->menu));
 }
 
@@ -999,9 +1001,6 @@ void menu_init (MenuPlugin *m)
     m->swin = NULL;
     m->menu_cache = NULL;
     m->menu = NULL;
-
-    /* Watch the icon theme and reload the menu if it changes */
-    g_signal_connect (gtk_icon_theme_get_default (), "changed", G_CALLBACK (handle_reload_menu), m);
 
     /* Show the widget and return */
     gtk_widget_show_all (m->plugin);
