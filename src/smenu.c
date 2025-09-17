@@ -1002,6 +1002,8 @@ void menu_init (MenuPlugin *m)
     m->menu_cache = NULL;
     m->menu = NULL;
 
+    read_system_menu (GTK_MENU (m->menu), m);
+
     /* Show the widget and return */
     gtk_widget_show_all (m->plugin);
 }
