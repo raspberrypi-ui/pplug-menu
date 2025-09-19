@@ -790,8 +790,10 @@ static void handle_reload_menu (MenuCache *, gpointer user_data)
     MenuPlugin *m = (MenuPlugin *) user_data;
 
     gtk_list_store_clear (m->applist);
+#ifndef LXPLUG
     /* don't reload the menu if it is on screen... */
     if (m->menu && gtk_widget_is_visible (m->menu)) return;
+#endif
     reload_system_menu (m, GTK_MENU (m->menu));
 }
 
