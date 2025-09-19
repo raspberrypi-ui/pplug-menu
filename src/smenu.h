@@ -56,7 +56,6 @@ typedef struct
 
     MenuCache* menu_cache;
     gpointer reload_notify;
-    FmDndSrc *ds;
 } MenuPlugin;
 
 extern conf_table_t conf_table[4];

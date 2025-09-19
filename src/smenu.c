@@ -96,7 +96,6 @@ static void create_search (MenuPlugin *m);
 static void handle_menu_item_activate (GtkMenuItem *mi, MenuPlugin *);
 static void handle_menu_item_properties (GtkMenuItem *, GtkWidget* mi);
 static void handle_restore_submenu (GtkMenuItem *mi, GtkWidget *submenu);
-static void handle_menu_item_data_get (FmDndSrc *ds, GtkWidget *mi);
 static void show_context_menu (GtkWidget* mi);
 static gboolean handle_menu_item_button_press (GtkWidget* mi, GdkEventButton* evt, MenuPlugin* m);
 static gboolean handle_key_presses (GtkWidget *, GdkEventKey *event, gpointer user_data);
@@ -458,13 +457,6 @@ static void handle_restore_submenu (GtkMenuItem *mi, GtkWidget *submenu)
     g_object_set_data (G_OBJECT (mi), "PanelMenuItemSubmenu", NULL);
 }
 
-static void handle_menu_item_data_get (FmDndSrc *ds, GtkWidget *mi)
-{
-    FmFileInfo *fi = g_object_get_qdata (G_OBJECT (mi), sys_menu_item_quark);
-
-    fm_dnd_src_set_file (ds, fi);
-}
-
 static void show_context_menu (GtkWidget* mi)
 {
     GtkWidget *item, *menu;
@@ -503,14 +495,7 @@ static void show_context_menu (GtkWidget* mi)
 static gboolean handle_menu_item_button_press (GtkWidget* mi, GdkEventButton* evt, MenuPlugin* m)
 {
     longpress = FALSE;
-    if (evt->button == 1)
-    {
-        /* allow drag on clicked item */
-        g_signal_handlers_disconnect_matched (m->ds, G_SIGNAL_MATCH_FUNC, 0, 0, NULL, handle_menu_item_data_get, NULL);
-        fm_dnd_src_set_widget (m->ds, mi);
-        g_signal_connect (m->ds, "data-get", G_CALLBACK (handle_menu_item_data_get), mi);
-    }
-    else if (evt->button == 3)
+    if (evt->button == 3)
     {
         /* don't make duplicates */
         if (g_signal_handler_find (mi, G_SIGNAL_MATCH_FUNC, 0, 0, NULL, handle_restore_submenu, NULL)) return FALSE;
@@ -664,7 +649,6 @@ static GtkWidget *create_system_menu_item (MenuCacheItem *item, MenuPlugin *m)
         if (icon) g_object_unref (icon);
 
         g_signal_connect (mi, "button-press-event", G_CALLBACK (handle_menu_item_button_press), m);
-        gtk_drag_source_set (mi, GDK_BUTTON1_MASK, NULL, 0, GDK_ACTION_COPY);
 #ifndef LXPLUG
         g_signal_connect (mi, "button-release-event", G_CALLBACK (handle_menu_item_button_release), m);
 
@@ -999,7 +983,6 @@ void menu_init (MenuPlugin *m)
 
     /* Set up variables */
     m->applist = gtk_list_store_new (3, GDK_TYPE_PIXBUF, G_TYPE_STRING, G_TYPE_STRING);
-    m->ds = fm_dnd_src_new (NULL);
     m->swin = NULL;
     m->menu_cache = NULL;
     m->menu = NULL;
@@ -1013,9 +996,6 @@ void menu_init (MenuPlugin *m)
 void menu_destructor (gpointer user_data)
 {
     MenuPlugin *m = (MenuPlugin *) user_data;
-
-    g_signal_handlers_disconnect_matched (m->ds, G_SIGNAL_MATCH_FUNC, 0, 0, NULL, handle_menu_item_data_get, NULL);
-    g_object_unref (G_OBJECT (m->ds));
 
     if (m->menu) gtk_widget_destroy (m->menu);
 #ifdef LXPLUG
