@@ -97,7 +97,7 @@ static void handle_menu_item_activate (GtkMenuItem *mi, MenuPlugin *);
 static void handle_menu_item_properties (GtkMenuItem *, GtkWidget* mi);
 static void handle_restore_submenu (GtkMenuItem *mi, GtkWidget *submenu);
 static void show_context_menu (GtkWidget* mi);
-static gboolean handle_menu_item_button_press (GtkWidget* mi, GdkEventButton* evt, MenuPlugin* m);
+static gboolean handle_menu_item_button_press (GtkWidget* mi, GdkEventButton* evt, gpointer);
 static gboolean handle_key_presses (GtkWidget *, GdkEventKey *event, gpointer user_data);
 static GtkWidget *create_system_menu_item (MenuCacheItem *item, MenuPlugin *m);
 static int sys_menu_load_submenu (MenuPlugin* m, MenuCacheDir* dir, GtkWidget* menu, int pos);
@@ -492,7 +492,7 @@ static void show_context_menu (GtkWidget* mi)
     gtk_widget_show_all (menu);
 }
 
-static gboolean handle_menu_item_button_press (GtkWidget* mi, GdkEventButton* evt, MenuPlugin* m)
+static gboolean handle_menu_item_button_press (GtkWidget* mi, GdkEventButton* evt, gpointer)
 {
     longpress = FALSE;
     if (evt->button == 3)
@@ -641,21 +641,22 @@ static GtkWidget *create_system_menu_item (MenuCacheItem *item, MenuPlugin *m)
             g_free (mpath);
 
             gtk_widget_set_name (mi, "syssubmenu");
+            g_signal_connect (mi, "button-press-event", G_CALLBACK (handle_menu_item_button_press), m);
 #ifdef LXPLUG
             g_signal_connect (mi, "activate", G_CALLBACK (handle_menu_item_activate), m);
+#else
+            g_signal_connect (mi, "button-release-event", G_CALLBACK (handle_menu_item_button_release), m);
+
+            m->migesture = gtk_gesture_long_press_new (mi);
+            gtk_gesture_single_set_touch_only (GTK_GESTURE_SINGLE (m->migesture), touch_only);
+            g_signal_connect (m->migesture, "pressed", G_CALLBACK (handle_menu_item_gesture_pressed), mi);
+            gtk_event_controller_set_propagation_phase (GTK_EVENT_CONTROLLER (m->migesture), GTK_PHASE_BUBBLE);
 #endif
         }
         fm_path_unref (path);
         if (icon) g_object_unref (icon);
 
-        g_signal_connect (mi, "button-press-event", G_CALLBACK (handle_menu_item_button_press), m);
 #ifndef LXPLUG
-        g_signal_connect (mi, "button-release-event", G_CALLBACK (handle_menu_item_button_release), m);
-
-        m->migesture = gtk_gesture_long_press_new (mi);
-        gtk_gesture_single_set_touch_only (GTK_GESTURE_SINGLE (m->migesture), touch_only);
-        g_signal_connect (m->migesture, "pressed", G_CALLBACK (handle_menu_item_gesture_pressed), mi);
-        gtk_event_controller_set_propagation_phase (GTK_EVENT_CONTROLLER (m->migesture), GTK_PHASE_BUBBLE);
 #endif
     }
     gtk_widget_show_all (mi);
