@@ -1,3 +1,9 @@
+pplug-menu (1.6) trixie; urgency=medium
+
+  * Fix run-time warnings
+
+ -- Simon Long <simon@raspberrypi.com>  Mon, 22 Sep 2025 08:22:23 +0100
+
 pplug-menu (1.5) trixie; urgency=medium
 
   * Remove drag and drop; only respond to gestures on app icons

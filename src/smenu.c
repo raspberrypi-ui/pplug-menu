@@ -744,7 +744,7 @@ static void reload_system_menu (MenuPlugin *m, GtkMenu *menu)
     GtkMenuItem* item;
     GtkWidget* sub_menu;
     gint idx;
-
+    if (!menu) return;
     children = gtk_container_get_children (GTK_CONTAINER (menu));
     for (child = children, idx = 0; child; child = child->next, ++idx)
     {
@@ -774,7 +774,7 @@ static void handle_reload_menu (MenuCache *, gpointer user_data)
 {
     MenuPlugin *m = (MenuPlugin *) user_data;
 
-    gtk_list_store_clear (m->applist);
+    if (m->applist) gtk_list_store_clear (m->applist);
 #ifndef LXPLUG
     /* don't reload the menu if it is on screen... */
     if (m->menu && gtk_widget_is_visible (m->menu)) return;
@@ -795,7 +795,7 @@ static void read_system_menu (GtkMenu *menu, MenuPlugin *m)
         }
         m->reload_notify = menu_cache_add_reload_notify (m->menu_cache, handle_reload_menu, m);
     }
-    sys_menu_insert_items (m, menu, -1);
+    if (menu) sys_menu_insert_items (m, menu, -1);
 }
 
 /* Functions to create individual menu items from panel config */
