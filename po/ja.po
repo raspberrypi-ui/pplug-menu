@@ -8,66 +8,86 @@ msgid ""
 msgstr ""
 "Project-Id-Version: lxpanel 0.5.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-08-03 13:44+0100\n"
-"PO-Revision-Date: 2019-02-23 07:06+0000\n"
-"Last-Translator: Mamoru TASAKA <mtasaka@fedoraproject.org>\n"
+"POT-Creation-Date: 2025-09-28 00:33+0900\n"
+"PO-Revision-Date: 2025-09-28 00:45+0900\n"
+"Last-Translator: Akira Ouchi <akkiesoft@marokun.net>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
-"Language: \n"
+"Language: ja\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Pootle 2.8\n"
+"X-Generator: Poedit 3.2.2\n"
 "X-Pootle-Revision: 1332\n"
 "X-Pootle-Path: /ja/lxpanel/po/ja.po\n"
 "X-POOTLE-MTIME: 1550905593.535770\n"
 
-#: ../plugins/menu/menu.c:97
+#: src/gtk-run.c:392 src/smenu.c:892
 msgid "Run"
 msgstr "実行"
 
-#: ../plugins/menu/menu.c:98
-msgid "Restart"
-msgstr "再起動"
+#: src/gtk-run.c:396
+msgid "_Cancel"
+msgstr "キャンセル(_C)"
 
-#: ../plugins/menu/menu.c:99
-msgid "Logout"
-msgstr "ログアウト"
+#: src/gtk-run.c:397
+msgid "_OK"
+msgstr "_OK"
 
-#: ../plugins/menu/menu.c:448
+#: src/gtk-run.c:413
+msgid "Enter the command you want to execute:"
+msgstr "実行したいコマンドを入力してください:"
+
+#: src/smenu.c:134
+msgid "No file manager is configured."
+msgstr "ファイルマネージャーが設定されていません。"
+
+#: src/smenu.c:467
 msgid "Add to desktop"
 msgstr "デスクトップに追加"
 
-#: ../plugins/menu/menu.c:455
+#: src/smenu.c:472
+msgid "Add to Launcher"
+msgstr "ランチャーに追加"
+
+#: src/smenu.c:480
 msgid "Properties"
 msgstr "プロパティ"
 
-#: ../plugins/menu/menu.c:888
-msgid "Click here to open applications menu"
-msgstr ""
+#: src/smenu.c:897
+msgid "Logout"
+msgstr "ログアウト"
 
-#: ../plugins/menu/menu.c:974
+#: src/smenu.c:969
+msgid "Click here to open applications menu"
+msgstr "ここをクリックするとアプリケーション・メニューが開きます"
+
+#: src/smenu.c:1091 src/smenu.cpp:43
 msgid "Menu"
 msgstr "メニュー"
 
-#: ../plugins/menu/menu.c:975
-msgid "Icon"
-msgstr "アイコン"
+#: src/smenu.c:1092 src/smenu.cpp:37
+msgid "Icon horizontal padding"
+msgstr "アイコンの水平方向の余白"
 
-#: ../plugins/menu/menu.c:976
-msgid "Padding"
-msgstr ""
+#: src/smenu.c:1093 src/smenu.cpp:38
+msgid "Fix height of search window"
+msgstr "検索ウィンドウの高さを固定する"
 
-#: ../plugins/menu/menu.c:977
-msgid "Fixed Size"
-msgstr ""
+#: src/smenu.c:1094 src/smenu.cpp:39
+msgid "Search window height"
+msgstr "検索ウィンドウの高さ"
 
-#: ../plugins/menu/menu.c:985
+#: src/smenu.c:1102
 msgid "Menu with Search"
-msgstr ""
+msgstr "検索付きメニュー"
 
-#: ../plugins/menu/menu.c:986
-#, fuzzy
+#: src/smenu.c:1103
 msgid "Searchable Application Menu"
-msgstr "アプリケーション・メニュー"
+msgstr "検索可能なアプリケーション・メニュー"
 
+#~ msgid "Restart"
+#~ msgstr "再起動"
+
+#~ msgid "Icon"
+#~ msgstr "アイコン"
