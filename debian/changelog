@@ -1,3 +1,9 @@
+pplug-menu (1.7) trixie; urgency=medium
+
+  * Update Japanese translation
+
+ -- Simon Long <simon@raspberrypi.com>  Fri, 03 Oct 2025 11:26:24 +0100
+
 pplug-menu (1.6) trixie; urgency=medium
 
   * Fix run-time warnings
