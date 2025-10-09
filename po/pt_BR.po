@@ -5,6 +5,7 @@
 # Henrique P. Machado <zehrique@ubuntu.com>, 2008-2009.
 # Og Maciel <ogmaciel@gnome.org>, 2009.
 # Sérgio Cipolla <secipolla@gmail.com>, 2010-2011.
+# Eduardo Addad de Oliveira <eduardo@addadtech.com.br>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: lxpanel\n"
@@ -27,6 +28,10 @@ msgstr ""
 msgid "Run"
 msgstr "Executar"
 
+#: ../src/gtk-run.c:396
+msgid "_Cancel"
+msgstr "_Cancelar"
+
 #: ../plugins/menu/menu.c:98
 msgid "Restart"
 msgstr "Reiniciar"
@@ -35,17 +40,29 @@ msgstr "Reiniciar"
 msgid "Logout"
 msgstr "Desconectar"
 
+#: ../src/smenu.c:141
+msgid "No file manager is configured."
+msgstr "Nenhum gerenciador de arquivos está configurado."
+
 #: ../plugins/menu/menu.c:448
 msgid "Add to desktop"
 msgstr "Adicionar à área de trabalho"
+
+#: ../src/smenu.c:479
+msgid "Add to Launcher"
+msgstr "Adicionar ao iniciador"
 
 #: ../plugins/menu/menu.c:455
 msgid "Properties"
 msgstr "Propriedades"
 
+#: ../src/gtk-run.c:413
+msgid "Enter the command you want to execute:"
+msgstr "Digite o comando que deseja executar:"
+
 #: ../plugins/menu/menu.c:888
 msgid "Click here to open applications menu"
-msgstr ""
+msgstr "Clique aqui para abrir o menu de aplicativos"
 
 #: ../plugins/menu/menu.c:974
 msgid "Menu"
