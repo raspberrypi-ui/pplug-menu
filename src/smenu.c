@@ -611,28 +611,38 @@ static GtkWidget *create_system_menu_item (MenuCacheItem *item, MenuPlugin *m)
 #else
         icon = NULL;
         const char *icon_name = menu_cache_item_get_icon (item);
+        int scale = gtk_widget_get_scale_factor (m->plugin);
         if (icon_name)
         {
             if (strstr (icon_name, "/"))
-                icon = gdk_pixbuf_new_from_file_at_size (icon_name, get_icon_size (), get_icon_size (), NULL);
+                icon = gdk_pixbuf_new_from_file_at_size (icon_name, get_icon_size () * scale, get_icon_size () * scale, NULL);
             else
             {
-                icon = gtk_icon_theme_load_icon (gtk_icon_theme_get_default (), icon_name,
-                    get_icon_size (), GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
+                icon = gtk_icon_theme_load_icon_for_scale (gtk_icon_theme_get_default (), icon_name,
+                    get_icon_size (), scale, GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
 
                 // fallback for packages using obsolete icon location
                 if (!icon)
                 {
                     char *fname = g_strdup_printf ("/usr/share/pixmaps/%s", icon_name);
-                    icon = gdk_pixbuf_new_from_file_at_size (fname, get_icon_size (), get_icon_size (), NULL);
+                    icon = gdk_pixbuf_new_from_file_at_size (fname, get_icon_size () * scale, get_icon_size () * scale, NULL);
                     g_free (fname);
                 }
             }
         }
         if (!icon)
-            icon = gtk_icon_theme_load_icon (gtk_icon_theme_get_default (), "application-x-executable",
-                get_icon_size (), GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
-        if (icon) gtk_image_set_from_pixbuf (GTK_IMAGE (img), icon);
+            icon = gtk_icon_theme_load_icon_for_scale (gtk_icon_theme_get_default (), "application-x-executable",
+                get_icon_size (), scale, GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
+        if (icon)
+        {
+            if (scale == 1) gtk_image_set_from_pixbuf (GTK_IMAGE (img), icon);
+            else
+            {
+                cairo_surface_t *cr = gdk_cairo_surface_create_from_pixbuf (icon, scale, NULL);
+                gtk_image_set_from_surface (GTK_IMAGE (img), cr);
+                cairo_surface_destroy (cr);
+            }
+        }
 #endif
         if (menu_cache_item_get_type (item) == MENU_CACHE_TYPE_APP)
         {
@@ -810,6 +820,7 @@ static GtkWidget *read_menu_item (MenuPlugin *m, char *disp_name, char *icon, vo
 {
     GtkWidget *item, *box, *label, *img;
     GdkPixbuf *pixbuf;
+    int scale;
 
     item = gtk_menu_item_new ();
     box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, MENU_ICON_SPACE);
@@ -819,11 +830,18 @@ static GtkWidget *read_menu_item (MenuPlugin *m, char *disp_name, char *icon, vo
     label = gtk_label_new (disp_name);
     g_signal_connect (G_OBJECT (item), "activate", (GCallback) handle_run_command, cmd);
 
+    scale = gtk_widget_get_scale_factor (m->plugin);
     img = gtk_image_new ();
-    pixbuf = gtk_icon_theme_load_icon (gtk_icon_theme_get_default (), icon, wrap_icon_size (m), GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
+    pixbuf = gtk_icon_theme_load_icon_for_scale (gtk_icon_theme_get_default (), icon, wrap_icon_size (m), scale, GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
     if (pixbuf)
     {
-        gtk_image_set_from_pixbuf (GTK_IMAGE (img), pixbuf);
+        if (scale == 1) gtk_image_set_from_pixbuf (GTK_IMAGE (img), pixbuf);
+        else
+        {
+            cairo_surface_t *cr = gdk_cairo_surface_create_from_pixbuf (pixbuf, scale, NULL);
+            gtk_image_set_from_surface (GTK_IMAGE (img), cr);
+            cairo_surface_destroy (cr);
+        }
         g_object_unref (pixbuf);
         gtk_container_add (GTK_CONTAINER (box), img);
     }
@@ -915,10 +933,17 @@ static void menu_button_clicked (GtkWidget *, MenuPlugin *m)
 /* Handler for system config changed message from panel */
 void menu_update_display (MenuPlugin *m)
 {
-    GdkPixbuf *pixbuf = gtk_icon_theme_load_icon (gtk_icon_theme_get_default (), "start-here", wrap_icon_size (m), GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
+    int scale = gtk_widget_get_scale_factor (m->img);
+    GdkPixbuf *pixbuf = gtk_icon_theme_load_icon_for_scale (gtk_icon_theme_get_default (), "start-here", wrap_icon_size (m), scale, GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
     if (pixbuf)
     {
-        gtk_image_set_from_pixbuf (GTK_IMAGE (m->img), pixbuf);
+        if (scale == 1) gtk_image_set_from_pixbuf (GTK_IMAGE (m->img), pixbuf);
+        else
+        {
+            cairo_surface_t *cr = gdk_cairo_surface_create_from_pixbuf (pixbuf, scale, NULL);
+            gtk_image_set_from_surface (GTK_IMAGE (m->img), cr);
+            cairo_surface_destroy (cr);
+        }
         g_object_unref (pixbuf);
     }
     if (m->img) gtk_widget_set_size_request (m->img, wrap_icon_size (m) + 2 * m->padding, -1);
