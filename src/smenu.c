@@ -393,6 +393,10 @@ static void create_search (MenuPlugin *m)
 
     /* set up the tree view */
     prend = gtk_cell_renderer_pixbuf_new ();
+    GValue val = G_VALUE_INIT;
+    g_value_init (&val, G_TYPE_INT);
+    g_value_set_int (&val, gtk_widget_get_scale_factor (m->img));
+    g_object_set_property (G_OBJECT (prend), "scale", &val);
     trend = gtk_cell_renderer_text_new ();
     gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (m->stv), -1, NULL, prend, "pixbuf", 0, NULL);
     gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (m->stv), -1, NULL, trend, "text", 1, NULL);
@@ -633,16 +637,8 @@ static GtkWidget *create_system_menu_item (MenuCacheItem *item, MenuPlugin *m)
         if (!icon)
             icon = gtk_icon_theme_load_icon_for_scale (gtk_icon_theme_get_default (), "application-x-executable",
                 get_icon_size (), scale, GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
-        if (icon)
-        {
-            if (scale == 1) gtk_image_set_from_pixbuf (GTK_IMAGE (img), icon);
-            else
-            {
-                cairo_surface_t *cr = gdk_cairo_surface_create_from_pixbuf (icon, scale, NULL);
-                gtk_image_set_from_surface (GTK_IMAGE (img), cr);
-                cairo_surface_destroy (cr);
-            }
-        }
+
+        if (icon) set_image_from_pixbuf (img, icon);
 #endif
         if (menu_cache_item_get_type (item) == MENU_CACHE_TYPE_APP)
         {
@@ -835,13 +831,7 @@ static GtkWidget *read_menu_item (MenuPlugin *m, char *disp_name, char *icon, vo
     pixbuf = gtk_icon_theme_load_icon_for_scale (gtk_icon_theme_get_default (), icon, wrap_icon_size (m), scale, GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
     if (pixbuf)
     {
-        if (scale == 1) gtk_image_set_from_pixbuf (GTK_IMAGE (img), pixbuf);
-        else
-        {
-            cairo_surface_t *cr = gdk_cairo_surface_create_from_pixbuf (pixbuf, scale, NULL);
-            gtk_image_set_from_surface (GTK_IMAGE (img), cr);
-            cairo_surface_destroy (cr);
-        }
+        set_image_from_pixbuf (img, pixbuf);
         g_object_unref (pixbuf);
         gtk_container_add (GTK_CONTAINER (box), img);
     }
@@ -933,19 +923,7 @@ static void menu_button_clicked (GtkWidget *, MenuPlugin *m)
 /* Handler for system config changed message from panel */
 void menu_update_display (MenuPlugin *m)
 {
-    int scale = gtk_widget_get_scale_factor (m->img);
-    GdkPixbuf *pixbuf = gtk_icon_theme_load_icon_for_scale (gtk_icon_theme_get_default (), "start-here", wrap_icon_size (m), scale, GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
-    if (pixbuf)
-    {
-        if (scale == 1) gtk_image_set_from_pixbuf (GTK_IMAGE (m->img), pixbuf);
-        else
-        {
-            cairo_surface_t *cr = gdk_cairo_surface_create_from_pixbuf (pixbuf, scale, NULL);
-            gtk_image_set_from_surface (GTK_IMAGE (m->img), cr);
-            cairo_surface_destroy (cr);
-        }
-        g_object_unref (pixbuf);
-    }
+    wrap_set_taskbar_icon (m, m->img, "start-here");
     if (m->img) gtk_widget_set_size_request (m->img, wrap_icon_size (m) + 2 * m->padding, -1);
 
     if (m->applist) gtk_list_store_clear (m->applist);
