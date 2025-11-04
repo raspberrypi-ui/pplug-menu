@@ -610,7 +610,7 @@ static GtkWidget *create_system_menu_item (MenuCacheItem *item, MenuPlugin *m)
 #ifdef LXPLUG
         FmIcon *fm_icon = fm_file_info_get_icon (fi);
         if (fm_icon == NULL) fm_icon = fm_icon_from_name ("application-x-executable");
-        icon = fm_pixbuf_from_icon_with_fallback (fm_icon, panel_get_safe_icon_size (m->panel), "application-x-executable");
+        icon = fm_pixbuf_from_icon_with_fallback (fm_icon, panel_get_safe_icon_size (m->panel), 1, "application-x-executable");
         gtk_image_set_from_pixbuf (GTK_IMAGE (img), icon);
 #else
         icon = NULL;
