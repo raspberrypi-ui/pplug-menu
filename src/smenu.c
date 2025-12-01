@@ -951,6 +951,11 @@ gboolean menu_control_msg (MenuPlugin *m, const char *cmd)
         }
         return TRUE;
     }
+    if (!strncmp (cmd, "run", 3))
+    {
+        gtk_run ();
+        return TRUE;
+    }
 
     return FALSE;
 }
