@@ -1,3 +1,9 @@
+pplug-menu (1.10) trixie; urgency=medium
+
+  * Add run command
+
+ -- Simon Long <simon@raspberrypi.com>  Tue, 02 Dec 2025 10:07:56 +0000
+
 pplug-menu (1.9) trixie; urgency=medium
 
   * Add support for scaling for HiDPI
