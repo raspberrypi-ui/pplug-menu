@@ -83,6 +83,7 @@ GQuark sys_menu_item_quark = 0;
 /*----------------------------------------------------------------------------*/
 
 static void launch_desktop_file (const char *dfile);
+static void launch_application (const char *appname);
 static void destroy_search (MenuPlugin *m);
 static gboolean filter_apps (GtkTreeModel *model, GtkTreeIter *iter, gpointer user_data);
 static void append_to_entry (GtkWidget *entry, char val);
@@ -93,7 +94,7 @@ static gboolean handle_search_keypress (GtkWidget *, GdkEventKey *event, gpointe
 static void handle_list_select (GtkTreeView *tv, GtkTreePath *path, GtkTreeViewColumn *, gpointer user_data);
 static void search_destroyed (GtkWidget *, gpointer data);
 static void create_search (MenuPlugin *m);
-static void handle_menu_item_activate (GtkMenuItem *mi, MenuPlugin *);
+static void handle_menu_item_activate (GtkMenuItem *mi, gpointer);
 static void handle_menu_item_properties (GtkMenuItem *, GtkWidget* mi);
 static void handle_restore_submenu (GtkMenuItem *mi, GtkWidget *submenu);
 static void show_context_menu (GtkWidget* mi);
@@ -130,6 +131,12 @@ static void launch_desktop_file (const char *dfile)
     char *path = g_strdup_printf ("gtk-launch %s", dfile);
     system (path);
     g_free (path);
+}
+
+static void launch_application (const char *appname)
+{
+    char *cmd[2] = {(char *) appname, NULL};
+    g_spawn_async (NULL, cmd, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL);
 }
 
 /* Search box */
@@ -827,9 +834,9 @@ static void handle_popped_up (GtkMenu *menu, gpointer, gpointer, gboolean, gbool
 static void mlogout (void)
 {
     if (!system ("test -f /usr/bin/pishutdown"))
-        fm_launch_command_simple (NULL, NULL, 0, "pishutdown", NULL);
+        launch_application ("pishutdown");
     else
-        fm_launch_command_simple (NULL, NULL, 0, "lxde-pi-shutdown-helper", NULL);
+        launch_application ("lxde-pi-shutdown-helper");
 }
 
 /* Top level function to read in menu data from panel configuration */
