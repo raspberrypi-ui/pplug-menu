@@ -83,7 +83,6 @@ GQuark sys_menu_item_quark = 0;
 /*----------------------------------------------------------------------------*/
 
 static void launch_desktop_file (const char *dfile);
-static void launch_application (const char *appname);
 static void destroy_search (MenuPlugin *m);
 static gboolean filter_apps (GtkTreeModel *model, GtkTreeIter *iter, gpointer user_data);
 static void append_to_entry (GtkWidget *entry, char val);
@@ -133,7 +132,7 @@ static void launch_desktop_file (const char *dfile)
     g_free (path);
 }
 
-static void launch_application (const char *appname)
+void launch_application (const char *appname)
 {
     char *cmd[2] = {(char *) appname, NULL};
     g_spawn_async (NULL, cmd, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL);

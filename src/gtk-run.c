@@ -46,6 +46,8 @@
 #include "lxutils.h"
 #endif
 
+extern void launch_application (const char *appname);
+
 static GtkWidget* win = NULL; /* the run dialog */
 #ifndef DISABLE_MENU
 static MenuCache* menu_cache = NULL;
@@ -301,11 +303,7 @@ static void on_response( GtkDialog* dlg, gint response, gpointer user_data )
     GtkEntry* entry = (GtkEntry*)user_data;
     if( G_LIKELY(response == GTK_RESPONSE_OK) )
     {
-        if (!fm_launch_command_simple(GTK_WINDOW(dlg), NULL, 0, gtk_entry_get_text(entry), NULL))
-        {
-            g_signal_stop_emission_by_name( dlg, "response" );
-            return;
-        }
+        launch_application (gtk_entry_get_text(entry));
     }
 
     /* cancel running thread if needed */
