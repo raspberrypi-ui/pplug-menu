@@ -110,6 +110,7 @@ static GtkWidget *read_menu_item (MenuPlugin *m, char *disp_name, char *icon, vo
 static void mlogout (void);
 static gboolean create_menu (MenuPlugin *m);
 static void menu_button_clicked (GtkWidget *, MenuPlugin *m);
+static void handle_menu_item_add_to_desktop (GtkMenuItem *, GtkWidget* mi);
 #ifdef LXPLUG
 static void handle_search_resize (GtkWidget *, GtkAllocation *, gpointer user_data);
 static void handle_menu_hidden (GtkWidget *, gpointer user_data);
@@ -395,26 +396,30 @@ static void create_search (MenuPlugin *m)
 
 /* Handlers for system menu items */
 
-static void handle_menu_item_activate (GtkMenuItem *mi, MenuPlugin *)
+static void handle_menu_item_activate (GtkMenuItem *mi, gpointer)
 {
-    launch_desktop_file (g_object_get_qdata (G_OBJECT (mi), sys_menu_item_quark));
+    MenuCacheItem *item = g_object_get_qdata (G_OBJECT (mi), sys_menu_item_quark);
+    launch_desktop_file (menu_cache_item_get_file_basename (item));
 }
 
 static void handle_menu_item_add_to_desktop (GtkMenuItem *, GtkWidget* mi)
 {
-    FmFileInfo *fi = g_object_get_qdata (G_OBJECT (mi), sys_menu_item_quark);
-    FmPathList *files = fm_path_list_new ();
-
-    fm_path_list_push_tail (files, fm_file_info_get_path (fi));
-    fm_link_files (NULL, files, fm_path_get_desktop ());
-    fm_path_list_unref (files);
+    MenuCacheItem *item = g_object_get_qdata (G_OBJECT (mi), sys_menu_item_quark);
+    char *path = g_build_filename (g_get_home_dir (), "Desktop", menu_cache_item_get_file_basename (item), NULL);
+    FILE *fp = fopen (path, "wb");
+    fprintf (fp, "[Desktop Entry]\nType=Link\n");
+    fprintf (fp, "Name=%s\n", menu_cache_item_get_name (item));
+    fprintf (fp, "Icon=%s\n", menu_cache_item_get_icon (item));
+    fprintf (fp, "URL=/usr/share/applications/%s\n", menu_cache_item_get_file_basename (item));
+    fclose (fp);
+    g_free (path);
 }
 
 #ifndef LXPLUG
 static void handle_menu_item_add_to_launcher (GtkMenuItem *, GtkWidget* mi)
 {
-    char *name = g_object_get_qdata (G_OBJECT (mi), sys_menu_item_quark);
-    add_to_launcher (name);
+    MenuCacheItem *item = g_object_get_qdata (G_OBJECT (mi), sys_menu_item_quark);
+    add_to_launcher (menu_cache_item_get_file_basename (item));
 }
 #endif
 
@@ -571,7 +576,7 @@ static GtkWidget *create_system_menu_item (MenuCacheItem *item, MenuPlugin *m)
         label = gtk_label_new (menu_cache_item_get_name (item));
         gtk_container_add (GTK_CONTAINER (box), label);
 
-        g_object_set_qdata_full (G_OBJECT (mi), sys_menu_item_quark, (char *) menu_cache_item_get_file_basename (item), NULL);
+        g_object_set_qdata_full (G_OBJECT (mi), sys_menu_item_quark, item, NULL);
 
         icon = NULL;
         const char *icon_name = menu_cache_item_get_icon (item);
