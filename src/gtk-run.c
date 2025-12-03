@@ -37,7 +37,6 @@
 #ifndef DISABLE_MENU
 #include <menu-cache.h>
 #endif
-#include <libfm/fm-gtk.h>
 
 //#include "gtk-compat.h"
 #ifdef LXPLUG
