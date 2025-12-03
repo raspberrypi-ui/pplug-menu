@@ -413,8 +413,8 @@ static void handle_menu_item_add_to_desktop (GtkMenuItem *, GtkWidget* mi)
 #ifndef LXPLUG
 static void handle_menu_item_add_to_launcher (GtkMenuItem *, GtkWidget* mi)
 {
-    FmFileInfo *fi = g_object_get_qdata (G_OBJECT (mi), sys_menu_item_quark);
-    add_to_launcher (fm_file_info_get_name (fi));
+    char *name = g_object_get_qdata (G_OBJECT (mi), sys_menu_item_quark);
+    add_to_launcher (name);
 }
 #endif
 
