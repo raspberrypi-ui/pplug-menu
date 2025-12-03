@@ -82,7 +82,7 @@ GQuark sys_menu_item_quark = 0;
 /* Prototypes                                                                 */
 /*----------------------------------------------------------------------------*/
 
-static gboolean _open_dir_in_file_manager (GAppLaunchContext *ctx, GList *folder_infos, gpointer, GError **err);
+static void launch_desktop_file (const char *dfile);
 static void destroy_search (MenuPlugin *m);
 static gboolean filter_apps (GtkTreeModel *model, GtkTreeIter *iter, gpointer user_data);
 static void append_to_entry (GtkWidget *entry, char val);
@@ -124,29 +124,11 @@ static void handle_popped_up (GtkMenu *menu, gpointer, gpointer, gboolean, gbool
 /* Function definitions                                                       */
 /*----------------------------------------------------------------------------*/
 
-/* Open a specified path in a file manager */
-
-static gboolean _open_dir_in_file_manager (GAppLaunchContext* ctx, GList* folder_infos,
-                                          gpointer, GError** err)
+static void launch_desktop_file (const char *dfile)
 {
-    FmFileInfo *fi = folder_infos->data; /* only first is used */
-    GAppInfo *app = g_app_info_get_default_for_type("inode/directory", TRUE);
-    GFile *gf;
-    gboolean ret;
-
-    if (app == NULL)
-    {
-        g_set_error_literal(err, G_SHELL_ERROR, G_SHELL_ERROR_EMPTY_STRING,
-                            _("No file manager is configured."));
-        return FALSE;
-    }
-    gf = fm_path_to_gfile(fm_file_info_get_path(fi));
-    folder_infos = g_list_prepend(NULL, gf);
-    ret = fm_app_info_launch(app, folder_infos, ctx, err);
-    g_list_free(folder_infos);
-    g_object_unref(gf);
-    g_object_unref(app);
-    return ret;
+    char *path = g_strdup_printf ("gtk-launch %s", dfile);
+    system (path);
+    g_free (path);
 }
 
 /* Search box */
@@ -276,7 +258,6 @@ static gboolean handle_search_keypress (GtkWidget *, GdkEventKey *event, gpointe
     GtkTreeIter iter;
     GtkTreePath *path;
     gchar *str;
-    FmPath *fpath;
     int nrows;
 
     switch (event->keyval)
@@ -286,9 +267,7 @@ static gboolean handle_search_keypress (GtkWidget *, GdkEventKey *event, gpointe
                                 if (gtk_tree_selection_get_selected (sel, &model, &iter))
                                 {
                                     gtk_tree_model_get (model, &iter, 2, &str, -1);
-                                    fpath = fm_path_new_for_str (str);
-                                    fm_launch_path_simple (NULL, NULL, fpath, _open_dir_in_file_manager, NULL);
-                                    fm_path_unref (fpath);
+                                    launch_desktop_file (str);
                                 }
                                 destroy_search (m);
                                 return TRUE;
@@ -316,14 +295,11 @@ static void handle_list_select (GtkTreeView *tv, GtkTreePath *path, GtkTreeViewC
     GtkTreeModel *mod = gtk_tree_view_get_model (tv);
     GtkTreeIter iter;
     gchar *str;
-    FmPath *fpath;
 
     if (gtk_tree_model_get_iter (mod, &iter, path))
     {
         gtk_tree_model_get (mod, &iter, 2, &str, -1);
-        fpath = fm_path_new_for_str (str);
-        fm_launch_path_simple (NULL, NULL, fpath, _open_dir_in_file_manager, NULL);
-        fm_path_unref (fpath);
+        launch_desktop_file (str);
     }
 
     destroy_search (m);
@@ -421,9 +397,7 @@ static void create_search (MenuPlugin *m)
 
 static void handle_menu_item_activate (GtkMenuItem *mi, MenuPlugin *)
 {
-    FmFileInfo *fi = g_object_get_qdata (G_OBJECT (mi), sys_menu_item_quark);
-
-    fm_launch_path_simple (NULL, NULL, fm_file_info_get_path (fi), _open_dir_in_file_manager, NULL);
+    launch_desktop_file (g_object_get_qdata (G_OBJECT (mi), sys_menu_item_quark));
 }
 
 static void handle_menu_item_add_to_desktop (GtkMenuItem *, GtkWidget* mi)
@@ -579,9 +553,6 @@ static GtkWidget *create_system_menu_item (MenuCacheItem *item, MenuPlugin *m)
 {
     GtkWidget* mi, *img, *box, *label;
     GdkPixbuf *icon;
-    FmPath *path;
-    FmFileInfo *fi;
-    char *mpath;
 
     if (menu_cache_item_get_type (item) == MENU_CACHE_TYPE_SEP)
     {
@@ -600,51 +571,38 @@ static GtkWidget *create_system_menu_item (MenuCacheItem *item, MenuPlugin *m)
         label = gtk_label_new (menu_cache_item_get_name (item));
         gtk_container_add (GTK_CONTAINER (box), label);
 
-        mpath = menu_cache_dir_make_path (MENU_CACHE_DIR (item));
-        path = fm_path_new_relative (fm_path_get_apps_menu (), mpath + 13);
-        g_free (mpath);
+        g_object_set_qdata_full (G_OBJECT (mi), sys_menu_item_quark, (char *) menu_cache_item_get_file_basename (item), NULL);
 
-        fi = fm_file_info_new_from_menu_cache_item (path, item);
-        g_object_set_qdata_full (G_OBJECT (mi), sys_menu_item_quark, fi, (GDestroyNotify) fm_file_info_unref);
-
-#ifdef LXPLUG
-        FmIcon *fm_icon = fm_file_info_get_icon (fi);
-        if (fm_icon == NULL) fm_icon = fm_icon_from_name ("application-x-executable");
-        icon = fm_pixbuf_from_icon_with_fallback (fm_icon, panel_get_safe_icon_size (m->panel), 1, "application-x-executable");
-        gtk_image_set_from_pixbuf (GTK_IMAGE (img), icon);
-#else
         icon = NULL;
         const char *icon_name = menu_cache_item_get_icon (item);
         int scale = gtk_widget_get_scale_factor (m->plugin);
         if (icon_name)
         {
             if (strstr (icon_name, "/"))
-                icon = gdk_pixbuf_new_from_file_at_size (icon_name, get_icon_size () * scale, get_icon_size () * scale, NULL);
+                icon = gdk_pixbuf_new_from_file_at_size (icon_name, wrap_icon_size (m) * scale, wrap_icon_size (m) * scale, NULL);
             else
             {
                 icon = gtk_icon_theme_load_icon_for_scale (gtk_icon_theme_get_default (), icon_name,
-                    get_icon_size (), scale, GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
+                    wrap_icon_size (m), scale, GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
 
                 // fallback for packages using obsolete icon location
                 if (!icon)
                 {
                     char *fname = g_strdup_printf ("/usr/share/pixmaps/%s", icon_name);
-                    icon = gdk_pixbuf_new_from_file_at_size (fname, get_icon_size () * scale, get_icon_size () * scale, NULL);
+                    icon = gdk_pixbuf_new_from_file_at_size (fname, wrap_icon_size (m) * scale, wrap_icon_size (m) * scale, NULL);
                     g_free (fname);
                 }
             }
         }
         if (!icon)
             icon = gtk_icon_theme_load_icon_for_scale (gtk_icon_theme_get_default (), "application-x-executable",
-                get_icon_size (), scale, GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
+                wrap_icon_size (m), scale, GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
 
         if (icon) set_image_from_pixbuf (img, icon);
-#endif
+
         if (menu_cache_item_get_type (item) == MENU_CACHE_TYPE_APP)
         {
-            mpath = fm_path_to_str (path);
-            gtk_list_store_insert_with_values (m->applist, NULL, -1, 0, icon, 1, menu_cache_item_get_name (item), 2, mpath, -1);
-            g_free (mpath);
+            gtk_list_store_insert_with_values (m->applist, NULL, -1, 0, icon, 1, menu_cache_item_get_name (item), 2, menu_cache_item_get_file_basename (item), -1);
 
             gtk_widget_set_name (mi, "syssubmenu");
             g_signal_connect (mi, "button-press-event", G_CALLBACK (handle_menu_item_button_press), m);
@@ -659,11 +617,7 @@ static GtkWidget *create_system_menu_item (MenuCacheItem *item, MenuPlugin *m)
             gtk_event_controller_set_propagation_phase (GTK_EVENT_CONTROLLER (m->migesture), GTK_PHASE_BUBBLE);
 #endif
         }
-        fm_path_unref (path);
         if (icon) g_object_unref (icon);
-
-#ifndef LXPLUG
-#endif
     }
     gtk_widget_show_all (mi);
     return mi;
