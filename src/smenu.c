@@ -43,7 +43,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <locale.h>
 #include <glib/gi18n.h>
 #include <menu-cache.h>
-#include <libfm/fm-gtk.h>
 
 #ifdef LXPLUG
 #include "plugin.h"
@@ -58,6 +57,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #endif
 
 extern void gtk_run (void);
+extern void show_properties_dialog (MenuCacheItem *item);
 
 /*----------------------------------------------------------------------------*/
 /* Typedefs and macros                                                        */
@@ -431,12 +431,8 @@ static void handle_menu_item_add_to_launcher (GtkMenuItem *, GtkWidget* mi)
 
 static void handle_menu_item_properties (GtkMenuItem *, GtkWidget* mi)
 {
-    FmFileInfo *fi = g_object_get_qdata (G_OBJECT (mi), sys_menu_item_quark);
-    FmFileInfoList *files = fm_file_info_list_new ();
-
-    fm_file_info_list_push_tail (files, fi);
-    fm_show_file_properties (NULL, files);
-    fm_file_info_list_unref (files);
+    MenuCacheItem *item = g_object_get_qdata (G_OBJECT (mi), sys_menu_item_quark);
+    show_properties_dialog (item);
 }
 
 static void handle_restore_submenu (GtkMenuItem *mi, GtkWidget *submenu)
@@ -936,11 +932,6 @@ void menu_init (MenuPlugin *m)
     setlocale (LC_ALL, "");
     bindtextdomain (GETTEXT_PACKAGE, PACKAGE_LOCALE_DIR);
     bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
-
-#ifndef LXPLUG
-    fm_gtk_init (NULL);
-    fm_init (NULL);
-#endif
 
     /* Allocate icon as a child of top level */
     m->img = gtk_image_new ();

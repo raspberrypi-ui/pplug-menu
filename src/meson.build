@@ -3,14 +3,14 @@ gtkmm = dependency('gtkmm-3.0', version: '>=3.24')
 lxpanel = dependency('lxpanel-pi')
 wfpanel = dependency('wf-panel-pi')
 menu_cache = dependency('libmenu-cache')
-libfm = dependency('libfm-gtk3')
 
 lsources = files(
   'smenu.c',
-  'gtk-run.c'
+  'gtk-run.c',
+  'properties.c'
 )
 
-ldeps = [ gtk, lxpanel, menu_cache, libfm ]
+ldeps = [ gtk, lxpanel, menu_cache ]
 
 largs = [ '-DPACKAGE_DATA_DIR="' + lresource_dir + '"', '-DGETTEXT_PACKAGE="lpplug_' + meson.project_name() + '"' ]
 
@@ -26,7 +26,7 @@ wsources = files(
   'smenu.cpp'
 )
 
-wdeps = [ gtkmm, wfpanel, menu_cache, libfm ]
+wdeps = [ gtkmm, wfpanel, menu_cache ]
 
 wargs = [ '-DPACKAGE_DATA_DIR="' + wresource_dir + '"', '-DGETTEXT_PACKAGE="wfplug_' + meson.project_name() +'"' ]
 
