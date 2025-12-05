@@ -48,8 +48,6 @@ GtkWidget *dlg, *lbl_file, *lbl_loc, *lbl_target, *entry_name, *entry_cmd, *entr
 void show_properties_dialog (MenuCacheItem *item)
 {
     GtkBuilder *builder;
-    GKeyFile *kf;
-    GError *err;
     char *str;
 
     builder = gtk_builder_new_from_file (PACKAGE_DATA_DIR "/ui/properties.ui");
@@ -66,44 +64,17 @@ void show_properties_dialog (MenuCacheItem *item)
     sw_notif = (GtkWidget *) gtk_builder_get_object (builder, "sw_notif");
     sw_terminal = (GtkWidget *) gtk_builder_get_object (builder, "sw_terminal");
 
+    gtk_image_set_from_icon_name (GTK_IMAGE (img_icon), menu_cache_item_get_icon (item), GTK_ICON_SIZE_DND);
     gtk_label_set_text (GTK_LABEL (lbl_file), menu_cache_item_get_file_basename (item));
     gtk_entry_set_text (GTK_ENTRY (entry_name), menu_cache_item_get_name (item));
     gtk_entry_set_text (GTK_ENTRY (entry_tooltip), menu_cache_item_get_comment (item));
+    gtk_entry_set_text (GTK_ENTRY (entry_cmd), menu_cache_app_get_exec (MENU_CACHE_APP (item)));
+    gtk_switch_set_active (GTK_SWITCH (sw_notif), menu_cache_app_get_use_sn (MENU_CACHE_APP (item)));
+    gtk_switch_set_active (GTK_SWITCH (sw_terminal), menu_cache_app_get_use_terminal (MENU_CACHE_APP (item)));
+
     str = menu_cache_item_get_file_path (item);
     gtk_label_set_text (GTK_LABEL (lbl_target), str);
     g_free (str);
-    gtk_image_set_from_icon_name (GTK_IMAGE (img_icon), menu_cache_item_get_icon (item), GTK_ICON_SIZE_DND);
-
-    str = menu_cache_item_get_file_path (item);
-    kf = g_key_file_new ();
-    if (g_key_file_load_from_file (kf, str, G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS, NULL))
-    {
-        g_free (str);
-
-        err = NULL;
-        str = g_key_file_get_string (kf, "Desktop Entry", "Exec", &err);
-        if (err == NULL && str) gtk_entry_set_text (GTK_ENTRY (entry_cmd), str);
-        g_free (str);
-
-        err = NULL;
-        str = g_key_file_get_string (kf, "Desktop Entry", "Path", &err);
-        if (err == NULL && str) gtk_entry_set_text (GTK_ENTRY (entry_dir), str);
-        g_free (str);
-
-        err = NULL;
-        str = g_key_file_get_string (kf, "Desktop Entry", "StartupNotify", &err);
-        if (err == NULL && str && !g_strcmp0 (str, "true")) gtk_switch_set_active (GTK_SWITCH (sw_notif), TRUE);
-        else gtk_switch_set_active (GTK_SWITCH (sw_notif), FALSE);
-        g_free (str);
-
-        err = NULL;
-        str = g_key_file_get_string (kf, "Desktop Entry", "Terminal", &err);
-        if (err == NULL && str && !g_strcmp0 (str, "true")) gtk_switch_set_active (GTK_SWITCH (sw_terminal), TRUE);
-        else gtk_switch_set_active (GTK_SWITCH (sw_terminal), FALSE);
-        g_free (str);
-    }
-    else g_free (str);
-    g_key_file_free (kf);
 
     gtk_widget_show (dlg);
     g_object_unref (builder);
