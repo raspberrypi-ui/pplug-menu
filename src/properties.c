@@ -43,122 +43,37 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <gtk/gtk.h>
 #include <menu-cache.h>
 
-
-#define     GET_WIDGET(transform,name) name = transform(gtk_builder_get_object(builder, #name))
-
-
-GtkDialog* fm_file_properties_widget_new (void)
-{
-    GtkBuilder* builder=gtk_builder_new();
-    GtkDialog* dlg;
-    //FmFilePropData* data;
-    //FmPathList* paths;
-
-    gtk_builder_set_translation_domain(builder, GETTEXT_PACKAGE);
-    //data = g_slice_new0(FmFilePropData);
-
-    //data->files = fm_file_info_list_ref(files);
-    //data->single_type = fm_file_info_list_is_same_type(files);
-    //data->single_file = (fm_file_info_list_get_length(files) == 1);
-    //data->fi = fm_file_info_list_peek_head(files);
-    //if(data->single_type)
-    //    data->mime_type = fm_mime_type_ref(fm_file_info_get_mime_type(data->fi));
-    //paths = fm_path_list_new_from_file_info_list(files);
-    //data->dc_job = fm_deep_count_job_new(paths, FM_DC_JOB_DEFAULT);
-    //fm_path_list_unref(paths);
-    //data->ext = NULL; /* no extension by default */
-    //data->extdata = NULL;
-
-    gtk_builder_add_from_file (builder, PACKAGE_DATA_DIR "/ui/file-prop.ui", NULL);
-    GET_WIDGET (GTK_DIALOG, dlg);
-#if 0
-    gtk_dialog_set_alternative_button_order (GTK_DIALOG (data->dlg), GTK_RESPONSE_OK, GTK_RESPONSE_CANCEL, -1);
-    dlg = data->dlg;
-
-    GET_WIDGET(GTK_TABLE,general_table);
-    GET_WIDGET(GTK_IMAGE,icon);
-    GET_WIDGET(GTK_WIDGET,icon_eventbox);
-    GET_WIDGET(GTK_ENTRY,name);
-    GET_WIDGET(GTK_LABEL,file);
-    GET_WIDGET(GTK_LABEL,file_label);
-    GET_WIDGET(GTK_LABEL,dir);
-    GET_WIDGET(GTK_LABEL,target);
-    GET_WIDGET(GTK_WIDGET,target_label);
-    GET_WIDGET(GTK_LABEL,type);
-    GET_WIDGET(GTK_WIDGET,open_with_label);
-    GET_WIDGET(GTK_COMBO_BOX,open_with);
-    GET_WIDGET(GTK_LABEL,total_files);
-    GET_WIDGET(GTK_WIDGET,total_files_label);
-    GET_WIDGET(GTK_LABEL,total_size);
-    GET_WIDGET(GTK_LABEL,size_on_disk);
-    GET_WIDGET(GTK_LABEL,mtime);
-    GET_WIDGET(GTK_WIDGET,mtime_label);
-    GET_WIDGET(GTK_LABEL,atime);
-    GET_WIDGET(GTK_WIDGET,atime_label);
-    GET_WIDGET(GTK_LABEL,ctime);
-    GET_WIDGET(GTK_WIDGET,ctime_label);
-
-    GET_WIDGET(GTK_WIDGET,permissions_tab);
-    GET_WIDGET(GTK_ENTRY,owner);
-    GET_WIDGET(GTK_ENTRY,group);
-
-    GET_WIDGET(GTK_COMBO_BOX,read_perm);
-    GET_WIDGET(GTK_COMBO_BOX,write_perm);
-    GET_WIDGET(GTK_LABEL,exec_label);
-    GET_WIDGET(GTK_COMBO_BOX,exec_perm);
-    GET_WIDGET(GTK_LABEL,flags_label);
-    GET_WIDGET(GTK_COMBO_BOX,flags_set_file);
-    GET_WIDGET(GTK_COMBO_BOX,flags_set_dir);
-    GET_WIDGET(GTK_WIDGET,hidden);
-
-    init_application_list(data);
-
-    data->timeout = gdk_threads_add_timeout(600, on_timeout, data);
-    g_signal_connect(dlg, "response", G_CALLBACK(on_response), data);
-    g_signal_connect_swapped(dlg, "destroy", G_CALLBACK(fm_file_prop_data_free), data);
-    g_signal_connect(data->dc_job, "finished", G_CALLBACK(on_finished), data);
-
-    g_signal_connect(data->icon_eventbox, "button-press-event",
-                     G_CALLBACK(_icon_click_event), data);
-    g_signal_connect(data->icon_eventbox, "key-press-event",
-                     G_CALLBACK(_icon_press_event), data);
-
-    if (!fm_job_run_async(FM_JOB(data->dc_job)))
-    {
-        g_object_unref(data->dc_job);
-        data->dc_job = NULL;
-        g_critical("failed to run scanning job for file properties dialog");
-    }
-
-    update_ui(data);
-
-    /* if we got some extension then activate it updating dialog window */
-    if(data->ext != NULL)
-    {
-        GSList *l, *l2;
-        for (l = data->ext, l2 = data->extdata; l; l = l->next, l2 = l2->next)
-            l2->data = ((FmFilePropExt*)l->data)->cb.init(builder, data, data->files);
-    }
-    /* add this after all updates from extensions was made */
-    if (gtk_widget_get_can_focus(data->icon_eventbox))
-    {
-        /* the dialog isn't realized yet so set cursor in callback */
-        g_signal_connect(data->icon_eventbox, "enter-notify-event",
-                         G_CALLBACK(on_icon_enter_notify), data);
-    }
-#endif
-    g_object_unref(builder);
-
-    return dlg;
-}
-
+GtkWidget *dlg, *lbl_file, *lbl_loc, *lbl_target, *entry_name, *entry_cmd, *entry_dir, *entry_desc, *entry_tooltip, *img_icon, *sw_notif, *sw_terminal;
 
 void show_properties_dialog (MenuCacheItem *item)
 {
-    GtkDialog* dlg = fm_file_properties_widget_new ();
-    //if (parent) gtk_window_set_transient_for (GTK_WINDOW (dlg), parent);
-    gtk_widget_show (GTK_WIDGET (dlg));
-    g_signal_connect_after (dlg, "response", G_CALLBACK (gtk_widget_destroy), NULL);
+    GtkBuilder *builder;
+    char *str;
+
+    builder = gtk_builder_new_from_file (PACKAGE_DATA_DIR "/ui/properties.ui");
+    dlg = (GtkWidget *) gtk_builder_get_object (builder, "wd_properties");
+    lbl_file = (GtkWidget *) gtk_builder_get_object (builder, "lbl_file");
+    lbl_loc = (GtkWidget *) gtk_builder_get_object (builder, "lbl_loc");
+    lbl_target = (GtkWidget *) gtk_builder_get_object (builder, "lbl_target");
+    entry_name = (GtkWidget *) gtk_builder_get_object (builder, "entry_name");
+    entry_cmd = (GtkWidget *) gtk_builder_get_object (builder, "entry_cmd");
+    entry_dir = (GtkWidget *) gtk_builder_get_object (builder, "entry_dir");
+    entry_desc = (GtkWidget *) gtk_builder_get_object (builder, "entry_desc");
+    entry_tooltip = (GtkWidget *) gtk_builder_get_object (builder, "entry_tooltip");
+    img_icon = (GtkWidget *) gtk_builder_get_object (builder, "img_icon");
+    sw_notif = (GtkWidget *) gtk_builder_get_object (builder, "sw_notif");
+    sw_terminal = (GtkWidget *) gtk_builder_get_object (builder, "sw_terminal");
+
+    gtk_label_set_text (GTK_LABEL (lbl_file), menu_cache_item_get_file_basename (item));
+    gtk_entry_set_text (GTK_ENTRY (entry_name), menu_cache_item_get_name (item));
+    gtk_entry_set_text (GTK_ENTRY (entry_tooltip), menu_cache_item_get_comment (item));
+    str = menu_cache_item_get_file_path (item);
+    gtk_label_set_text (GTK_LABEL (lbl_target), str);
+    g_free (str);
+    gtk_image_set_from_icon_name (GTK_IMAGE (img_icon), menu_cache_item_get_icon (item), GTK_ICON_SIZE_DND);
+
+    gtk_widget_show (dlg);
+    g_object_unref (builder);
 }
 
 /* End of file */
