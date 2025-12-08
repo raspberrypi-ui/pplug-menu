@@ -43,7 +43,44 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <gtk/gtk.h>
 #include <menu-cache.h>
 
-GtkWidget *dlg, *lbl_file, *lbl_loc, *lbl_target, *entry_name, *entry_cmd, *entry_dir, *entry_desc, *entry_tooltip, *img_icon, *sw_notif, *sw_terminal;
+GtkWidget *dlg, *lbl_file, *lbl_loc, *lbl_target, *entry_name, *entry_cmd, *entry_dir, *entry_desc, *entry_tooltip, *img_icon, *sw_notif, *sw_terminal, *btn_ok, *btn_cancel;
+
+static void prop_dialog_ok (GtkButton *, gpointer)
+{
+    GKeyFile *kf;
+    char *path, *str;
+    gsize len;
+
+    // use the target file as source
+    kf = g_key_file_new ();
+    g_key_file_load_from_file (kf, gtk_label_get_text (GTK_LABEL (lbl_target)), G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS, NULL);
+    g_key_file_set_string (kf, "Desktop Entry", "Name", gtk_entry_get_text (GTK_ENTRY (entry_name)));
+    g_key_file_set_string (kf, "Desktop Entry", "Comment", gtk_entry_get_text (GTK_ENTRY (entry_desc)));
+    g_key_file_set_string (kf, "Desktop Entry", "Exec", gtk_entry_get_text (GTK_ENTRY (entry_cmd)));
+    if (gtk_entry_get_text (GTK_ENTRY (entry_dir)))
+        g_key_file_set_string (kf, "Desktop Entry", "Path", gtk_entry_get_text (GTK_ENTRY (entry_dir)));
+    g_key_file_set_boolean (kf, "Desktop Entry", "StartupNotify", gtk_switch_get_state (GTK_SWITCH (sw_notif)));
+    g_key_file_set_boolean (kf, "Desktop Entry", "Terminal", gtk_switch_get_state (GTK_SWITCH (sw_terminal)));
+
+    // write to the override in local
+    str = g_path_get_basename (gtk_label_get_text (GTK_LABEL (lbl_target)));
+    path = g_build_filename (g_get_home_dir (), ".local", "share", "applications", str, NULL);
+    g_free (str);
+
+    str = g_key_file_to_data (kf, &len, NULL);
+    g_file_set_contents (path, str, len, NULL);
+    g_free (str);
+
+    g_key_file_free (kf);
+    g_free (path);
+
+    gtk_widget_destroy (dlg);
+}
+
+static void prop_dialog_cancel (GtkButton *, gpointer)
+{
+    gtk_widget_destroy (dlg);
+}
 
 void show_properties_dialog (MenuCacheItem *item)
 {
@@ -62,6 +99,8 @@ void show_properties_dialog (MenuCacheItem *item)
     img_icon = (GtkWidget *) gtk_builder_get_object (builder, "img_icon");
     sw_notif = (GtkWidget *) gtk_builder_get_object (builder, "sw_notif");
     sw_terminal = (GtkWidget *) gtk_builder_get_object (builder, "sw_terminal");
+    btn_ok = (GtkWidget *) gtk_builder_get_object (builder, "btn_ok");
+    btn_cancel = (GtkWidget *) gtk_builder_get_object (builder, "btn_cancel");
 
     gtk_image_set_from_icon_name (GTK_IMAGE (img_icon), menu_cache_item_get_icon (item), GTK_ICON_SIZE_DND);
     gtk_label_set_text (GTK_LABEL (lbl_file), menu_cache_item_get_file_basename (item));
@@ -85,6 +124,10 @@ void show_properties_dialog (MenuCacheItem *item)
     g_free (path);
     menu_cache_item_unref (MENU_CACHE_ITEM (parent));
 
+    g_signal_connect (btn_ok, "clicked", G_CALLBACK (prop_dialog_ok), NULL);
+    g_signal_connect (btn_cancel, "clicked", G_CALLBACK (prop_dialog_cancel), NULL);
+
+    gtk_window_set_default_size (GTK_WINDOW (dlg), 500, -1);
     gtk_widget_show (dlg);
     g_object_unref (builder);
 }
