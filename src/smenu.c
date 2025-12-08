@@ -57,6 +57,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #endif
 
 extern void gtk_run (void);
+extern void gtk_launch (const char *app_name);
 extern void show_properties_dialog (MenuCacheItem *item);
 
 /*----------------------------------------------------------------------------*/
@@ -82,7 +83,6 @@ GQuark sys_menu_item_quark = 0;
 /* Prototypes                                                                 */
 /*----------------------------------------------------------------------------*/
 
-static void launch_desktop_file (const char *dfile);
 static void destroy_search (MenuPlugin *m);
 static gboolean filter_apps (GtkTreeModel *model, GtkTreeIter *iter, gpointer user_data);
 static void append_to_entry (GtkWidget *entry, char val);
@@ -124,13 +124,6 @@ static void handle_popped_up (GtkMenu *menu, gpointer, gpointer, gboolean, gbool
 /*----------------------------------------------------------------------------*/
 /* Function definitions                                                       */
 /*----------------------------------------------------------------------------*/
-
-static void launch_desktop_file (const char *dfile)
-{
-    char *path = g_strdup_printf ("gtk-launch %s", dfile);
-    system (path);
-    g_free (path);
-}
 
 void launch_application (const char *appname)
 {
@@ -274,7 +267,7 @@ static gboolean handle_search_keypress (GtkWidget *, GdkEventKey *event, gpointe
                                 if (gtk_tree_selection_get_selected (sel, &model, &iter))
                                 {
                                     gtk_tree_model_get (model, &iter, 2, &str, -1);
-                                    launch_desktop_file (str);
+                                    gtk_launch (str);
                                 }
                                 destroy_search (m);
                                 return TRUE;
@@ -306,7 +299,7 @@ static void handle_list_select (GtkTreeView *tv, GtkTreePath *path, GtkTreeViewC
     if (gtk_tree_model_get_iter (mod, &iter, path))
     {
         gtk_tree_model_get (mod, &iter, 2, &str, -1);
-        launch_desktop_file (str);
+        gtk_launch (str);
     }
 
     destroy_search (m);
@@ -405,7 +398,7 @@ static void create_search (MenuPlugin *m)
 static void handle_menu_item_activate (GtkMenuItem *mi, gpointer)
 {
     MenuCacheItem *item = g_object_get_qdata (G_OBJECT (mi), sys_menu_item_quark);
-    launch_desktop_file (menu_cache_item_get_file_basename (item));
+    gtk_launch (menu_cache_item_get_file_basename (item));
 }
 
 static void handle_menu_item_add_to_desktop (GtkMenuItem *, GtkWidget* mi)
