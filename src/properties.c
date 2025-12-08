@@ -40,6 +40,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ============================================================================*/
 
+#include <glib/gstdio.h>
 #include <gtk/gtk.h>
 #include <menu-cache.h>
 
@@ -65,6 +66,10 @@ static void prop_dialog_ok (GtkButton *, gpointer)
     // write to the override in local
     str = g_path_get_basename (gtk_label_get_text (GTK_LABEL (lbl_target)));
     path = g_build_filename (g_get_home_dir (), ".local", "share", "applications", str, NULL);
+    g_free (str);
+
+    str = g_path_get_dirname (path);
+    g_mkdir_with_parents (str, S_IRUSR | S_IWUSR | S_IXUSR);
     g_free (str);
 
     str = g_key_file_to_data (kf, &len, NULL);
