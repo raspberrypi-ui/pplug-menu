@@ -48,7 +48,7 @@ GtkWidget *dlg, *lbl_file, *lbl_loc, *lbl_target, *entry_name, *entry_cmd, *entr
 void show_properties_dialog (MenuCacheItem *item)
 {
     GtkBuilder *builder;
-    char *str;
+    char *str, *path;
 
     builder = gtk_builder_new_from_file (PACKAGE_DATA_DIR "/ui/properties.ui");
     dlg = (GtkWidget *) gtk_builder_get_object (builder, "wd_properties");
@@ -59,7 +59,6 @@ void show_properties_dialog (MenuCacheItem *item)
     entry_cmd = (GtkWidget *) gtk_builder_get_object (builder, "entry_cmd");
     entry_dir = (GtkWidget *) gtk_builder_get_object (builder, "entry_dir");
     entry_desc = (GtkWidget *) gtk_builder_get_object (builder, "entry_desc");
-    entry_tooltip = (GtkWidget *) gtk_builder_get_object (builder, "entry_tooltip");
     img_icon = (GtkWidget *) gtk_builder_get_object (builder, "img_icon");
     sw_notif = (GtkWidget *) gtk_builder_get_object (builder, "sw_notif");
     sw_terminal = (GtkWidget *) gtk_builder_get_object (builder, "sw_terminal");
@@ -67,14 +66,24 @@ void show_properties_dialog (MenuCacheItem *item)
     gtk_image_set_from_icon_name (GTK_IMAGE (img_icon), menu_cache_item_get_icon (item), GTK_ICON_SIZE_DND);
     gtk_label_set_text (GTK_LABEL (lbl_file), menu_cache_item_get_file_basename (item));
     gtk_entry_set_text (GTK_ENTRY (entry_name), menu_cache_item_get_name (item));
-    gtk_entry_set_text (GTK_ENTRY (entry_tooltip), menu_cache_item_get_comment (item));
+    gtk_entry_set_text (GTK_ENTRY (entry_desc), menu_cache_item_get_comment (item));
     gtk_entry_set_text (GTK_ENTRY (entry_cmd), menu_cache_app_get_exec (MENU_CACHE_APP (item)));
+    gtk_entry_set_text (GTK_ENTRY (entry_dir), menu_cache_app_get_working_dir (MENU_CACHE_APP (item)));
+
     gtk_switch_set_active (GTK_SWITCH (sw_notif), menu_cache_app_get_use_sn (MENU_CACHE_APP (item)));
     gtk_switch_set_active (GTK_SWITCH (sw_terminal), menu_cache_app_get_use_terminal (MENU_CACHE_APP (item)));
 
-    str = menu_cache_item_get_file_path (item);
-    gtk_label_set_text (GTK_LABEL (lbl_target), str);
+    path = menu_cache_item_get_file_path (item);
+    gtk_label_set_text (GTK_LABEL (lbl_target), path);
+    g_free (path);
+
+    MenuCacheDir *parent = menu_cache_item_dup_parent (item);
+    path = menu_cache_dir_make_path (parent);
+    str = g_strdup_printf ("menu:/%s", path);
+    gtk_label_set_text (GTK_LABEL (lbl_loc), str);
     g_free (str);
+    g_free (path);
+    menu_cache_item_unref (MENU_CACHE_ITEM (parent));
 
     gtk_widget_show (dlg);
     g_object_unref (builder);
