@@ -46,38 +46,52 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 GtkWidget *dlg, *lbl_file, *lbl_loc, *lbl_target, *entry_name, *entry_cmd, *entry_dir, *entry_desc, *entry_tooltip, *img_icon, *sw_notif, *sw_terminal, *btn_ok, *btn_cancel;
 
+#define UPDATE_IF_CHANGED(name,ctrl) \
+    str = g_key_file_get_string (kf, "Desktop Entry", name, NULL); \
+    if (g_strcmp0 (str, gtk_entry_get_text (GTK_ENTRY (ctrl)))) \
+    { \
+        g_key_file_set_string (kf, "Desktop Entry", name, gtk_entry_get_text (GTK_ENTRY (ctrl))); \
+        update = TRUE; \
+    } \
+    g_free (str);
+
 static void prop_dialog_ok (GtkButton *, gpointer)
 {
     GKeyFile *kf;
     char *path, *str;
     gsize len;
+    gboolean update = FALSE;
 
     // use the target file as source
     kf = g_key_file_new ();
     g_key_file_load_from_file (kf, gtk_label_get_text (GTK_LABEL (lbl_target)), G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS, NULL);
-    g_key_file_set_string (kf, "Desktop Entry", "Name", gtk_entry_get_text (GTK_ENTRY (entry_name)));
-    g_key_file_set_string (kf, "Desktop Entry", "Comment", gtk_entry_get_text (GTK_ENTRY (entry_desc)));
-    g_key_file_set_string (kf, "Desktop Entry", "Exec", gtk_entry_get_text (GTK_ENTRY (entry_cmd)));
-    if (gtk_entry_get_text (GTK_ENTRY (entry_dir)))
-        g_key_file_set_string (kf, "Desktop Entry", "Path", gtk_entry_get_text (GTK_ENTRY (entry_dir)));
+
+    UPDATE_IF_CHANGED ("Name", entry_name);
+    UPDATE_IF_CHANGED ("Comment", entry_desc);
+    UPDATE_IF_CHANGED ("Exec", entry_cmd);
+    UPDATE_IF_CHANGED ("Path", entry_dir);
+
     g_key_file_set_boolean (kf, "Desktop Entry", "StartupNotify", gtk_switch_get_state (GTK_SWITCH (sw_notif)));
     g_key_file_set_boolean (kf, "Desktop Entry", "Terminal", gtk_switch_get_state (GTK_SWITCH (sw_terminal)));
 
     // write to the override in local
-    str = g_path_get_basename (gtk_label_get_text (GTK_LABEL (lbl_target)));
-    path = g_build_filename (g_get_home_dir (), ".local", "share", "applications", str, NULL);
-    g_free (str);
+    if (update)
+    {
+        str = g_path_get_basename (gtk_label_get_text (GTK_LABEL (lbl_target)));
+        path = g_build_filename (g_get_home_dir (), ".local", "share", "applications", str, NULL);
+        g_free (str);
 
-    str = g_path_get_dirname (path);
-    g_mkdir_with_parents (str, S_IRUSR | S_IWUSR | S_IXUSR);
-    g_free (str);
+        str = g_path_get_dirname (path);
+        g_mkdir_with_parents (str, S_IRUSR | S_IWUSR | S_IXUSR);
+        g_free (str);
 
-    str = g_key_file_to_data (kf, &len, NULL);
-    g_file_set_contents (path, str, len, NULL);
-    g_free (str);
+        str = g_key_file_to_data (kf, &len, NULL);
+        g_file_set_contents (path, str, len, NULL);
+        g_free (str);
 
+        g_free (path);
+    }
     g_key_file_free (kf);
-    g_free (path);
 
     gtk_widget_destroy (dlg);
 }
