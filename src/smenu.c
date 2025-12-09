@@ -101,10 +101,9 @@ static gboolean handle_menu_item_button_press (GtkWidget* mi, GdkEventButton* ev
 static gboolean handle_key_presses (GtkWidget *, GdkEventKey *event, gpointer user_data);
 static GtkWidget *create_system_menu_item (MenuCacheItem *item, MenuPlugin *m);
 static int sys_menu_load_submenu (MenuPlugin* m, MenuCacheDir* dir, GtkWidget* menu, int pos);
-static void sys_menu_insert_items (MenuPlugin *m, GtkMenu *menu, int position);
+static void insert_system_menu (MenuPlugin *m, GtkMenu *menu, int position);
 static void reload_system_menu (MenuPlugin *m, GtkMenu *menu);
 static void handle_reload_menu (MenuCache *, gpointer user_data);
-static void read_system_menu (GtkMenu *menu, MenuPlugin *m);
 static void handle_run_command (GtkWidget *, gpointer data);
 static GtkWidget *read_menu_item (MenuPlugin *m, char *disp_name, char *icon, void (*cmd)(void));
 static void mlogout (void);
@@ -675,13 +674,14 @@ static int sys_menu_load_submenu (MenuPlugin* m, MenuCacheDir* dir, GtkWidget* m
 
 /* Functions to load system menu into panel menu in response to 'system' tag */
 
-static void sys_menu_insert_items (MenuPlugin *m, GtkMenu *menu, int position)
+static void insert_system_menu (MenuPlugin *m, GtkMenu *menu, int position)
 {
     MenuCacheDir *dir;
 
     if (G_UNLIKELY (sys_menu_item_quark == 0))
         sys_menu_item_quark = g_quark_from_static_string ("SysMenuItem");
 
+    if (m->applist) gtk_list_store_clear (m->applist);
     dir = menu_cache_dup_root_dir (m->menu_cache);
 
     if (dir)
@@ -719,7 +719,7 @@ static void reload_system_menu (MenuPlugin *m, GtkMenu *menu)
             }
             while (child && g_object_get_qdata (G_OBJECT (child->data), sys_menu_item_quark) != NULL);
 
-            sys_menu_insert_items (m, menu, idx);
+            insert_system_menu (m, menu, idx);
             if (!child) break;
         }
         else if ((sub_menu = gtk_menu_item_get_submenu (item)))
@@ -735,27 +735,9 @@ static void handle_reload_menu (MenuCache *, gpointer user_data)
     MenuPlugin *m = (MenuPlugin *) user_data;
 
     if (m->applist) gtk_list_store_clear (m->applist);
-#ifndef LXPLUG
     /* don't reload the menu if it is on screen... */
     if (m->menu && gtk_widget_is_visible (m->menu)) return;
-#endif
     reload_system_menu (m, GTK_MENU (m->menu));
-}
-
-static void read_system_menu (GtkMenu *menu, MenuPlugin *m)
-{
-    if (m->menu_cache == NULL)
-    {
-        gboolean need_prefix = (g_getenv ("XDG_MENU_PREFIX") == NULL);
-        m->menu_cache = menu_cache_lookup (need_prefix ? "lxde-applications.menu+hidden" : "applications.menu+hidden");
-        if (m->menu_cache == NULL)
-        {
-            g_warning ("error loading applications menu");
-            return;
-        }
-        m->reload_notify = menu_cache_add_reload_notify (m->menu_cache, handle_reload_menu, m);
-    }
-    if (menu) sys_menu_insert_items (m, menu, -1);
 }
 
 /* Functions to create individual menu items from panel config */
@@ -842,7 +824,7 @@ static gboolean create_menu (MenuPlugin *m)
 #else
     g_signal_connect (m->menu, "popped-up", G_CALLBACK (handle_popped_up), m);
 #endif
-    read_system_menu (GTK_MENU (m->menu), m);
+    insert_system_menu (m, GTK_MENU (m->menu), -1);
 
     mi = gtk_separator_menu_item_new ();
     gtk_widget_set_name (mi, "sysmenu");
@@ -883,12 +865,6 @@ void menu_update_display (MenuPlugin *m)
     if (m->applist) gtk_list_store_clear (m->applist);
     if (m->menu) gtk_widget_destroy (m->menu);
     if (m->swin) destroy_search (m);
-    if (m->menu_cache)
-    {
-        menu_cache_remove_reload_notify (m->menu_cache, m->reload_notify);
-        menu_cache_unref (m->menu_cache);
-        m->menu_cache = NULL;
-    }
 }
 
 /* Handler for control message */
@@ -942,10 +918,12 @@ void menu_init (MenuPlugin *m)
     /* Set up variables */
     m->applist = gtk_list_store_new (3, GDK_TYPE_PIXBUF, G_TYPE_STRING, G_TYPE_STRING);
     m->swin = NULL;
-    m->menu_cache = NULL;
     m->menu = NULL;
 
-    read_system_menu (GTK_MENU (m->menu), m);
+    gboolean need_prefix = (g_getenv ("XDG_MENU_PREFIX") == NULL);
+    m->menu_cache = menu_cache_lookup (need_prefix ? "lxde-applications.menu+hidden" : "applications.menu+hidden");
+    if (m->menu_cache == NULL) g_warning ("Error loading applications menu");
+    m->reload_notify = menu_cache_add_reload_notify (m->menu_cache, handle_reload_menu, m);
 
     /* Show the widget and return */
     gtk_widget_show_all (m->plugin);
