@@ -93,6 +93,7 @@ static gboolean handle_search_keypress (GtkWidget *, GdkEventKey *event, gpointe
 static void handle_list_select (GtkTreeView *tv, GtkTreePath *path, GtkTreeViewColumn *, gpointer user_data);
 static void search_destroyed (GtkWidget *, gpointer data);
 static void create_search (MenuPlugin *m);
+static void destroy_menu (MenuPlugin *m);
 static void handle_menu_item_activate (GtkMenuItem *mi, gpointer);
 static void handle_menu_item_properties (GtkMenuItem *, GtkWidget* mi);
 static void handle_restore_submenu (GtkMenuItem *mi, GtkWidget *submenu);
@@ -102,8 +103,6 @@ static gboolean handle_key_presses (GtkWidget *, GdkEventKey *event, gpointer us
 static GtkWidget *create_system_menu_item (MenuCacheItem *item, MenuPlugin *m);
 static int sys_menu_load_submenu (MenuPlugin* m, MenuCacheDir* dir, GtkWidget* menu, int pos);
 static void insert_system_menu (MenuPlugin *m, GtkMenu *menu, int position);
-static void reload_system_menu (MenuPlugin *m, GtkMenu *menu);
-static void handle_reload_menu (MenuCache *, gpointer user_data);
 static void handle_run_command (GtkWidget *, gpointer data);
 static GtkWidget *read_menu_item (MenuPlugin *m, char *disp_name, char *icon, void (*cmd)(void));
 static void mlogout (void);
@@ -135,7 +134,7 @@ void launch_application (const char *appname)
 static void destroy_search (MenuPlugin *m)
 {
 #ifdef LXPLUG
-    gtk_widget_destroy (m->swin);
+    if (m->swin) gtk_widget_destroy (m->swin);
 #else
     close_popup ();
 #endif
@@ -394,6 +393,12 @@ static void create_search (MenuPlugin *m)
 
 /* Handlers for system menu items */
 
+static void destroy_menu (MenuPlugin *m)
+{
+    if (m->menu) gtk_widget_destroy (m->menu);
+    m->menu = NULL;
+}
+
 static void handle_menu_item_activate (GtkMenuItem *mi, gpointer)
 {
     MenuCacheItem *item = g_object_get_qdata (G_OBJECT (mi), sys_menu_item_quark);
@@ -490,7 +495,7 @@ static gboolean handle_key_presses (GtkWidget *, GdkEventKey *event, gpointer us
     if ((event->keyval >= 'a' && event->keyval <= 'z') ||
         (event->keyval >= 'A' && event->keyval <= 'Z'))
     {
-        gtk_menu_popdown (GTK_MENU (m->menu));
+        destroy_menu (m);
         if (!m->swin) create_search (m);
         gtk_entry_set_text (GTK_ENTRY (m->srch), "");
         append_to_entry (m->srch, event->keyval);
@@ -500,7 +505,7 @@ static gboolean handle_key_presses (GtkWidget *, GdkEventKey *event, gpointer us
 #ifdef LXPLUG
     if (event->keyval == GDK_KEY_Super_L)
     {
-        gtk_menu_popdown (GTK_MENU (m->menu));
+        destroy_menu (m);
         return TRUE;
     }
 #else
@@ -514,7 +519,7 @@ static gboolean handle_key_presses (GtkWidget *, GdkEventKey *event, gpointer us
             if (subitem)
             {
                 handle_menu_item_activate (GTK_MENU_ITEM (subitem), m);
-                gtk_widget_hide (m->menu);
+                destroy_menu (m);
                 return TRUE;
             }
         }
@@ -529,7 +534,7 @@ static gboolean handle_menu_item_button_release (GtkWidget* mi, GdkEventButton*,
     if (!longpress)
     {
         handle_menu_item_activate (GTK_MENU_ITEM (mi), m);
-        gtk_widget_hide (m->menu);
+        destroy_menu (m);
     }
     else
     {
@@ -698,48 +703,6 @@ static void insert_system_menu (MenuPlugin *m, GtkMenu *menu, int position)
     }
 }
 
-static void reload_system_menu (MenuPlugin *m, GtkMenu *menu)
-{
-    GList *children, *child;
-    GtkMenuItem* item;
-    GtkWidget* sub_menu;
-    gint idx;
-    if (!menu) return;
-    children = gtk_container_get_children (GTK_CONTAINER (menu));
-    for (child = children, idx = 0; child; child = child->next, ++idx)
-    {
-        item = GTK_MENU_ITEM (child->data);
-        if (g_object_get_qdata (G_OBJECT (item), sys_menu_item_quark) != NULL)
-        {
-            do
-            {
-                item = GTK_MENU_ITEM (child->data);
-                child = child->next;
-                gtk_widget_destroy (GTK_WIDGET (item));
-            }
-            while (child && g_object_get_qdata (G_OBJECT (child->data), sys_menu_item_quark) != NULL);
-
-            insert_system_menu (m, menu, idx);
-            if (!child) break;
-        }
-        else if ((sub_menu = gtk_menu_item_get_submenu (item)))
-        {
-            reload_system_menu (m, GTK_MENU (sub_menu));
-        }
-    }
-    g_list_free (children);
-}
-
-static void handle_reload_menu (MenuCache *, gpointer user_data)
-{
-    MenuPlugin *m = (MenuPlugin *) user_data;
-
-    if (m->applist) gtk_list_store_clear (m->applist);
-    /* don't reload the menu if it is on screen... */
-    if (m->menu && gtk_widget_is_visible (m->menu)) return;
-    reload_system_menu (m, GTK_MENU (m->menu));
-}
-
 /* Functions to create individual menu items from panel config */
 
 static void handle_run_command (GtkWidget *, gpointer data)
@@ -814,7 +777,7 @@ static gboolean create_menu (MenuPlugin *m)
 {
     GtkWidget *mi;
 
-    if (m->menu) gtk_widget_destroy (m->menu);
+    destroy_menu (m);
     m->menu = gtk_menu_new ();
     gtk_menu_set_reserve_toggle_size (GTK_MENU (m->menu), FALSE);
     gtk_container_set_border_width (GTK_CONTAINER (m->menu), 0);
@@ -862,9 +825,8 @@ void menu_update_display (MenuPlugin *m)
     wrap_set_taskbar_icon (m, m->img, "start-here");
     if (m->img) gtk_widget_set_size_request (m->img, wrap_icon_size (m) + 2 * m->padding, -1);
 
-    if (m->applist) gtk_list_store_clear (m->applist);
-    if (m->menu) gtk_widget_destroy (m->menu);
-    if (m->swin) destroy_search (m);
+    destroy_menu (m);
+    destroy_search (m);
 }
 
 /* Handler for control message */
@@ -872,7 +834,7 @@ gboolean menu_control_msg (MenuPlugin *m, const char *cmd)
 {
     if (!strncmp (cmd, "menu", 4))
     {
-        if (m->menu && gtk_widget_is_visible (m->menu)) gtk_menu_popdown (GTK_MENU (m->menu));
+        if (m->menu && gtk_widget_is_visible (m->menu)) destroy_menu (m);
         else if (m->swin && gtk_widget_is_visible (m->swin)) destroy_search (m);
         else
         {
@@ -923,7 +885,9 @@ void menu_init (MenuPlugin *m)
     gboolean need_prefix = (g_getenv ("XDG_MENU_PREFIX") == NULL);
     m->menu_cache = menu_cache_lookup (need_prefix ? "lxde-applications.menu+hidden" : "applications.menu+hidden");
     if (m->menu_cache == NULL) g_warning ("Error loading applications menu");
-    m->reload_notify = menu_cache_add_reload_notify (m->menu_cache, handle_reload_menu, m);
+
+    // we don't need a notification, but if you don't call this, the cache never loads...
+    m->reload_notify = menu_cache_add_reload_notify (m->menu_cache, NULL, NULL);
 
     /* Show the widget and return */
     gtk_widget_show_all (m->plugin);
@@ -933,12 +897,10 @@ void menu_destructor (gpointer user_data)
 {
     MenuPlugin *m = (MenuPlugin *) user_data;
 
-    if (m->menu) gtk_widget_destroy (m->menu);
-#ifdef LXPLUG
-    if (m->swin) destroy_search (m);
-#else
-    close_popup ();
-#endif
+    destroy_menu (m);
+    destroy_search (m);
+
+    if (m->applist) gtk_list_store_clear (m->applist);
     if (m->menu_cache)
     {
         menu_cache_remove_reload_notify (m->menu_cache, m->reload_notify);
