@@ -44,7 +44,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <gtk/gtk.h>
 #include <menu-cache.h>
 
-GtkWidget *dlg, *lbl_file, *lbl_loc, *lbl_target, *entry_name, *entry_cmd, *entry_dir, *entry_desc, *entry_tooltip, *img_icon, *sw_notif, *sw_terminal, *btn_ok, *btn_cancel;
+GtkWidget *dlg, *lbl_file, *lbl_loc, *lbl_target, *entry_name, *entry_cmd, *entry_dir, *entry_desc, *img_icon, *sw_notif, *sw_terminal, *btn_ok, *btn_cancel;
 
 static gboolean update_if_changed (GKeyFile *kf, const char *param, GtkWidget *widget)
 {
