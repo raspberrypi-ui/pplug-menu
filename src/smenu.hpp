@@ -47,6 +47,7 @@ class WayfireSmenu : public WayfireWidget
     sigc::connection icon_timer;
 
     WfOption <int> padding {"panel/smenu_padding"};
+    WfOption <bool> show_tooltips {"panel/smenu_show_tooltips"};
     WfOption <int> search_height {"panel/smenu_search_height"};
     WfOption <bool> search_fixed {"panel/smenu_search_fixed"};
 

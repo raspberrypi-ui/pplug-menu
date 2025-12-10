@@ -68,8 +68,9 @@ extern void show_properties_dialog (MenuCacheItem *item);
 /* Global data                                                                */
 /*----------------------------------------------------------------------------*/
 
-conf_table_t conf_table[4] = {
+conf_table_t conf_table[5] = {
     {CONF_TYPE_INT,  "padding",          N_("Icon horizontal padding"),     NULL},
+    {CONF_TYPE_BOOL, "show_tooltips",    N_("Show tooltips for menu items"), NULL},
     {CONF_TYPE_BOOL, "search_fixed",     N_("Fix height of search window"), NULL},
     {CONF_TYPE_INT,  "search_height",    N_("Search window height"),        NULL},
     {CONF_TYPE_NONE, NULL,               NULL,                              NULL}
@@ -609,6 +610,11 @@ static GtkWidget *create_system_menu_item (MenuCacheItem *item, MenuPlugin *m)
             gtk_list_store_insert_with_values (m->applist, NULL, -1, 0, icon, 1, menu_cache_item_get_name (item), 2, menu_cache_item_get_file_basename (item), -1);
 
             gtk_widget_set_name (mi, "syssubmenu");
+            if (m->tooltips)
+            {
+                const char *comment = menu_cache_item_get_comment (item);
+                if (comment) gtk_widget_set_tooltip_text (mi, comment);
+            }
             g_signal_connect (mi, "button-press-event", G_CALLBACK (handle_menu_item_button_press), m);
 #ifdef LXPLUG
             g_signal_connect (mi, "activate", G_CALLBACK (handle_menu_item_activate), m);
@@ -933,13 +939,15 @@ static GtkWidget *menu_constructor (LXPanel *panel, config_setting_t *settings)
 
     /* Set config defaults */
     m->padding = 6;
+    m->tooltips = FALSE;
     m->fixed = FALSE;
     m->height = 300;
 
     /* Read config */
     conf_table[0].value = (void *) &m->padding;
-    conf_table[1].value = (void *) &m->fixed;
-    conf_table[2].value = (void *) &m->height;
+    conf_table[1].value = (void *) &m->tooltips;
+    conf_table[2].value = (void *) &m->fixed;
+    conf_table[3].value = (void *) &m->height;
     lxplug_read_settings (m->settings, conf_table);
 
     menu_init (m);

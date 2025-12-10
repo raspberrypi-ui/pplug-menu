@@ -8,6 +8,10 @@
 		<_short>Icon Horizontal Padding</_short>
 		<default>6</default>
 	</option>
+	<option name="smenu_show_tooltips" type="bool">
+		<_short>Searchable Menu Show Tooltips</_short>
+		<default>false</default>
+	</option>
 	<option name="smenu_search_height" type="int">
 		<_short>Searchable Menu Search Window Height</_short>
 		<default>300</default>

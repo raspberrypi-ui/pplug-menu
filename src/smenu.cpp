@@ -43,6 +43,7 @@ void WayfireSmenu::read_settings (void)
     m->height = search_height;
     m->fixed = search_fixed;
     m->padding = padding;
+    m->tooltips = show_tooltips;
 }
 
 void WayfireSmenu::settings_changed_cb (void)
@@ -85,6 +86,7 @@ void WayfireSmenu::init (Gtk::HBox *container)
     search_height.set_callback (sigc::mem_fun (*this, &WayfireSmenu::settings_changed_cb));
     search_fixed.set_callback (sigc::mem_fun (*this, &WayfireSmenu::settings_changed_cb));
     padding.set_callback (sigc::mem_fun (*this, &WayfireSmenu::settings_changed_cb));
+    show_tooltips.set_callback (sigc::mem_fun (*this, &WayfireSmenu::settings_changed_cb));
 }
 
 WayfireSmenu::~WayfireSmenu()

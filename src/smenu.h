@@ -52,13 +52,14 @@ typedef struct
     int padding;
     int height;
     int rheight;
+    gboolean tooltips;
     gboolean fixed;
 
     MenuCache* menu_cache;
     gpointer reload_notify;
 } MenuPlugin;
 
-extern conf_table_t conf_table[4];
+extern conf_table_t conf_table[5];
 
 /*----------------------------------------------------------------------------*/
 /* Prototypes                                                                 */

@@ -38,6 +38,10 @@ msgstr ""
 msgid "Icon horizontal padding"
 msgstr "Icon Horizontal Padding"
 
+#: ../src/smenu.c:71
+msgid "Show tooltips for menu items"
+msgstr "Show Tooltips for Menu Items"
+
 #: ../src/smenu.c:72
 msgid "Fix height of search window"
 msgstr "Fix Size of Search Window"
