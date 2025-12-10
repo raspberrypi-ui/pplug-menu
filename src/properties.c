@@ -57,7 +57,7 @@ static gboolean update_string_if_changed (GKeyFile *kf, const char *param, GtkWi
     lcparam = g_strdup_printf ("%s[%s]", param, str);
     if (!g_key_file_has_key (kf, "Desktop Entry", lcparam, NULL))
     {
-        g_clear_pointer (&lcparam, g_free);
+        g_free (lcparam);
         lcparam = g_strdup (param);
     }
     g_free (str);
