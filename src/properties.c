@@ -90,25 +90,15 @@ static void prop_dialog_ok (GtkButton *, gpointer)
     g_key_file_load_from_file (kf, gtk_label_get_text (GTK_LABEL (lbl_target)), G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS, NULL);
 
     str = g_strdup (getenv ("LANG"));
-    if (strchr (str, '.')) *strchr (str, '.') = 0;
+    if (strchr (str, '.')) *(strchr (str, '.')) = 0;
     name = g_strdup_printf ("Name[%s]", str);
     comment = g_strdup_printf ("Comment[%s]", str);
+    if (!g_key_file_has_key (kf, "Desktop Entry", name, NULL)) g_clear_pointer (&name, g_free);
+    if (!g_key_file_has_key (kf, "Desktop Entry", comment, NULL)) g_clear_pointer (&comment, g_free);
     g_free (str);
 
-    if (!g_key_file_has_key (kf, "Desktop Entry", name, NULL))
-    {
-        g_free (name);
-        name = g_strdup ("Name");
-    }
-
-    if (!g_key_file_has_key (kf, "Desktop Entry", comment, NULL))
-    {
-        g_free (comment);
-        comment = g_strdup ("Comment");
-    }
-
-    update |= update_if_changed (kf, name, entry_name);
-    update |= update_if_changed (kf, comment, entry_desc);
+    update |= update_if_changed (kf, name ? name : "Name", entry_name);
+    update |= update_if_changed (kf, comment ? comment: "Comment", entry_desc);
     update |= update_if_changed (kf, "Exec", entry_cmd);
     update |= update_if_changed (kf, "Path", entry_dir);
     update |= update_if_changed (kf, "StartupNotify", sw_notif);
