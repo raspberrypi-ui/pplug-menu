@@ -46,42 +46,54 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 GtkWidget *dlg, *lbl_file, *lbl_loc, *lbl_target, *entry_name, *entry_cmd, *entry_dir, *entry_desc, *img_icon, *sw_notif, *sw_terminal, *btn_ok, *btn_cancel;
 
-static gboolean update_if_changed (GKeyFile *kf, const char *param, GtkWidget *widget)
+static gboolean update_string_if_changed (GKeyFile *kf, const char *param, GtkWidget *widget)
 {
-    char *str;
+    char *str, *lcparam;
     const char *ent;
     gboolean update;
 
-    if (GTK_IS_ENTRY (widget))
+    str = g_strdup (getenv ("LANG"));
+    if (strchr (str, '.')) *(strchr (str, '.')) = 0;
+    lcparam = g_strdup_printf ("%s[%s]", param, str);
+    if (!g_key_file_has_key (kf, "Desktop Entry", lcparam, NULL))
     {
-        str = g_key_file_get_string (kf, "Desktop Entry", param, NULL);
-        ent = gtk_entry_get_text (GTK_ENTRY (widget));
-        if (!str && ent[0] == 0) update = FALSE;
-        else if (!g_strcmp0 (str, ent)) update = FALSE;
-        else
-        {
-            g_key_file_set_string (kf, "Desktop Entry", param, ent);
-            update = TRUE;
-        }
-        g_free (str);
+        g_clear_pointer (&lcparam, g_free);
+        lcparam = g_strdup (param);
     }
-    else if (GTK_IS_SWITCH (widget))
-    {
-        if (gtk_switch_get_state (GTK_SWITCH (widget)) != g_key_file_get_boolean (kf, "Desktop Entry", param, NULL))
-        {
-            g_key_file_set_boolean (kf, "Desktop Entry", param, gtk_switch_get_state (GTK_SWITCH (widget)));
-            update = TRUE;
-        }
-        else update = FALSE;
-    }
+    g_free (str);
 
+    str = g_key_file_get_string (kf, "Desktop Entry", lcparam, NULL);
+    ent = gtk_entry_get_text (GTK_ENTRY (widget));
+    if (!str && ent[0] == 0) update = FALSE;
+    else if (!g_strcmp0 (str, ent)) update = FALSE;
+    else
+    {
+        g_key_file_set_string (kf, "Desktop Entry", lcparam, ent);
+        update = TRUE;
+    }
+    g_free (str);
+    g_free (lcparam);
+    return update;
+}
+
+static gboolean update_bool_if_changed (GKeyFile *kf, const char *param, GtkWidget *widget)
+{
+    gboolean update, sw;
+
+    sw = gtk_switch_get_state (GTK_SWITCH (widget));
+    if (sw != g_key_file_get_boolean (kf, "Desktop Entry", param, NULL))
+    {
+        g_key_file_set_boolean (kf, "Desktop Entry", param, sw);
+        update = TRUE;
+    }
+    else update = FALSE;
     return update;
 }
 
 static void prop_dialog_ok (GtkButton *, gpointer)
 {
     GKeyFile *kf;
-    char *path, *str, *name, *comment;
+    char *path, *str;
     gsize len;
     gboolean update = FALSE;
 
@@ -89,23 +101,12 @@ static void prop_dialog_ok (GtkButton *, gpointer)
     kf = g_key_file_new ();
     g_key_file_load_from_file (kf, gtk_label_get_text (GTK_LABEL (lbl_target)), G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS, NULL);
 
-    str = g_strdup (getenv ("LANG"));
-    if (strchr (str, '.')) *(strchr (str, '.')) = 0;
-    name = g_strdup_printf ("Name[%s]", str);
-    comment = g_strdup_printf ("Comment[%s]", str);
-    if (!g_key_file_has_key (kf, "Desktop Entry", name, NULL)) g_clear_pointer (&name, g_free);
-    if (!g_key_file_has_key (kf, "Desktop Entry", comment, NULL)) g_clear_pointer (&comment, g_free);
-    g_free (str);
-
-    update |= update_if_changed (kf, name ? name : "Name", entry_name);
-    update |= update_if_changed (kf, comment ? comment: "Comment", entry_desc);
-    update |= update_if_changed (kf, "Exec", entry_cmd);
-    update |= update_if_changed (kf, "Path", entry_dir);
-    update |= update_if_changed (kf, "StartupNotify", sw_notif);
-    update |= update_if_changed (kf, "Terminal", sw_terminal);
-
-    g_free (name);
-    g_free (comment);
+    update |= update_string_if_changed (kf, "Name", entry_name);
+    update |= update_string_if_changed (kf, "Comment", entry_desc);
+    update |= update_string_if_changed (kf, "Exec", entry_cmd);
+    update |= update_string_if_changed (kf, "Path", entry_dir);
+    update |= update_bool_if_changed (kf, "StartupNotify", sw_notif);
+    update |= update_bool_if_changed (kf, "Terminal", sw_terminal);
 
     // write to the override in local
     if (update)
