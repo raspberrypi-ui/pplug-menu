@@ -81,7 +81,7 @@ static gboolean update_if_changed (GKeyFile *kf, const char *param, GtkWidget *w
 static void prop_dialog_ok (GtkButton *, gpointer)
 {
     GKeyFile *kf;
-    char *path, *str;
+    char *path, *str, *name, *comment;
     gsize len;
     gboolean update = FALSE;
 
@@ -89,12 +89,33 @@ static void prop_dialog_ok (GtkButton *, gpointer)
     kf = g_key_file_new ();
     g_key_file_load_from_file (kf, gtk_label_get_text (GTK_LABEL (lbl_target)), G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS, NULL);
 
-    update |= update_if_changed (kf, "Name", entry_name);
-    update |= update_if_changed (kf, "Comment", entry_desc);
+    str = g_strdup (getenv ("LANG"));
+    if (strchr (str, '.')) *strchr (str, '.') = 0;
+    name = g_strdup_printf ("Name[%s]", str);
+    comment = g_strdup_printf ("Comment[%s]", str);
+    g_free (str);
+
+    if (!g_key_file_has_key (kf, "Desktop Entry", name, NULL))
+    {
+        g_free (name);
+        name = g_strdup ("Name");
+    }
+
+    if (!g_key_file_has_key (kf, "Desktop Entry", comment, NULL))
+    {
+        g_free (comment);
+        comment = g_strdup ("Comment");
+    }
+
+    update |= update_if_changed (kf, name, entry_name);
+    update |= update_if_changed (kf, comment, entry_desc);
     update |= update_if_changed (kf, "Exec", entry_cmd);
     update |= update_if_changed (kf, "Path", entry_dir);
     update |= update_if_changed (kf, "StartupNotify", sw_notif);
     update |= update_if_changed (kf, "Terminal", sw_terminal);
+
+    g_free (name);
+    g_free (comment);
 
     // write to the override in local
     if (update)
@@ -146,9 +167,11 @@ void show_properties_dialog (MenuCacheItem *item)
     gtk_image_set_from_icon_name (GTK_IMAGE (img_icon), menu_cache_item_get_icon (item), GTK_ICON_SIZE_DND);
     gtk_label_set_text (GTK_LABEL (lbl_file), menu_cache_item_get_file_basename (item));
     gtk_entry_set_text (GTK_ENTRY (entry_name), menu_cache_item_get_name (item));
-    gtk_entry_set_text (GTK_ENTRY (entry_desc), menu_cache_item_get_comment (item));
     gtk_entry_set_text (GTK_ENTRY (entry_cmd), menu_cache_app_get_exec (MENU_CACHE_APP (item)));
-    gtk_entry_set_text (GTK_ENTRY (entry_dir), menu_cache_app_get_working_dir (MENU_CACHE_APP (item)));
+    if (menu_cache_item_get_comment (item))
+        gtk_entry_set_text (GTK_ENTRY (entry_desc), menu_cache_item_get_comment (item));
+    if (menu_cache_app_get_working_dir (MENU_CACHE_APP (item)))
+        gtk_entry_set_text (GTK_ENTRY (entry_dir), menu_cache_app_get_working_dir (MENU_CACHE_APP (item)));
 
     gtk_switch_set_active (GTK_SWITCH (sw_notif), menu_cache_app_get_use_sn (MENU_CACHE_APP (item)));
     gtk_switch_set_active (GTK_SWITCH (sw_terminal), menu_cache_app_get_use_terminal (MENU_CACHE_APP (item)));
