@@ -46,14 +46,37 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 GtkWidget *dlg, *lbl_file, *lbl_loc, *lbl_target, *entry_name, *entry_cmd, *entry_dir, *entry_desc, *entry_tooltip, *img_icon, *sw_notif, *sw_terminal, *btn_ok, *btn_cancel;
 
-#define UPDATE_IF_CHANGED(name,ctrl) \
-    str = g_key_file_get_string (kf, "Desktop Entry", name, NULL); \
-    if (g_strcmp0 (str, gtk_entry_get_text (GTK_ENTRY (ctrl)))) \
-    { \
-        g_key_file_set_string (kf, "Desktop Entry", name, gtk_entry_get_text (GTK_ENTRY (ctrl))); \
-        update = TRUE; \
-    } \
-    g_free (str);
+static gboolean update_if_changed (GKeyFile *kf, const char *param, GtkWidget *widget)
+{
+    char *str;
+    const char *ent;
+    gboolean update;
+
+    if (GTK_IS_ENTRY (widget))
+    {
+        str = g_key_file_get_string (kf, "Desktop Entry", param, NULL);
+        ent = gtk_entry_get_text (GTK_ENTRY (widget));
+        if (!str && ent[0] == 0) update = FALSE;
+        else if (!g_strcmp0 (str, ent)) update = FALSE;
+        else
+        {
+            g_key_file_set_string (kf, "Desktop Entry", param, ent);
+            update = TRUE;
+        }
+        g_free (str);
+    }
+    else if (GTK_IS_SWITCH (widget))
+    {
+        if (gtk_switch_get_state (GTK_SWITCH (widget)) != g_key_file_get_boolean (kf, "Desktop Entry", param, NULL))
+        {
+            g_key_file_set_boolean (kf, "Desktop Entry", param, gtk_switch_get_state (GTK_SWITCH (widget)));
+            update = TRUE;
+        }
+        else update = FALSE;
+    }
+
+    return update;
+}
 
 static void prop_dialog_ok (GtkButton *, gpointer)
 {
@@ -66,13 +89,12 @@ static void prop_dialog_ok (GtkButton *, gpointer)
     kf = g_key_file_new ();
     g_key_file_load_from_file (kf, gtk_label_get_text (GTK_LABEL (lbl_target)), G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS, NULL);
 
-    UPDATE_IF_CHANGED ("Name", entry_name);
-    UPDATE_IF_CHANGED ("Comment", entry_desc);
-    UPDATE_IF_CHANGED ("Exec", entry_cmd);
-    UPDATE_IF_CHANGED ("Path", entry_dir);
-
-    g_key_file_set_boolean (kf, "Desktop Entry", "StartupNotify", gtk_switch_get_state (GTK_SWITCH (sw_notif)));
-    g_key_file_set_boolean (kf, "Desktop Entry", "Terminal", gtk_switch_get_state (GTK_SWITCH (sw_terminal)));
+    update |= update_if_changed (kf, "Name", entry_name);
+    update |= update_if_changed (kf, "Comment", entry_desc);
+    update |= update_if_changed (kf, "Exec", entry_cmd);
+    update |= update_if_changed (kf, "Path", entry_dir);
+    update |= update_if_changed (kf, "StartupNotify", sw_notif);
+    update |= update_if_changed (kf, "Terminal", sw_terminal);
 
     // write to the override in local
     if (update)
