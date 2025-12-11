@@ -63,7 +63,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 /* Global data                                                                */
 /*----------------------------------------------------------------------------*/
 
-GtkWidget *dlg, *idlg, *lbl_target, *entry_name, *entry_cmd, *entry_dir, *entry_desc, *img_icon, *sw_notif, *sw_terminal;
+GtkWidget *dlg, *idlg, *entry_name, *entry_cmd, *entry_dir, *entry_desc, *img_icon, *sw_notif, *sw_terminal;
 
 GtkListStore *items;
 GtkTreeModel *sorted;
@@ -76,12 +76,12 @@ char *icon_name;
 
 static void show_icon_dialog (GtkButton *, gpointer);
 static void add_icon (gpointer data, gpointer);
-static void icon_dialog_ok (GtkButton *, gpointer);
+static void icon_dialog_ok (GtkButton *, gpointer user_data);
 static void load_from_file (GtkButton *, gpointer);
 static void show_icon (void);
 static gboolean update_string_if_changed (GKeyFile *kf, const char *param, GtkWidget *widget);
 static gboolean update_bool_if_changed (GKeyFile *kf, const char *param, GtkWidget *widget);
-static void prop_dialog_ok (GtkButton *, gpointer);
+static void prop_dialog_ok (GtkButton *, gpointer user_data);
 static void dialog_cancel (GtkButton *, gpointer);
 
 /*----------------------------------------------------------------------------*/
@@ -196,6 +196,7 @@ static void load_from_file (GtkButton *, gpointer)
 void show_properties_dialog (MenuCacheItem *item)
 {
     GtkBuilder *builder;
+    GtkWidget *lbl_target;
     char *str, *path;
 
     builder = gtk_builder_new_from_file (PACKAGE_DATA_DIR "/ui/properties.ui");
@@ -235,7 +236,7 @@ void show_properties_dialog (MenuCacheItem *item)
     g_free (path);
     menu_cache_item_unref (MENU_CACHE_ITEM (parent));
 
-    g_signal_connect (gtk_builder_get_object (builder, "btn_ok"), "clicked", G_CALLBACK (prop_dialog_ok), NULL);
+    g_signal_connect (gtk_builder_get_object (builder, "btn_ok"), "clicked", G_CALLBACK (prop_dialog_ok), lbl_target);
     g_signal_connect (gtk_builder_get_object (builder, "btn_cancel"), "clicked", G_CALLBACK (dialog_cancel), dlg);
     g_signal_connect (gtk_builder_get_object (builder, "btn_icons"), "clicked", G_CALLBACK (show_icon_dialog), NULL);
 
@@ -303,8 +304,9 @@ static gboolean update_bool_if_changed (GKeyFile *kf, const char *param, GtkWidg
     return update;
 }
 
-static void prop_dialog_ok (GtkButton *, gpointer)
+static void prop_dialog_ok (GtkButton *, gpointer user_data)
 {
+    GtkWidget *lbl_target = (GtkWidget *) user_data;
     GKeyFile *kf;
     char *path, *str;
     gsize len;
