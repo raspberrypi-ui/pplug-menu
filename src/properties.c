@@ -172,6 +172,7 @@ void show_properties_dialog (MenuCacheItem *item)
     GtkBuilder *builder;
     GdkPixbuf *pixbuf;
     char *str, *path;
+    int scale;
 
     builder = gtk_builder_new_from_file (PACKAGE_DATA_DIR "/ui/properties.ui");
     dlg = (GtkWidget *) gtk_builder_get_object (builder, "wd_properties");
@@ -190,8 +191,12 @@ void show_properties_dialog (MenuCacheItem *item)
     btn_icons = (GtkWidget *) gtk_builder_get_object (builder, "btn_icons");
 
     icon_name = g_strdup (menu_cache_item_get_icon (item));
-    pixbuf = gtk_icon_theme_load_icon_for_scale (gtk_icon_theme_get_default (), icon_name, 32,
-        gtk_widget_get_scale_factor (dlg), GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
+    scale = gtk_widget_get_scale_factor (dlg);
+    if (strchr (icon_name, '/'))
+        pixbuf = gdk_pixbuf_new_from_file_at_scale (icon_name, scale * 32, scale * 32, TRUE, NULL);
+    else
+        pixbuf = gtk_icon_theme_load_icon_for_scale (gtk_icon_theme_get_default (), icon_name, 32,
+            scale, GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
     set_image_from_pixbuf (img_icon, pixbuf);
     g_object_unref (pixbuf);
 
