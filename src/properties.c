@@ -63,12 +63,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 /* Global data                                                                */
 /*----------------------------------------------------------------------------*/
 
-GtkWidget *dlg, *idlg, *entry_name, *entry_cmd, *entry_dir, *entry_desc, *img_icon, *sw_notif, *sw_terminal;
+static GtkWidget *dlg, *idlg, *entry_name, *entry_cmd, *entry_dir, *entry_desc, *img_icon, *sw_notif, *sw_terminal;
 
-GtkListStore *items;
-GtkTreeModel *sorted;
+static GtkListStore *items;
+static GtkTreeModel *sorted;
 
-char *icon_name;
+static char *icon_name;
 
 /*----------------------------------------------------------------------------*/
 /* Prototypes                                                                 */
