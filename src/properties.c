@@ -50,6 +50,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "lxutils.h"
 #endif
 
+/*----------------------------------------------------------------------------*/
+/* Typedefs and macros                                                        */
+/*----------------------------------------------------------------------------*/
+
+#define ITEM_TITLE      0
+#define ITEM_ICON       1
+#define CELL_WIDTH      100
+
+/*----------------------------------------------------------------------------*/
+/* Global data                                                                */
+/*----------------------------------------------------------------------------*/
+
 GtkWidget *dlg, *lbl_file, *lbl_loc, *lbl_target, *entry_name, *entry_cmd, *entry_dir, *entry_desc, *img_icon, *sw_notif, *sw_terminal, *btn_ok, *btn_cancel, *btn_icons;
 GtkWidget *idlg, *iv_icons, *btn_i_ok, *btn_i_cancel;
 
@@ -57,6 +69,169 @@ GtkListStore *items;
 GtkTreeModel *sorted;
 
 char *icon_name;
+
+/*----------------------------------------------------------------------------*/
+/* Prototypes                                                                 */
+/*----------------------------------------------------------------------------*/
+
+static void show_icon_dialog (GtkButton *, gpointer);
+static void add_icon (gpointer data, gpointer);
+static void icon_dialog_ok (GtkButton *, gpointer);
+static void icon_dialog_cancel (GtkButton *, gpointer);
+static gboolean update_string_if_changed (GKeyFile *kf, const char *param, GtkWidget *widget);
+static gboolean update_bool_if_changed (GKeyFile *kf, const char *param, GtkWidget *widget);
+static void prop_dialog_ok (GtkButton *, gpointer);
+static void prop_dialog_cancel (GtkButton *, gpointer);
+
+/*----------------------------------------------------------------------------*/
+/* Function definitions                                                       */
+/*----------------------------------------------------------------------------*/
+
+/* Change icon dialog */
+
+static void show_icon_dialog (GtkButton *, gpointer)
+{
+    GtkBuilder *builder;
+    GtkCellRenderer *renderer;
+    GList *icon_list;
+
+    builder = gtk_builder_new_from_file (PACKAGE_DATA_DIR "/ui/properties.ui");
+    idlg = (GtkWidget *) gtk_builder_get_object (builder, "wd_icons");
+    iv_icons = (GtkWidget *) gtk_builder_get_object (builder, "iv_icons");
+    btn_i_ok = (GtkWidget *) gtk_builder_get_object (builder, "btn_i_ok");
+    btn_i_cancel = (GtkWidget *) gtk_builder_get_object (builder, "btn_i_cancel");
+    gtk_window_set_transient_for (GTK_WINDOW (idlg), GTK_WINDOW (dlg));
+    gtk_window_set_destroy_with_parent (GTK_WINDOW (idlg), TRUE);
+
+    items = gtk_list_store_new (2, G_TYPE_STRING, GDK_TYPE_PIXBUF);
+    sorted = gtk_tree_model_sort_new_with_model (GTK_TREE_MODEL (items));
+    gtk_tree_sortable_set_sort_column_id (GTK_TREE_SORTABLE (sorted), ITEM_TITLE, GTK_SORT_ASCENDING);
+
+    renderer = gtk_cell_renderer_pixbuf_new ();
+    gtk_cell_renderer_set_fixed_size (renderer, CELL_WIDTH, -1);
+    gtk_cell_layout_pack_start (GTK_CELL_LAYOUT (iv_icons), renderer, FALSE);
+    gtk_cell_layout_add_attribute (GTK_CELL_LAYOUT (iv_icons), renderer, "pixbuf", ITEM_ICON);
+    GValue val = G_VALUE_INIT;
+    g_value_init (&val, G_TYPE_INT);
+    g_value_set_int (&val, gtk_widget_get_scale_factor (dlg));
+    g_object_set_property (G_OBJECT (renderer), "scale", &val);
+
+    renderer = gtk_cell_renderer_text_new ();
+    gtk_cell_renderer_set_alignment (renderer, 0.5, 0.0);
+    g_object_set (renderer, "wrap-width", CELL_WIDTH, "wrap-mode", PANGO_WRAP_WORD, "alignment", PANGO_ALIGN_CENTER, NULL);
+    gtk_cell_layout_pack_start (GTK_CELL_LAYOUT (iv_icons), renderer, FALSE);
+    gtk_cell_layout_add_attribute (GTK_CELL_LAYOUT (iv_icons), renderer, "markup", ITEM_TITLE);
+
+    gtk_icon_view_set_model (GTK_ICON_VIEW (iv_icons), sorted);
+
+    icon_list = gtk_icon_theme_list_icons (gtk_icon_theme_get_default (), "Applications");
+    g_list_foreach (icon_list, add_icon, NULL);
+    g_list_free_full (icon_list, (GDestroyNotify) g_free);
+    gtk_window_set_default_size (GTK_WINDOW (idlg), 500, 400);
+
+    g_signal_connect (btn_i_ok, "clicked", G_CALLBACK (icon_dialog_ok), NULL);
+    g_signal_connect (btn_i_cancel, "clicked", G_CALLBACK (icon_dialog_cancel), NULL);
+
+    gtk_widget_show (idlg);
+    g_object_unref (builder);
+}
+
+static void add_icon (gpointer data, gpointer)
+{
+    GtkTreeIter entry;
+    GdkPixbuf *icon;
+    const char *name = (const char *) data;
+
+    icon = gtk_icon_theme_load_icon_for_scale (gtk_icon_theme_get_default (), name, 32,
+        gtk_widget_get_scale_factor (dlg), GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
+    gtk_list_store_append (items, &entry);
+    gtk_list_store_set (items, &entry, ITEM_TITLE, name, ITEM_ICON, icon, -1);
+    if (icon) g_object_unref (icon);
+}
+
+static void icon_dialog_ok (GtkButton *, gpointer)
+{
+    GtkTreeIter iter;
+    GList *sel;
+
+    sel = gtk_icon_view_get_selected_items (GTK_ICON_VIEW (iv_icons));
+    if (sel)
+    {
+        g_free (icon_name);
+        gtk_tree_model_get_iter (sorted, &iter, (GtkTreePath *) sel->data);
+        gtk_tree_model_get (sorted, &iter, ITEM_TITLE, &icon_name, -1);
+        gtk_image_set_from_icon_name (GTK_IMAGE (img_icon), icon_name, GTK_ICON_SIZE_DND);
+        g_list_free_full (sel, (GDestroyNotify) gtk_tree_path_free);
+    }
+    gtk_widget_destroy (idlg);
+}
+
+static void icon_dialog_cancel (GtkButton *, gpointer)
+{
+    gtk_widget_destroy (idlg);
+}
+
+/* File properties dialog */
+
+void show_properties_dialog (MenuCacheItem *item)
+{
+    GtkBuilder *builder;
+    GdkPixbuf *pixbuf;
+    char *str, *path;
+
+    builder = gtk_builder_new_from_file (PACKAGE_DATA_DIR "/ui/properties.ui");
+    dlg = (GtkWidget *) gtk_builder_get_object (builder, "wd_properties");
+    lbl_file = (GtkWidget *) gtk_builder_get_object (builder, "lbl_file");
+    lbl_loc = (GtkWidget *) gtk_builder_get_object (builder, "lbl_loc");
+    lbl_target = (GtkWidget *) gtk_builder_get_object (builder, "lbl_target");
+    entry_name = (GtkWidget *) gtk_builder_get_object (builder, "entry_name");
+    entry_cmd = (GtkWidget *) gtk_builder_get_object (builder, "entry_cmd");
+    entry_dir = (GtkWidget *) gtk_builder_get_object (builder, "entry_dir");
+    entry_desc = (GtkWidget *) gtk_builder_get_object (builder, "entry_desc");
+    img_icon = (GtkWidget *) gtk_builder_get_object (builder, "img_icon");
+    sw_notif = (GtkWidget *) gtk_builder_get_object (builder, "sw_notif");
+    sw_terminal = (GtkWidget *) gtk_builder_get_object (builder, "sw_terminal");
+    btn_ok = (GtkWidget *) gtk_builder_get_object (builder, "btn_ok");
+    btn_cancel = (GtkWidget *) gtk_builder_get_object (builder, "btn_cancel");
+    btn_icons = (GtkWidget *) gtk_builder_get_object (builder, "btn_icons");
+
+    icon_name = g_strdup (menu_cache_item_get_icon (item));
+    pixbuf = gtk_icon_theme_load_icon_for_scale (gtk_icon_theme_get_default (), icon_name, 32,
+        gtk_widget_get_scale_factor (dlg), GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
+    set_image_from_pixbuf (img_icon, pixbuf);
+    g_object_unref (pixbuf);
+
+    gtk_label_set_text (GTK_LABEL (lbl_file), menu_cache_item_get_file_basename (item));
+    gtk_entry_set_text (GTK_ENTRY (entry_name), menu_cache_item_get_name (item));
+    gtk_entry_set_text (GTK_ENTRY (entry_cmd), menu_cache_app_get_exec (MENU_CACHE_APP (item)));
+    if (menu_cache_item_get_comment (item))
+        gtk_entry_set_text (GTK_ENTRY (entry_desc), menu_cache_item_get_comment (item));
+    if (menu_cache_app_get_working_dir (MENU_CACHE_APP (item)))
+        gtk_entry_set_text (GTK_ENTRY (entry_dir), menu_cache_app_get_working_dir (MENU_CACHE_APP (item)));
+
+    gtk_switch_set_active (GTK_SWITCH (sw_notif), menu_cache_app_get_use_sn (MENU_CACHE_APP (item)));
+    gtk_switch_set_active (GTK_SWITCH (sw_terminal), menu_cache_app_get_use_terminal (MENU_CACHE_APP (item)));
+
+    path = menu_cache_item_get_file_path (item);
+    gtk_label_set_text (GTK_LABEL (lbl_target), path);
+    g_free (path);
+
+    MenuCacheDir *parent = menu_cache_item_dup_parent (item);
+    path = menu_cache_dir_make_path (parent);
+    str = g_strdup_printf ("menu:/%s", path);
+    gtk_label_set_text (GTK_LABEL (lbl_loc), str);
+    g_free (str);
+    g_free (path);
+    menu_cache_item_unref (MENU_CACHE_ITEM (parent));
+
+    g_signal_connect (btn_ok, "clicked", G_CALLBACK (prop_dialog_ok), NULL);
+    g_signal_connect (btn_cancel, "clicked", G_CALLBACK (prop_dialog_cancel), NULL);
+    g_signal_connect (btn_icons, "clicked", G_CALLBACK (show_icon_dialog), NULL);
+
+    gtk_window_set_default_size (GTK_WINDOW (dlg), 500, -1);
+    gtk_widget_show (dlg);
+    g_object_unref (builder);
+}
 
 static gboolean update_string_if_changed (GKeyFile *kf, const char *param, GtkWidget *widget)
 {
@@ -153,151 +328,6 @@ static void prop_dialog_ok (GtkButton *, gpointer)
 static void prop_dialog_cancel (GtkButton *, gpointer)
 {
     gtk_widget_destroy (dlg);
-}
-
-#define ITEM_TITLE      0
-#define ITEM_ICON       1
-#define CELL_WIDTH      100
-
-static void add_icon (gpointer data, gpointer)
-{
-    GtkTreeIter entry;
-    GdkPixbuf *icon;
-    const char *name = (const char *) data;
-
-    icon = gtk_icon_theme_load_icon_for_scale (gtk_icon_theme_get_default (), name, 32,
-        gtk_widget_get_scale_factor (dlg), GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
-    gtk_list_store_append (items, &entry);
-    gtk_list_store_set (items, &entry, ITEM_TITLE, name, ITEM_ICON, icon, -1);
-    if (icon) g_object_unref (icon);
-}
-
-static void icon_dialog_ok (GtkButton *, gpointer)
-{
-    GtkTreeIter iter;
-    GList *sel;
-
-    sel = gtk_icon_view_get_selected_items (GTK_ICON_VIEW (iv_icons));
-    if (sel)
-    {
-        g_free (icon_name);
-        gtk_tree_model_get_iter (sorted, &iter, (GtkTreePath *) sel->data);
-        gtk_tree_model_get (sorted, &iter, ITEM_TITLE, &icon_name, -1);
-        gtk_image_set_from_icon_name (GTK_IMAGE (img_icon), icon_name, GTK_ICON_SIZE_DND);
-        g_list_free_full (sel, (GDestroyNotify) gtk_tree_path_free);
-    }
-    gtk_widget_destroy (idlg);
-}
-
-static void icon_dialog_cancel (GtkButton *, gpointer)
-{
-    gtk_widget_destroy (idlg);
-}
-
-static void prop_dialog_icons (GtkButton *, gpointer)
-{
-    GtkBuilder *builder;
-    GtkCellRenderer *renderer;
-    GList *icon_list;
-
-    builder = gtk_builder_new_from_file (PACKAGE_DATA_DIR "/ui/properties.ui");
-    idlg = (GtkWidget *) gtk_builder_get_object (builder, "wd_icons");
-    iv_icons = (GtkWidget *) gtk_builder_get_object (builder, "iv_icons");
-    btn_i_ok = (GtkWidget *) gtk_builder_get_object (builder, "btn_i_ok");
-    btn_i_cancel = (GtkWidget *) gtk_builder_get_object (builder, "btn_i_cancel");
-    gtk_window_set_transient_for (GTK_WINDOW (idlg), GTK_WINDOW (dlg));
-
-    items = gtk_list_store_new (2, G_TYPE_STRING, GDK_TYPE_PIXBUF);
-    sorted = gtk_tree_model_sort_new_with_model (GTK_TREE_MODEL (items));
-    gtk_tree_sortable_set_sort_column_id (GTK_TREE_SORTABLE (sorted), ITEM_TITLE, GTK_SORT_ASCENDING);
-
-    renderer = gtk_cell_renderer_pixbuf_new ();
-    gtk_cell_renderer_set_fixed_size (renderer, CELL_WIDTH, -1);
-    gtk_cell_layout_pack_start (GTK_CELL_LAYOUT (iv_icons), renderer, FALSE);
-    gtk_cell_layout_add_attribute (GTK_CELL_LAYOUT (iv_icons), renderer, "pixbuf", ITEM_ICON);
-    GValue val = G_VALUE_INIT;
-    g_value_init (&val, G_TYPE_INT);
-    g_value_set_int (&val, gtk_widget_get_scale_factor (dlg));
-    g_object_set_property (G_OBJECT (renderer), "scale", &val);
-
-    renderer = gtk_cell_renderer_text_new ();
-    gtk_cell_renderer_set_alignment (renderer, 0.5, 0.0);
-    g_object_set (renderer, "wrap-width", CELL_WIDTH, "wrap-mode", PANGO_WRAP_WORD, "alignment", PANGO_ALIGN_CENTER, NULL);
-    gtk_cell_layout_pack_start (GTK_CELL_LAYOUT (iv_icons), renderer, FALSE);
-    gtk_cell_layout_add_attribute (GTK_CELL_LAYOUT (iv_icons), renderer, "markup", ITEM_TITLE);
-
-    gtk_icon_view_set_model (GTK_ICON_VIEW (iv_icons), sorted);
-
-    icon_list = gtk_icon_theme_list_icons (gtk_icon_theme_get_default (), "Applications");
-    g_list_foreach (icon_list, add_icon, NULL);
-    g_list_free_full (icon_list, (GDestroyNotify) g_free);
-    gtk_window_set_default_size (GTK_WINDOW (idlg), 500, 400);
-
-    g_signal_connect (btn_i_ok, "clicked", G_CALLBACK (icon_dialog_ok), NULL);
-    g_signal_connect (btn_i_cancel, "clicked", G_CALLBACK (icon_dialog_cancel), NULL);
-
-    gtk_widget_show (idlg);
-    g_object_unref (builder);
-}
-
-void show_properties_dialog (MenuCacheItem *item)
-{
-    GtkBuilder *builder;
-    GdkPixbuf *pixbuf;
-    char *str, *path;
-
-    builder = gtk_builder_new_from_file (PACKAGE_DATA_DIR "/ui/properties.ui");
-    dlg = (GtkWidget *) gtk_builder_get_object (builder, "wd_properties");
-    lbl_file = (GtkWidget *) gtk_builder_get_object (builder, "lbl_file");
-    lbl_loc = (GtkWidget *) gtk_builder_get_object (builder, "lbl_loc");
-    lbl_target = (GtkWidget *) gtk_builder_get_object (builder, "lbl_target");
-    entry_name = (GtkWidget *) gtk_builder_get_object (builder, "entry_name");
-    entry_cmd = (GtkWidget *) gtk_builder_get_object (builder, "entry_cmd");
-    entry_dir = (GtkWidget *) gtk_builder_get_object (builder, "entry_dir");
-    entry_desc = (GtkWidget *) gtk_builder_get_object (builder, "entry_desc");
-    img_icon = (GtkWidget *) gtk_builder_get_object (builder, "img_icon");
-    sw_notif = (GtkWidget *) gtk_builder_get_object (builder, "sw_notif");
-    sw_terminal = (GtkWidget *) gtk_builder_get_object (builder, "sw_terminal");
-    btn_ok = (GtkWidget *) gtk_builder_get_object (builder, "btn_ok");
-    btn_cancel = (GtkWidget *) gtk_builder_get_object (builder, "btn_cancel");
-    btn_icons = (GtkWidget *) gtk_builder_get_object (builder, "btn_icons");
-
-    icon_name = g_strdup (menu_cache_item_get_icon (item));
-    pixbuf = gtk_icon_theme_load_icon_for_scale (gtk_icon_theme_get_default (), icon_name, 32,
-        gtk_widget_get_scale_factor (dlg), GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
-    set_image_from_pixbuf (img_icon, pixbuf);
-    g_object_unref (pixbuf);
-
-    gtk_label_set_text (GTK_LABEL (lbl_file), menu_cache_item_get_file_basename (item));
-    gtk_entry_set_text (GTK_ENTRY (entry_name), menu_cache_item_get_name (item));
-    gtk_entry_set_text (GTK_ENTRY (entry_cmd), menu_cache_app_get_exec (MENU_CACHE_APP (item)));
-    if (menu_cache_item_get_comment (item))
-        gtk_entry_set_text (GTK_ENTRY (entry_desc), menu_cache_item_get_comment (item));
-    if (menu_cache_app_get_working_dir (MENU_CACHE_APP (item)))
-        gtk_entry_set_text (GTK_ENTRY (entry_dir), menu_cache_app_get_working_dir (MENU_CACHE_APP (item)));
-
-    gtk_switch_set_active (GTK_SWITCH (sw_notif), menu_cache_app_get_use_sn (MENU_CACHE_APP (item)));
-    gtk_switch_set_active (GTK_SWITCH (sw_terminal), menu_cache_app_get_use_terminal (MENU_CACHE_APP (item)));
-
-    path = menu_cache_item_get_file_path (item);
-    gtk_label_set_text (GTK_LABEL (lbl_target), path);
-    g_free (path);
-
-    MenuCacheDir *parent = menu_cache_item_dup_parent (item);
-    path = menu_cache_dir_make_path (parent);
-    str = g_strdup_printf ("menu:/%s", path);
-    gtk_label_set_text (GTK_LABEL (lbl_loc), str);
-    g_free (str);
-    g_free (path);
-    menu_cache_item_unref (MENU_CACHE_ITEM (parent));
-
-    g_signal_connect (btn_ok, "clicked", G_CALLBACK (prop_dialog_ok), NULL);
-    g_signal_connect (btn_cancel, "clicked", G_CALLBACK (prop_dialog_cancel), NULL);
-    g_signal_connect (btn_icons, "clicked", G_CALLBACK (prop_dialog_icons), NULL);
-
-    gtk_window_set_default_size (GTK_WINDOW (dlg), 500, -1);
-    gtk_widget_show (dlg);
-    g_object_unref (builder);
 }
 
 /* End of file */
