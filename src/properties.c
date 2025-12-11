@@ -63,8 +63,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 /* Global data                                                                */
 /*----------------------------------------------------------------------------*/
 
-GtkWidget *dlg, *lbl_file, *lbl_loc, *lbl_target, *entry_name, *entry_cmd, *entry_dir, *entry_desc, *img_icon, *sw_notif, *sw_terminal, *btn_ok, *btn_cancel, *btn_icons;
-GtkWidget *idlg, *iv_icons, *btn_i_ok, *btn_i_cancel, *btn_i_file;
+GtkWidget *dlg, *idlg, *lbl_target, *entry_name, *entry_cmd, *entry_dir, *entry_desc, *img_icon, *sw_notif, *sw_terminal;
 
 GtkListStore *items;
 GtkTreeModel *sorted;
@@ -96,13 +95,11 @@ static void show_icon_dialog (GtkButton *, gpointer)
     GtkBuilder *builder;
     GtkCellRenderer *renderer;
     GList *icon_list;
+    GtkWidget *iv_icons;
 
     builder = gtk_builder_new_from_file (PACKAGE_DATA_DIR "/ui/properties.ui");
     idlg = (GtkWidget *) gtk_builder_get_object (builder, "wd_icons");
     iv_icons = (GtkWidget *) gtk_builder_get_object (builder, "iv_icons");
-    btn_i_ok = (GtkWidget *) gtk_builder_get_object (builder, "btn_i_ok");
-    btn_i_cancel = (GtkWidget *) gtk_builder_get_object (builder, "btn_i_cancel");
-    btn_i_file = (GtkWidget *) gtk_builder_get_object (builder, "btn_i_file");
     gtk_window_set_transient_for (GTK_WINDOW (idlg), GTK_WINDOW (dlg));
     gtk_window_set_destroy_with_parent (GTK_WINDOW (idlg), TRUE);
 
@@ -132,9 +129,9 @@ static void show_icon_dialog (GtkButton *, gpointer)
     g_list_free_full (icon_list, (GDestroyNotify) g_free);
     gtk_window_set_default_size (GTK_WINDOW (idlg), 500, 400);
 
-    g_signal_connect (btn_i_ok, "clicked", G_CALLBACK (icon_dialog_ok), NULL);
-    g_signal_connect (btn_i_cancel, "clicked", G_CALLBACK (dialog_cancel), idlg);
-    g_signal_connect (btn_i_file, "clicked", G_CALLBACK (load_from_file), idlg);
+    g_signal_connect (gtk_builder_get_object (builder, "btn_i_ok"), "clicked", G_CALLBACK (icon_dialog_ok), iv_icons);
+    g_signal_connect (gtk_builder_get_object (builder, "btn_i_cancel"), "clicked", G_CALLBACK (dialog_cancel), idlg);
+    g_signal_connect (gtk_builder_get_object (builder, "btn_i_file"), "clicked", G_CALLBACK (load_from_file), idlg);
 
     gtk_widget_show (idlg);
     g_object_unref (builder);
@@ -153,10 +150,11 @@ static void add_icon (gpointer data, gpointer)
     if (icon) g_object_unref (icon);
 }
 
-static void icon_dialog_ok (GtkButton *, gpointer)
+static void icon_dialog_ok (GtkButton *, gpointer user_data)
 {
     GtkTreeIter iter;
     GList *sel;
+    GtkWidget *iv_icons = (GtkWidget *) user_data;
 
     sel = gtk_icon_view_get_selected_items (GTK_ICON_VIEW (iv_icons));
     if (sel)
@@ -202,8 +200,6 @@ void show_properties_dialog (MenuCacheItem *item)
 
     builder = gtk_builder_new_from_file (PACKAGE_DATA_DIR "/ui/properties.ui");
     dlg = (GtkWidget *) gtk_builder_get_object (builder, "wd_properties");
-    lbl_file = (GtkWidget *) gtk_builder_get_object (builder, "lbl_file");
-    lbl_loc = (GtkWidget *) gtk_builder_get_object (builder, "lbl_loc");
     lbl_target = (GtkWidget *) gtk_builder_get_object (builder, "lbl_target");
     entry_name = (GtkWidget *) gtk_builder_get_object (builder, "entry_name");
     entry_cmd = (GtkWidget *) gtk_builder_get_object (builder, "entry_cmd");
@@ -212,14 +208,11 @@ void show_properties_dialog (MenuCacheItem *item)
     img_icon = (GtkWidget *) gtk_builder_get_object (builder, "img_icon");
     sw_notif = (GtkWidget *) gtk_builder_get_object (builder, "sw_notif");
     sw_terminal = (GtkWidget *) gtk_builder_get_object (builder, "sw_terminal");
-    btn_ok = (GtkWidget *) gtk_builder_get_object (builder, "btn_ok");
-    btn_cancel = (GtkWidget *) gtk_builder_get_object (builder, "btn_cancel");
-    btn_icons = (GtkWidget *) gtk_builder_get_object (builder, "btn_icons");
 
     icon_name = g_strdup (menu_cache_item_get_icon (item));
     show_icon ();
 
-    gtk_label_set_text (GTK_LABEL (lbl_file), menu_cache_item_get_file_basename (item));
+    gtk_label_set_text (GTK_LABEL (gtk_builder_get_object (builder, "lbl_file")), menu_cache_item_get_file_basename (item));
     gtk_entry_set_text (GTK_ENTRY (entry_name), menu_cache_item_get_name (item));
     gtk_entry_set_text (GTK_ENTRY (entry_cmd), menu_cache_app_get_exec (MENU_CACHE_APP (item)));
     if (menu_cache_item_get_comment (item))
@@ -237,14 +230,14 @@ void show_properties_dialog (MenuCacheItem *item)
     MenuCacheDir *parent = menu_cache_item_dup_parent (item);
     path = menu_cache_dir_make_path (parent);
     str = g_strdup_printf ("menu:/%s", path);
-    gtk_label_set_text (GTK_LABEL (lbl_loc), str);
+    gtk_label_set_text (GTK_LABEL (gtk_builder_get_object (builder, "lbl_loc")), str);
     g_free (str);
     g_free (path);
     menu_cache_item_unref (MENU_CACHE_ITEM (parent));
 
-    g_signal_connect (btn_ok, "clicked", G_CALLBACK (prop_dialog_ok), NULL);
-    g_signal_connect (btn_cancel, "clicked", G_CALLBACK (dialog_cancel), dlg);
-    g_signal_connect (btn_icons, "clicked", G_CALLBACK (show_icon_dialog), NULL);
+    g_signal_connect (gtk_builder_get_object (builder, "btn_ok"), "clicked", G_CALLBACK (prop_dialog_ok), NULL);
+    g_signal_connect (gtk_builder_get_object (builder, "btn_cancel"), "clicked", G_CALLBACK (dialog_cancel), dlg);
+    g_signal_connect (gtk_builder_get_object (builder, "btn_icons"), "clicked", G_CALLBACK (show_icon_dialog), NULL);
 
     gtk_window_set_default_size (GTK_WINDOW (dlg), 500, -1);
     gtk_widget_show (dlg);
