@@ -39,10 +39,11 @@
             <property name="layout-style">end</property>
             <child>
               <object class="GtkButton" id="btn_i_cancel">
-                <property name="label" translatable="yes">Cancel</property>
+                <property name="label" translatable="yes">_Cancel</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>
+                <property name="use-underline">True</property>
               </object>
               <packing>
                 <property name="expand">True</property>
@@ -52,10 +53,11 @@
             </child>
             <child>
               <object class="GtkButton" id="btn_i_ok">
-                <property name="label" translatable="yes">OK</property>
+                <property name="label" translatable="yes">_OK</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>
+                <property name="use-underline">True</property>
               </object>
               <packing>
                 <property name="expand">True</property>
@@ -65,10 +67,11 @@
             </child>
             <child>
               <object class="GtkButton" id="btn_i_file">
-                <property name="label" translatable="yes">From File...</property>
+                <property name="label" translatable="yes">From _File...</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>
+                <property name="use-underline">True</property>
               </object>
               <packing>
                 <property name="expand">True</property>
@@ -495,10 +498,11 @@
             <property name="layout-style">end</property>
             <child>
               <object class="GtkButton" id="btn_icons">
-                <property name="label" translatable="yes">Change Icon...</property>
+                <property name="label" translatable="yes">Change _Icon...</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>
+                <property name="use-underline">True</property>
               </object>
               <packing>
                 <property name="expand">True</property>
@@ -509,10 +513,11 @@
             </child>
             <child>
               <object class="GtkButton" id="btn_cancel">
-                <property name="label" translatable="yes">Cancel</property>
+                <property name="label" translatable="yes">_Cancel</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>
+                <property name="use-underline">True</property>
               </object>
               <packing>
                 <property name="expand">True</property>
@@ -522,10 +527,11 @@
             </child>
             <child>
               <object class="GtkButton" id="btn_ok">
-                <property name="label" translatable="yes">OK</property>
+                <property name="label" translatable="yes">_OK</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>
+                <property name="use-underline">True</property>
               </object>
               <packing>
                 <property name="expand">True</property>
