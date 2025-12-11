@@ -2,21 +2,6 @@
 Copyright (c) 2022-2025 Raspberry Pi
 All rights reserved.
 
-Some code taken from the lxpanel and pcmanfm projects
-
-Copyright (c) 2006-2010 Hong Jen Yee (PCMan) <pcman.tw@gmail.com>
-            2006-2008 Jim Huang <jserv.tw@gmail.com>
-            2008 Fred Chien <fred@lxde.org>
-            2009 Ying-Chun Liu (PaulLiu) <grandpaul@gmail.com>
-            2009-2010 Marty Jack <martyj19@comcast.net>
-            2010 Jürgen Hötzel <juergen@archlinux.org>
-            2010-2011 Julien Lavergne <julien.lavergne@gmail.com>
-            2012-2013 Henry Gebhardt <hsggebhardt@gmail.com>
-            2012 Michael Rawson <michaelrawson76@gmail.com>
-            2014 Max Krummenacher <max.oss.09@gmail.com>
-            2014 SHiNE CsyFeK <csyfek@users.sourceforge.net>
-            2014 Andriy Grytsenko <andrej@rep.kiev.ua>
-
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
     * Redistributions of source code must retain the above copyright
@@ -40,10 +25,10 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ============================================================================*/
 
-#include <glib/gstdio.h>
 #include <gtk/gtk.h>
-#include <menu-cache.h>
+#include <glib/gstdio.h>
 #include <glib/gi18n.h>
+#include <menu-cache.h>
 
 #ifdef LXPLUG
 #include "plugin.h"
@@ -175,7 +160,7 @@ static void load_from_file (GtkButton *, gpointer)
 
     filter = gtk_file_filter_new ();
     gtk_file_filter_add_pixbuf_formats (filter);
-    dialog = gtk_file_chooser_dialog_new ("Open File", GTK_WINDOW (idlg), GTK_FILE_CHOOSER_ACTION_OPEN,
+    dialog = gtk_file_chooser_dialog_new (_("Select Image File"), GTK_WINDOW (idlg), GTK_FILE_CHOOSER_ACTION_OPEN,
         _("_Cancel"), GTK_RESPONSE_CANCEL, _("_Select"), GTK_RESPONSE_ACCEPT, NULL);
     gtk_file_chooser_set_filter (GTK_FILE_CHOOSER (dialog), filter);
 
