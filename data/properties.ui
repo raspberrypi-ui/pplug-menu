@@ -5,6 +5,7 @@
   <object class="GtkWindow" id="wd_icons">
     <property name="can-focus">False</property>
     <property name="border-width">5</property>
+    <property name="title" translatable="yes">Change Icon</property>
     <child>
       <object class="GtkBox">
         <property name="visible">True</property>

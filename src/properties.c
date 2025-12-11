@@ -44,6 +44,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <gtk/gtk.h>
 #include <menu-cache.h>
 
+#ifdef LXPLUG
+#include "plugin.h"
+#else
+#include "lxutils.h"
+#endif
+
 GtkWidget *dlg, *lbl_file, *lbl_loc, *lbl_target, *entry_name, *entry_cmd, *entry_dir, *entry_desc, *img_icon, *sw_notif, *sw_terminal, *btn_ok, *btn_cancel, *btn_icons;
 GtkWidget *idlg, *iv_icons, *btn_i_ok, *btn_i_cancel;
 
@@ -159,7 +165,8 @@ static void add_icon (gpointer data, gpointer)
     GdkPixbuf *icon;
     const char *name = (const char *) data;
 
-    icon = gtk_icon_theme_load_icon_for_scale (gtk_icon_theme_get_default (), name, 32, gtk_widget_get_scale_factor (dlg), 0, NULL);
+    icon = gtk_icon_theme_load_icon_for_scale (gtk_icon_theme_get_default (), name, 32,
+        gtk_widget_get_scale_factor (dlg), GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
     gtk_list_store_append (items, &entry);
     gtk_list_store_set (items, &entry, ITEM_TITLE, name, ITEM_ICON, icon, -1);
     if (icon) g_object_unref (icon);
@@ -204,12 +211,6 @@ static void prop_dialog_icons (GtkButton *, gpointer)
     sorted = gtk_tree_model_sort_new_with_model (GTK_TREE_MODEL (items));
     gtk_tree_sortable_set_sort_column_id (GTK_TREE_SORTABLE (sorted), ITEM_TITLE, GTK_SORT_ASCENDING);
 
-    renderer = gtk_cell_renderer_text_new ();
-    gtk_cell_renderer_set_alignment (renderer, 0.5, 0.0);
-    g_object_set (renderer, "wrap-width", CELL_WIDTH, "wrap-mode", PANGO_WRAP_WORD, "alignment", PANGO_ALIGN_CENTER, NULL);
-    gtk_cell_layout_pack_start (GTK_CELL_LAYOUT (iv_icons), renderer, FALSE);
-    gtk_cell_layout_add_attribute (GTK_CELL_LAYOUT (iv_icons), renderer, "markup", ITEM_TITLE);
-
     renderer = gtk_cell_renderer_pixbuf_new ();
     gtk_cell_renderer_set_fixed_size (renderer, CELL_WIDTH, -1);
     gtk_cell_layout_pack_start (GTK_CELL_LAYOUT (iv_icons), renderer, FALSE);
@@ -218,6 +219,12 @@ static void prop_dialog_icons (GtkButton *, gpointer)
     g_value_init (&val, G_TYPE_INT);
     g_value_set_int (&val, gtk_widget_get_scale_factor (dlg));
     g_object_set_property (G_OBJECT (renderer), "scale", &val);
+
+    renderer = gtk_cell_renderer_text_new ();
+    gtk_cell_renderer_set_alignment (renderer, 0.5, 0.0);
+    g_object_set (renderer, "wrap-width", CELL_WIDTH, "wrap-mode", PANGO_WRAP_WORD, "alignment", PANGO_ALIGN_CENTER, NULL);
+    gtk_cell_layout_pack_start (GTK_CELL_LAYOUT (iv_icons), renderer, FALSE);
+    gtk_cell_layout_add_attribute (GTK_CELL_LAYOUT (iv_icons), renderer, "markup", ITEM_TITLE);
 
     gtk_icon_view_set_model (GTK_ICON_VIEW (iv_icons), sorted);
 
@@ -236,6 +243,7 @@ static void prop_dialog_icons (GtkButton *, gpointer)
 void show_properties_dialog (MenuCacheItem *item)
 {
     GtkBuilder *builder;
+    GdkPixbuf *pixbuf;
     char *str, *path;
 
     builder = gtk_builder_new_from_file (PACKAGE_DATA_DIR "/ui/properties.ui");
@@ -255,7 +263,11 @@ void show_properties_dialog (MenuCacheItem *item)
     btn_icons = (GtkWidget *) gtk_builder_get_object (builder, "btn_icons");
 
     icon_name = g_strdup (menu_cache_item_get_icon (item));
-    gtk_image_set_from_icon_name (GTK_IMAGE (img_icon), icon_name, GTK_ICON_SIZE_DND);
+    pixbuf = gtk_icon_theme_load_icon_for_scale (gtk_icon_theme_get_default (), icon_name, 32,
+        gtk_widget_get_scale_factor (dlg), GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
+    set_image_from_pixbuf (img_icon, pixbuf);
+    g_object_unref (pixbuf);
+
     gtk_label_set_text (GTK_LABEL (lbl_file), menu_cache_item_get_file_basename (item));
     gtk_entry_set_text (GTK_ENTRY (entry_name), menu_cache_item_get_name (item));
     gtk_entry_set_text (GTK_ENTRY (entry_cmd), menu_cache_app_get_exec (MENU_CACHE_APP (item)));
