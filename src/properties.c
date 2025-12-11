@@ -77,11 +77,10 @@ char *icon_name;
 static void show_icon_dialog (GtkButton *, gpointer);
 static void add_icon (gpointer data, gpointer);
 static void icon_dialog_ok (GtkButton *, gpointer);
-static void icon_dialog_cancel (GtkButton *, gpointer);
 static gboolean update_string_if_changed (GKeyFile *kf, const char *param, GtkWidget *widget);
 static gboolean update_bool_if_changed (GKeyFile *kf, const char *param, GtkWidget *widget);
 static void prop_dialog_ok (GtkButton *, gpointer);
-static void prop_dialog_cancel (GtkButton *, gpointer);
+static void dialog_cancel (GtkButton *, gpointer);
 
 /*----------------------------------------------------------------------------*/
 /* Function definitions                                                       */
@@ -130,7 +129,7 @@ static void show_icon_dialog (GtkButton *, gpointer)
     gtk_window_set_default_size (GTK_WINDOW (idlg), 500, 400);
 
     g_signal_connect (btn_i_ok, "clicked", G_CALLBACK (icon_dialog_ok), NULL);
-    g_signal_connect (btn_i_cancel, "clicked", G_CALLBACK (icon_dialog_cancel), NULL);
+    g_signal_connect (btn_i_cancel, "clicked", G_CALLBACK (dialog_cancel), idlg);
 
     gtk_widget_show (idlg);
     g_object_unref (builder);
@@ -163,11 +162,6 @@ static void icon_dialog_ok (GtkButton *, gpointer)
         gtk_image_set_from_icon_name (GTK_IMAGE (img_icon), icon_name, GTK_ICON_SIZE_DND);
         g_list_free_full (sel, (GDestroyNotify) gtk_tree_path_free);
     }
-    gtk_widget_destroy (idlg);
-}
-
-static void icon_dialog_cancel (GtkButton *, gpointer)
-{
     gtk_widget_destroy (idlg);
 }
 
@@ -225,7 +219,7 @@ void show_properties_dialog (MenuCacheItem *item)
     menu_cache_item_unref (MENU_CACHE_ITEM (parent));
 
     g_signal_connect (btn_ok, "clicked", G_CALLBACK (prop_dialog_ok), NULL);
-    g_signal_connect (btn_cancel, "clicked", G_CALLBACK (prop_dialog_cancel), NULL);
+    g_signal_connect (btn_cancel, "clicked", G_CALLBACK (dialog_cancel), dlg);
     g_signal_connect (btn_icons, "clicked", G_CALLBACK (show_icon_dialog), NULL);
 
     gtk_window_set_default_size (GTK_WINDOW (dlg), 500, -1);
@@ -325,9 +319,9 @@ static void prop_dialog_ok (GtkButton *, gpointer)
     gtk_widget_destroy (dlg);
 }
 
-static void prop_dialog_cancel (GtkButton *, gpointer)
+static void dialog_cancel (GtkButton *, gpointer data)
 {
-    gtk_widget_destroy (dlg);
+    gtk_widget_destroy (GTK_WIDGET (data));
 }
 
 /* End of file */
