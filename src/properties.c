@@ -83,6 +83,7 @@ static void show_icon_dialog (GtkButton *, gpointer)
     GtkWidget *iv_icons;
     GValue val = G_VALUE_INIT;
 
+    textdomain (GETTEXT_PACKAGE);
     builder = gtk_builder_new_from_file (PACKAGE_DATA_DIR "/ui/properties.ui");
     idlg = (GtkWidget *) gtk_builder_get_object (builder, "wd_icons");
     iv_icons = (GtkWidget *) gtk_builder_get_object (builder, "iv_icons");
@@ -184,6 +185,7 @@ void show_properties_dialog (MenuCacheItem *item)
     GtkWidget *lbl_target;
     char *str, *path;
 
+    textdomain (GETTEXT_PACKAGE);
     builder = gtk_builder_new_from_file (PACKAGE_DATA_DIR "/ui/properties.ui");
     dlg = (GtkWidget *) gtk_builder_get_object (builder, "wd_properties");
     lbl_target = (GtkWidget *) gtk_builder_get_object (builder, "lbl_target");
