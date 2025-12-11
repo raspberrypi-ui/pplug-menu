@@ -81,7 +81,7 @@ static void show_icon_dialog (GtkButton *, gpointer)
     GtkCellRenderer *renderer;
     GList *icon_list;
     GtkWidget *iv_icons;
-    GValue val;
+    GValue val = G_VALUE_INIT;
 
     builder = gtk_builder_new_from_file (PACKAGE_DATA_DIR "/ui/properties.ui");
     idlg = (GtkWidget *) gtk_builder_get_object (builder, "wd_icons");
@@ -97,7 +97,6 @@ static void show_icon_dialog (GtkButton *, gpointer)
     gtk_cell_renderer_set_fixed_size (renderer, CELL_WIDTH, -1);
     gtk_cell_layout_pack_start (GTK_CELL_LAYOUT (iv_icons), renderer, FALSE);
     gtk_cell_layout_add_attribute (GTK_CELL_LAYOUT (iv_icons), renderer, "pixbuf", ITEM_ICON);
-    val = G_VALUE_INIT;
     g_value_init (&val, G_TYPE_INT);
     g_value_set_int (&val, gtk_widget_get_scale_factor (dlg));
     g_object_set_property (G_OBJECT (renderer), "scale", &val);
