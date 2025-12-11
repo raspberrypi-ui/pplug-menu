@@ -87,6 +87,7 @@
           <object class="GtkBox">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
+            <property name="spacing">10</property>
             <child>
               <object class="GtkBox">
                 <property name="visible">True</property>
@@ -174,12 +175,23 @@
               </packing>
             </child>
             <child>
-              <object class="GtkImage" id="img_icon">
+              <object class="GtkFrame">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
-                <property name="xpad">20</property>
-                <property name="icon-name">image-missing</property>
-                <property name="icon_size">5</property>
+                <property name="halign">center</property>
+                <property name="valign">center</property>
+                <property name="label-xalign">0</property>
+                <property name="shadow-type">in</property>
+                <child>
+                  <object class="GtkImage" id="img_icon">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="xpad">10</property>
+                    <property name="ypad">10</property>
+                    <property name="icon-name">image-missing</property>
+                    <property name="icon_size">5</property>
+                  </object>
+                </child>
               </object>
               <packing>
                 <property name="expand">False</property>
