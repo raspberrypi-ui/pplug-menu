@@ -339,11 +339,11 @@ static void on_entry_changed( GtkEntry* entry, GtkImage* img )
         const char *name = menu_cache_item_get_icon(MENU_CACHE_ITEM(app));
         if (name)
         {
-            gtk_image_set_from_icon_name(img, name, GTK_ICON_SIZE_DIALOG);
+            gtk_image_set_from_icon_name(img, name, GTK_ICON_SIZE_DND);
             return;
         }
     }
-    gtk_image_set_from_icon_name(img, "gtk-execute", GTK_ICON_SIZE_DIALOG);
+    gtk_image_set_from_icon_name(img, "gtk-execute", GTK_ICON_SIZE_DND);
 }
 #endif
 
@@ -362,31 +362,37 @@ static void activate_window(GtkWindow* toplevel_window)
 
 void gtk_run()
 {
-    GtkWidget *entry, *hbox, *img, *dlg_vbox;
+    GtkWidget *entry, *hbox, *img, *dlg_vbox, *lbl;
+
+    textdomain (GETTEXT_PACKAGE);
 
     if(!win)
     {
-        win = gtk_dialog_new_with_buttons( _("Run"),
+        win = gtk_dialog_new_with_buttons( C_("dialog", "Run"),
                                            NULL,
                                            0,
                                            _("_Cancel"), GTK_RESPONSE_CANCEL,
                                            _("_OK"), GTK_RESPONSE_OK,
                                            NULL );
         gtk_dialog_set_default_response( (GtkDialog*)win, GTK_RESPONSE_OK );
+        gtk_container_set_border_width(GTK_CONTAINER (win), 5 );
         entry = gtk_entry_new();
 
         gtk_entry_set_activates_default( (GtkEntry*)entry, TRUE );
         dlg_vbox = gtk_dialog_get_content_area((GtkDialog*)win);
+
+        lbl = gtk_label_new(_("Enter the command you want to execute:"));
+        gtk_label_set_xalign (GTK_LABEL (lbl), 0.0);
         gtk_box_pack_start( (GtkBox*)dlg_vbox,
-                             gtk_label_new(_("Enter the command you want to execute:")),
-                             FALSE, FALSE, 8 );
-        hbox = gtk_box_new( GTK_ORIENTATION_HORIZONTAL, 2 );
-        img = gtk_image_new_from_icon_name ( "gtk-execute", GTK_ICON_SIZE_DIALOG );
+                             lbl,
+                             FALSE, FALSE, 0 );
+        hbox = gtk_box_new( GTK_ORIENTATION_HORIZONTAL, 5 );
+        img = gtk_image_new_from_icon_name ( "gtk-execute", GTK_ICON_SIZE_DND );
         gtk_box_pack_start( (GtkBox*)hbox, img,
-                             FALSE, FALSE, 4 );
-        gtk_box_pack_start( (GtkBox*)hbox, entry, TRUE, TRUE, 4 );
+                             FALSE, FALSE, 5 );
+        gtk_box_pack_start( (GtkBox*)hbox, entry, TRUE, TRUE, 5 );
         gtk_box_pack_start( (GtkBox*)dlg_vbox,
-                             hbox, FALSE, FALSE, 8 );
+                             hbox, FALSE, FALSE, 5 );
         g_signal_connect( win, "response", G_CALLBACK(on_response), entry );
         gtk_window_set_position( (GtkWindow*)win, GTK_WIN_POS_CENTER );
         gtk_window_set_default_size( (GtkWindow*)win, 360, -1 );

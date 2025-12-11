@@ -22,6 +22,10 @@ msgstr ""
 msgid "Run"
 msgstr "Run..."
 
+msgctxt "dialog"
+msgid "Run"
+msgstr "Run Command"
+
 #: ../src/gtk-run.c:396
 msgid "_Cancel"
 msgstr "_Cancel"
@@ -32,7 +36,7 @@ msgstr "_OK"
 
 #: ../src/gtk-run.c:413
 msgid "Enter the command you want to execute:"
-msgstr ""
+msgstr "Enter the command to execute:"
 
 #: ../src/smenu.c:71
 msgid "Icon horizontal padding"
