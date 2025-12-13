@@ -104,9 +104,6 @@ static gboolean handle_key_presses (GtkWidget *, GdkEventKey *event, gpointer us
 static GtkWidget *create_system_menu_item (MenuCacheItem *item, MenuPlugin *m);
 static int sys_menu_load_submenu (MenuPlugin* m, MenuCacheDir* dir, GtkWidget* menu, int pos);
 static void insert_system_menu (MenuPlugin *m, GtkMenu *menu, int position);
-static void handle_run_command (GtkWidget *, gpointer data);
-static GtkWidget *read_menu_item (MenuPlugin *m, char *disp_name, char *icon, void (*cmd)(void));
-static void mlogout (void);
 static gboolean create_menu (MenuPlugin *m);
 static void menu_button_clicked (GtkWidget *, MenuPlugin *m);
 static void handle_menu_item_add_to_desktop (GtkMenuItem *, GtkWidget* mi);
@@ -123,12 +120,6 @@ static void handle_popped_up (GtkMenu *menu, gpointer, gpointer, gboolean, gbool
 /*----------------------------------------------------------------------------*/
 /* Function definitions                                                       */
 /*----------------------------------------------------------------------------*/
-
-void launch_application (const char *appname)
-{
-    char *cmd[2] = {(char *) appname, NULL};
-    g_spawn_async (NULL, cmd, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL);
-}
 
 /* Search box */
 
@@ -711,41 +702,6 @@ static void insert_system_menu (MenuPlugin *m, GtkMenu *menu, int position)
 
 /* Functions to create individual menu items from panel config */
 
-static void handle_run_command (GtkWidget *, gpointer data)
-{
-    void (*cmd) (void) = (void *) data;
-    cmd ();
-}
-
-static GtkWidget *read_menu_item (MenuPlugin *m, char *disp_name, char *icon, void (*cmd)(void))
-{
-    GtkWidget *item, *box, *label, *img;
-    GdkPixbuf *pixbuf;
-    int scale;
-
-    item = gtk_menu_item_new ();
-    box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, MENU_ICON_SPACE);
-    gtk_container_add (GTK_CONTAINER (item), box);
-    gtk_container_set_border_width (GTK_CONTAINER (item), 0);
-
-    label = gtk_label_new (disp_name);
-    g_signal_connect (G_OBJECT (item), "activate", (GCallback) handle_run_command, cmd);
-
-    scale = gtk_widget_get_scale_factor (m->plugin);
-    img = gtk_image_new ();
-    pixbuf = gtk_icon_theme_load_icon_for_scale (gtk_icon_theme_get_default (), icon, wrap_icon_size (m), scale, GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
-    if (pixbuf)
-    {
-        set_image_from_pixbuf (img, pixbuf);
-        g_object_unref (pixbuf);
-        gtk_container_add (GTK_CONTAINER (box), img);
-    }
-    gtk_container_add (GTK_CONTAINER (box), label);
-    gtk_widget_show_all (box);
-
-    return item;
-}
-
 #ifdef LXPLUG
 static void handle_menu_hidden (GtkWidget *, gpointer user_data)
 {
@@ -770,19 +726,9 @@ static void handle_popped_up (GtkMenu *menu, gpointer, gpointer, gboolean, gbool
 }
 #endif
 
-static void mlogout (void)
-{
-    if (!system ("test -f /usr/bin/pishutdown"))
-        launch_application ("pishutdown");
-    else
-        launch_application ("lxde-pi-shutdown-helper");
-}
-
 /* Top level function to read in menu data from panel configuration */
 static gboolean create_menu (MenuPlugin *m)
 {
-    GtkWidget *mi;
-
     destroy_menu (m);
     m->menu = gtk_menu_new ();
     gtk_menu_set_reserve_toggle_size (GTK_MENU (m->menu), FALSE);
@@ -794,21 +740,6 @@ static gboolean create_menu (MenuPlugin *m)
     g_signal_connect (m->menu, "popped-up", G_CALLBACK (handle_popped_up), m);
 #endif
     insert_system_menu (m, GTK_MENU (m->menu), -1);
-
-    mi = gtk_separator_menu_item_new ();
-    gtk_widget_set_name (mi, "sysmenu");
-    gtk_widget_show (mi);
-    gtk_menu_shell_append (GTK_MENU_SHELL (m->menu), mi);
-
-    mi = read_menu_item (m, _("Run"), "system-run", gtk_run);
-    gtk_widget_set_name (mi, "sysmenu");
-    gtk_widget_show (mi);
-    gtk_menu_shell_append (GTK_MENU_SHELL (m->menu), mi);
-
-    mi = read_menu_item (m, _("Logout"), "system-shutdown", mlogout);
-    gtk_widget_set_name (mi, "sysmenu");
-    gtk_widget_show (mi);
-    gtk_menu_shell_append (GTK_MENU_SHELL (m->menu), mi);
 
     return TRUE;
 }

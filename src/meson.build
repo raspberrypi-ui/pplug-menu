@@ -6,7 +6,6 @@ menu_cache = dependency('libmenu-cache')
 
 lsources = files(
   'smenu.c',
-  'gtk-run.c',
   'gtk-launch.c',
   'properties.c'
 )
