@@ -716,7 +716,7 @@ static void handle_popped_up (GtkMenu *menu, gpointer, gpointer, gboolean, gbool
     GdkMonitor *mon = gdk_display_get_monitor_at_window (gdk_display_get_default (), gwin);
     gdk_monitor_get_workarea (mon, &rect);
     int height = gdk_window_get_height (gwin);
-    int max_height = rect.height / gdk_window_get_scale_factor (gwin);
+    int max_height = rect.height;
     if (height > max_height)
     {
         height = max_height;
