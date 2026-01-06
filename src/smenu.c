@@ -56,7 +56,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "launcher.h"
 #endif
 
-extern void gtk_run (void);
 extern void gtk_launch (const char *app_name);
 extern void show_properties_dialog (MenuCacheItem *item);
 
@@ -778,11 +777,6 @@ gboolean menu_control_msg (MenuPlugin *m, const char *cmd)
             create_menu (m);
             wrap_show_menu (m->plugin, m->menu);
         }
-        return TRUE;
-    }
-    if (!strncmp (cmd, "run", 3))
-    {
-        gtk_run ();
         return TRUE;
     }
 

@@ -1,3 +1,9 @@
+pplug-menu (1.11) trixie; urgency=medium
+
+  * Move shutdown and run to separate packages
+
+ -- Simon Long <simon@raspberrypi.com>  Tue, 06 Jan 2026 07:23:15 +0000
+
 pplug-menu (1.10) trixie; urgency=medium
 
   * Add run command
