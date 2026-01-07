@@ -50,6 +50,7 @@ void WayfireSmenu::settings_changed_cb (void)
 {
     read_settings ();
     menu_set_padding (m);
+    gtk_widget_set_tooltip_text (m->img, m->tooltips ? _("Click here to open applications menu") : NULL);
 }
 
 void WayfireSmenu::command (const char *cmd)

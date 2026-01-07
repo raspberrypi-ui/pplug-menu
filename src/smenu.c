@@ -800,7 +800,7 @@ void menu_init (MenuPlugin *m)
     gtk_container_add (GTK_CONTAINER (m->plugin), m->img);
     wrap_set_taskbar_icon (m, m->img, "start-here");
     gtk_widget_set_size_request (m->img, wrap_icon_size (m) + 2 * m->padding, -1);
-    gtk_widget_set_tooltip_text (m->img, _("Click here to open applications menu"));
+    gtk_widget_set_tooltip_text (m->img, m->tooltips ? _("Click here to open applications menu") : NULL);
 
     /* Set up button */
     gtk_button_set_relief (GTK_BUTTON (m->plugin), GTK_RELIEF_NONE);
@@ -914,6 +914,8 @@ static gboolean menu_apply_config (gpointer user_data)
     lxplug_write_settings (m->settings, conf_table);
 
     menu_set_padding (m);
+    gtk_widget_set_tooltip_text (m->img, m->tooltips ? _("Click here to open applications menu") : NULL);
+
     return FALSE;
 }
 
