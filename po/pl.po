@@ -9,9 +9,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: lxpanel 0.5.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-08-03 13:44+0100\n"
-"PO-Revision-Date: 2017-05-25 06:59+0000\n"
-"Last-Translator: Piotr Strębski <strebski@o2.pl>\n"
+"POT-Creation-Date: 2026-04-17 11:54+0200\n"
+"PO-Revision-Date: 2026-04-17 12:10+0000\n"
+"Last-Translator: Skotniczny <skotniczny@outlook.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
 "MIME-Version: 1.0\n"
@@ -24,52 +24,56 @@ msgstr ""
 "X-Pootle-Path: /pl/lxpanel/po/pl.po\n"
 "X-POOTLE-MTIME: 1495695544.309291\n"
 
-#: ../plugins/menu/menu.c:97
-msgid "Run"
-msgstr "Uruchom"
+#: ../src/smenu.c:72
+msgid "Icon horizontal padding"
+msgstr "Odstęp poziomy wokół ikony"
 
-#: ../plugins/menu/menu.c:98
-msgid "Restart"
-msgstr "Uruchom ponownie komputer"
+#: ../src/smenu.c:73
+msgid "Show tooltips for menu items"
+msgstr "Pokaż podpowiedzi w menu"
 
-#: ../plugins/menu/menu.c:99
-msgid "Logout"
-msgstr "Wyloguj"
+#: ../src/smenu.c:74
+msgid "Fix height of search window"
+msgstr "Ustaw stałą wysokość okna wyszukiwania"
 
-#: ../plugins/menu/menu.c:448
+#: ../src/smenu.c:75
+msgid "Search window height"
+msgstr "Wysokość okna wyszukiwania"
+
+#: ../src/smenu.c:460
 msgid "Add to desktop"
 msgstr "Dodaj do pulpitu"
 
-#: ../plugins/menu/menu.c:455
+#: ../src/smenu.c:466
+msgid "Add to Launcher"
+msgstr "Dodaj do paska zadań"
+
+#: ../src/smenu.c:475
 msgid "Properties"
 msgstr "Właściwości"
 
-#: ../plugins/menu/menu.c:888
+#: ../src/smenu.c:817 ../src/smenu.c:931 ../src/smenu.cpp:53
 msgid "Click here to open applications menu"
-msgstr ""
+msgstr "Kliknij tutaj, aby otworzyć menu aplikacji"
 
-#: ../plugins/menu/menu.c:974
+#: ../src/smenu.c:950
+msgid "Searchable Application Menu"
+msgstr "Menu aplikacji z wyszukiwaniem"
+
+#. End of file
+#. ----------------------------------------------------------------------------
+#: ../src/smenu.h:32
 msgid "Menu"
 msgstr "Menu programów"
 
-#: ../plugins/menu/menu.c:975
-msgid "Icon"
-msgstr "Ikona:"
+#~ msgid "Run"
+#~ msgstr "Uruchom"
 
-#: ../plugins/menu/menu.c:976
-msgid "Padding"
-msgstr ""
+#~ msgid "Restart"
+#~ msgstr "Uruchom ponownie komputer"
 
-#: ../plugins/menu/menu.c:977
-msgid "Fixed Size"
-msgstr ""
+#~ msgid "Logout"
+#~ msgstr "Wyloguj"
 
-#: ../plugins/menu/menu.c:985
-msgid "Menu with Search"
-msgstr ""
-
-#: ../plugins/menu/menu.c:986
-#, fuzzy
-msgid "Searchable Application Menu"
-msgstr "Wyświetla aktywatory programów w zorganizowanym menu"
-
+#~ msgid "Icon"
+#~ msgstr "Ikona:"
