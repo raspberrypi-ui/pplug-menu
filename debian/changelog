@@ -1,3 +1,9 @@
+pplug-menu (1.17) trixie; urgency=medium
+
+  * Fix keyboard activation of top-level items
+
+ -- Simon Long <simon@raspberrypi.com>  Wed, 20 May 2026 14:58:48 +0100
+
 pplug-menu (1.16) trixie; urgency=medium
 
   * Add Polish translation
