@@ -531,17 +531,18 @@ static gboolean handle_key_presses (GtkWidget *, GdkEventKey *event, gpointer us
 #else
     if (event->keyval == GDK_KEY_Return)
     {
-        GtkWidget *menu = gtk_menu_shell_get_selected_item (GTK_MENU_SHELL (m->menu));
-        GtkWidget *submenu = gtk_menu_item_get_submenu (GTK_MENU_ITEM (menu));
-        if (submenu)
+        GtkWidget *item = gtk_menu_shell_get_selected_item (GTK_MENU_SHELL (m->menu));
+        while (item)
         {
-            GtkWidget *subitem = gtk_menu_shell_get_selected_item (GTK_MENU_SHELL (submenu));
-            if (subitem)
-            {
-                handle_menu_item_activate (GTK_MENU_ITEM (subitem), m);
-                destroy_menu (m);
-                return TRUE;
-            }
+            GtkWidget *submenu = gtk_menu_item_get_submenu (GTK_MENU_ITEM (item));
+            if (!submenu) break;
+            item = gtk_menu_shell_get_selected_item (GTK_MENU_SHELL (submenu));
+        }
+        if (item)
+        {
+            handle_menu_item_activate (GTK_MENU_ITEM (item), m);
+            destroy_menu (m);
+            return TRUE;
         }
     }
 #endif
