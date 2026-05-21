@@ -1,3 +1,9 @@
+pplug-menu (1.18) trixie; urgency=medium
+
+  * Fix crash when hitting enter with no highlight in menu
+
+ -- Simon Long <simon@raspberrypi.com>  Thu, 21 May 2026 12:32:02 +0100
+
 pplug-menu (1.17) trixie; urgency=medium
 
   * Fix keyboard activation of top-level items

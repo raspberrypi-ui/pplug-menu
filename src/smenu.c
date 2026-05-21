@@ -543,7 +543,7 @@ static gboolean handle_key_presses (GtkWidget *, GdkEventKey *event, gpointer us
                 return TRUE;
             }
         }
-        else handle_menu_item_activate (GTK_MENU_ITEM (menu), m);
+        else if (menu) handle_menu_item_activate (GTK_MENU_ITEM (menu), m);
     }
 #endif
     return FALSE;
