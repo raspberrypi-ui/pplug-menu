@@ -824,6 +824,7 @@ void menu_init (MenuPlugin *m)
     gtk_button_set_relief (GTK_BUTTON (m->plugin), GTK_RELIEF_NONE);
 #ifndef LXPLUG
     g_signal_connect (m->plugin, "clicked", G_CALLBACK (menu_button_clicked), m);
+    add_long_press (m->plugin, NULL, NULL);
 #endif
 
     /* Set up variables */
