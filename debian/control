@@ -21,6 +21,6 @@ Description: Menu plugin for lxpanel-pi
 Package: wfplug-menu
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends},
- wf-panel-pi (>=1.10)
+ wf-panel-pi (>=1.18)
 Description: Menu plugin for wf-panel-pi
  Plugin for wf-panel-pi to add searchable main menu.

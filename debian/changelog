@@ -1,3 +1,9 @@
+pplug-menu (1.19) trixie; urgency=medium
+
+  * New XML
+
+ -- Simon Long <simon@raspberrypi.com>  Wed, 08 Jul 2026 13:53:52 +0100
+
 pplug-menu (1.18) trixie; urgency=medium
 
   * Fix crash when hitting enter with no highlight in menu
