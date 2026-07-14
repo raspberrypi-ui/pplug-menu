@@ -29,15 +29,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "smenu.hpp"
 
 extern "C" {
-    WayfireWidget *create () { return new WayfireSmenu; }
-    void destroy (WayfireWidget *w) { delete w; }
+    PanelWidget *create () { return new WidgetSmenu; }
+    void destroy (PanelWidget *w) { delete w; }
 
     const conf_table_t *config_params (void) { return conf_table; };
     const char *display_name (void) { return PLUGIN_TITLE; };
     const char *package_name (void) { return GETTEXT_PACKAGE; };
 }
 
-void WayfireSmenu::read_settings (void)
+void WidgetSmenu::read_settings (void)
 {
     m->height = search_height;
     m->fixed = search_fixed;
@@ -45,25 +45,25 @@ void WayfireSmenu::read_settings (void)
     m->tooltips = show_tooltips;
 }
 
-void WayfireSmenu::settings_changed_cb (void)
+void WidgetSmenu::settings_changed_cb (void)
 {
     read_settings ();
     menu_set_padding (m);
     gtk_widget_set_tooltip_text (m->img, m->tooltips ? _("Click here to open applications menu") : NULL);
 }
 
-void WayfireSmenu::command (const char *cmd)
+void WidgetSmenu::command (const char *cmd)
 {
     menu_control_msg (m, cmd);
 }
 
-bool WayfireSmenu::set_icon (void)
+bool WidgetSmenu::set_icon (void)
 {
     menu_update_display (m);
     return false;
 }
 
-void WayfireSmenu::init (Gtk::HBox *container)
+void WidgetSmenu::init (Gtk::HBox *container)
 {
     /* Create the button */
     plugin = std::make_unique <Gtk::Button> ();
@@ -73,20 +73,20 @@ void WayfireSmenu::init (Gtk::HBox *container)
     /* Setup structure */
     m = g_new0 (MenuPlugin, 1);
     m->plugin = (GtkWidget *)((*plugin).gobj());
-    icon_timer = Glib::signal_idle().connect (sigc::mem_fun (*this, &WayfireSmenu::set_icon));
+    icon_timer = Glib::signal_idle().connect (sigc::mem_fun (*this, &WidgetSmenu::set_icon));
 
     /* Initialise the plugin */
     read_settings ();
     menu_init (m);
 
     /* Setup callbacks */
-    search_height.set_callback (sigc::mem_fun (*this, &WayfireSmenu::settings_changed_cb));
-    search_fixed.set_callback (sigc::mem_fun (*this, &WayfireSmenu::settings_changed_cb));
-    padding.set_callback (sigc::mem_fun (*this, &WayfireSmenu::settings_changed_cb));
-    show_tooltips.set_callback (sigc::mem_fun (*this, &WayfireSmenu::settings_changed_cb));
+    search_height.set_callback (sigc::mem_fun (*this, &WidgetSmenu::settings_changed_cb));
+    search_fixed.set_callback (sigc::mem_fun (*this, &WidgetSmenu::settings_changed_cb));
+    padding.set_callback (sigc::mem_fun (*this, &WidgetSmenu::settings_changed_cb));
+    show_tooltips.set_callback (sigc::mem_fun (*this, &WidgetSmenu::settings_changed_cb));
 }
 
-WayfireSmenu::~WayfireSmenu()
+WidgetSmenu::~WidgetSmenu()
 {
     icon_timer.disconnect ();
     menu_destructor (m);
