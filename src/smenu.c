@@ -578,6 +578,8 @@ static GtkWidget *create_system_menu_item (MenuCacheItem *item, MenuPlugin *m)
 {
     GtkWidget* mi, *img, *box, *label;
     GdkPixbuf *icon;
+    const char *str;
+    int scale;
 
     if (menu_cache_item_get_type (item) == MENU_CACHE_TYPE_SEP)
     {
@@ -596,9 +598,19 @@ static GtkWidget *create_system_menu_item (MenuCacheItem *item, MenuPlugin *m)
         label = gtk_label_new (menu_cache_item_get_name (item));
         gtk_container_add (GTK_CONTAINER (box), label);
 
-        const char *icon_name = menu_cache_item_get_icon (item);
-        icon = wrap_load_taskbar_pixbuf (m, m->plugin, icon_name);
-        if (icon) set_image_from_pixbuf (img, icon);
+        str = menu_cache_item_get_icon (item);
+        icon = wrap_load_taskbar_pixbuf (m, m->plugin, str);
+        if (icon)
+        {
+            scale = gtk_widget_get_scale_factor (m->plugin);
+            if (scale == 1) gtk_image_set_from_pixbuf (GTK_IMAGE (img), icon);
+            else
+            {
+                cairo_surface_t *cr = gdk_cairo_surface_create_from_pixbuf (icon, scale, NULL);
+                gtk_image_set_from_surface (GTK_IMAGE (img), cr);
+                cairo_surface_destroy (cr);
+            }
+        }
 
         if (menu_cache_item_get_type (item) == MENU_CACHE_TYPE_APP)
         {
@@ -607,8 +619,8 @@ static GtkWidget *create_system_menu_item (MenuCacheItem *item, MenuPlugin *m)
             gtk_widget_set_name (mi, menu_cache_item_get_file_basename (item));
             if (m->tooltips)
             {
-                const char *comment = menu_cache_item_get_comment (item);
-                if (comment) gtk_widget_set_tooltip_text (mi, comment);
+                str = menu_cache_item_get_comment (item);
+                if (str) gtk_widget_set_tooltip_text (mi, str);
             }
             g_signal_connect (mi, "button-press-event", G_CALLBACK (handle_menu_item_button_press), m);
 #ifdef LXPLUG
