@@ -69,11 +69,11 @@ extern void show_properties_dialog (MenuCacheItem *item);
 /*----------------------------------------------------------------------------*/
 
 conf_table_t conf_table[5] = {
-    {CONF_TYPE_INT,  "padding",          N_("Icon horizontal padding"),     NULL},
-    {CONF_TYPE_BOOL, "show_tooltips",    N_("Show tooltips for menu items"), NULL},
-    {CONF_TYPE_BOOL, "search_fixed",     N_("Fix height of search window"), NULL},
-    {CONF_TYPE_INT,  "search_height",    N_("Search window height"),        NULL},
-    {CONF_TYPE_NONE, NULL,               NULL,                              NULL}
+    {CONF_TYPE_INT,  "padding",          N_("Icon horizontal padding"),         NULL,   "6"},
+    {CONF_TYPE_BOOL, "show_tooltips",    N_("Show tooltips for menu items"),    NULL,   "false"},
+    {CONF_TYPE_BOOL, "search_fixed",     N_("Fix height of search window"),     NULL,   "false"},
+    {CONF_TYPE_INT,  "search_height",    N_("Search window height"),            NULL,   "300"},
+    {CONF_TYPE_NONE, NULL,               NULL,                                  NULL,   NULL}
 };
 
 static gboolean longpress;
@@ -629,7 +629,7 @@ static GtkWidget *create_system_menu_item (MenuCacheItem *item, MenuPlugin *m)
             g_signal_connect (mi, "button-release-event", G_CALLBACK (handle_menu_item_button_release), m);
 
             m->migesture = gtk_gesture_long_press_new (mi);
-            gtk_gesture_single_set_touch_only (GTK_GESTURE_SINGLE (m->migesture), touch_only);
+            gtk_gesture_single_set_touch_only (GTK_GESTURE_SINGLE (m->migesture), gestures_touch_only);
             g_signal_connect (m->migesture, "pressed", G_CALLBACK (handle_menu_item_gesture_pressed), mi);
             gtk_event_controller_set_propagation_phase (GTK_EVENT_CONTROLLER (m->migesture), GTK_PHASE_BUBBLE);
 #endif

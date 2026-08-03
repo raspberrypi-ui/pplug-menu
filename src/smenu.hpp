@@ -43,11 +43,6 @@ class WidgetSmenu : public PanelWidget
 
     sigc::connection icon_timer;
 
-    WfOption <int> padding {"smenu/padding"};
-    WfOption <bool> show_tooltips {"smenu/show_tooltips"};
-    WfOption <int> search_height {"smenu/search_height"};
-    WfOption <bool> search_fixed {"smenu/search_fixed"};
-
     /* plugin */
     MenuPlugin *m;
 
@@ -58,7 +53,7 @@ class WidgetSmenu : public PanelWidget
     virtual ~WidgetSmenu ();
     bool set_icon (void);
     void read_settings (void);
-    void settings_changed_cb (void);
+    void handle_config_reload (void);
 };
 
 #endif /* end of include guard: WIDGETS_SMENU_HPP */

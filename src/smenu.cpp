@@ -39,15 +39,18 @@ extern "C" {
 
 void WidgetSmenu::read_settings (void)
 {
-    m->height = search_height;
-    m->fixed = search_fixed;
-    m->padding = padding;
-    m->tooltips = show_tooltips;
+    conf_table[0].value = (void *) &m->padding;
+    conf_table[1].value = (void *) &m->tooltips;
+    conf_table[2].value = (void *) &m->fixed;
+    conf_table[3].value = (void *) &m->height;
+
+    load_configuration_data (PLUGIN_NAME, conf_table);
 }
 
-void WidgetSmenu::settings_changed_cb (void)
+void WidgetSmenu::handle_config_reload (void)
 {
-    read_settings ();
+    load_configuration_data (PLUGIN_NAME, conf_table);
+
     menu_set_padding (m);
     gtk_widget_set_tooltip_text (m->img, m->tooltips ? _("Click here to open applications menu") : NULL);
 }
@@ -78,12 +81,6 @@ void WidgetSmenu::init (Gtk::HBox *container)
     /* Initialise the plugin */
     read_settings ();
     menu_init (m);
-
-    /* Setup callbacks */
-    search_height.set_callback (sigc::mem_fun (*this, &WidgetSmenu::settings_changed_cb));
-    search_fixed.set_callback (sigc::mem_fun (*this, &WidgetSmenu::settings_changed_cb));
-    padding.set_callback (sigc::mem_fun (*this, &WidgetSmenu::settings_changed_cb));
-    show_tooltips.set_callback (sigc::mem_fun (*this, &WidgetSmenu::settings_changed_cb));
 }
 
 WidgetSmenu::~WidgetSmenu()
