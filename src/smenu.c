@@ -942,9 +942,7 @@ static gboolean menu_apply_config (gpointer user_data)
 
     lxplug_write_settings (m->settings, conf_table);
 
-    menu_set_padding (m);
-    gtk_widget_set_tooltip_text (m->img, m->tooltips ? _("Click here to open applications menu") : NULL);
-
+    menu_update_display (m);
     return FALSE;
 }
 
