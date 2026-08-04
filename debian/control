@@ -5,7 +5,7 @@ Maintainer: Simon Long <simon@raspberrypi.com>
 Build-Depends:
  debhelper-compat (= 13), meson,
  libgtk-3-dev (>= 3.24), libgtkmm-3.0-dev (>= 3.24),
- lxpanel-pi-dev (>=1.6), wf-panel-pi-dev (>=1.18),
+ lxpanel-pi-dev (>=1.8), wf-panel-pi-dev (>=1.22),
  libgtk-layer-shell-dev (>= 0.6.0), libglm-dev,
  libmenu-cache-dev
 Standards-Version: 4.5.1
@@ -14,13 +14,13 @@ Homepage: http://raspberrypi.com/
 Package: lpplug-menu
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends},
- lxpanel-pi (>=1.6)
+ lxpanel-pi (>=1.8)
 Description: Menu plugin for lxpanel-pi
  Plugin for lxpanel-pi to add searchable main menu.
 
 Package: wfplug-menu
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends},
- wf-panel-pi (>=1.18)
+ wf-panel-pi (>=1.22)
 Description: Menu plugin for wf-panel-pi
  Plugin for wf-panel-pi to add searchable main menu.

@@ -768,10 +768,22 @@ static void menu_button_clicked (GtkWidget *, MenuPlugin *m)
 void menu_update_display (MenuPlugin *m)
 {
     wrap_set_taskbar_icon (m, m->img, "start-here");
-    if (m->img) gtk_widget_set_size_request (m->img, wrap_icon_size (m) + 2 * m->padding, -1);
+    if (m->img)
+    {
+        gtk_widget_set_size_request (m->img, wrap_icon_size (m) + 2 * m->padding, -1);
+        gtk_widget_set_tooltip_text (m->img, m->tooltips ? _("Click here to open applications menu") : NULL);
+    }
 
     destroy_menu (m);
     destroy_search (m);
+}
+
+void menu_set_values (MenuPlugin *m)
+{
+    conf_table[0].value = (void *) &m->padding;
+    conf_table[1].value = (void *) &m->tooltips;
+    conf_table[2].value = (void *) &m->fixed;
+    conf_table[3].value = (void *) &m->height;
 }
 
 /* Handler for control message */
@@ -800,12 +812,6 @@ gboolean menu_control_msg (MenuPlugin *m, const char *cmd)
     }
 
     return FALSE;
-}
-
-/* Handler for padding update from variable watcher */
-void menu_set_padding (MenuPlugin *m)
-{
-    gtk_widget_set_size_request (m->img, wrap_icon_size (m) + 2 * m->padding, -1);
 }
 
 void menu_init (MenuPlugin *m)
@@ -894,17 +900,8 @@ static GtkWidget *menu_constructor (LXPanel *panel, config_setting_t *settings)
     m->plugin = gtk_button_new ();
     lxpanel_plugin_set_data (m->plugin, m, menu_destructor);
 
-    /* Set config defaults */
-    m->padding = 6;
-    m->tooltips = FALSE;
-    m->fixed = FALSE;
-    m->height = 300;
-
     /* Read config */
-    conf_table[0].value = (void *) &m->padding;
-    conf_table[1].value = (void *) &m->tooltips;
-    conf_table[2].value = (void *) &m->fixed;
-    conf_table[3].value = (void *) &m->height;
+    menu_set_values (m);
     lxplug_read_settings (m->settings, conf_table);
 
     menu_init (m);

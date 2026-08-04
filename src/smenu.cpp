@@ -37,22 +37,9 @@ extern "C" {
     const char *package_name (void) { return GETTEXT_PACKAGE; };
 }
 
-void WidgetSmenu::read_settings (void)
-{
-    conf_table[0].value = (void *) &m->padding;
-    conf_table[1].value = (void *) &m->tooltips;
-    conf_table[2].value = (void *) &m->fixed;
-    conf_table[3].value = (void *) &m->height;
-
-    load_configuration_data (PLUGIN_NAME, conf_table);
-}
-
 void WidgetSmenu::handle_config_reload (void)
 {
-    load_configuration_data (PLUGIN_NAME, conf_table);
-
-    menu_set_padding (m);
-    gtk_widget_set_tooltip_text (m->img, m->tooltips ? _("Click here to open applications menu") : NULL);
+    if (load_configuration_data (PLUGIN_NAME, conf_table)) menu_update_display (m);
 }
 
 void WidgetSmenu::command (const char *cmd)
@@ -79,7 +66,8 @@ void WidgetSmenu::init (Gtk::HBox *container)
     icon_timer = Glib::signal_idle().connect (sigc::mem_fun (*this, &WidgetSmenu::set_icon));
 
     /* Initialise the plugin */
-    read_settings ();
+    menu_set_values (m);
+    load_configuration_data (PLUGIN_NAME, conf_table);
     menu_init (m);
 }
 

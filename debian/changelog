@@ -1,3 +1,9 @@
+pplug-menu (1.20) trixie; urgency=medium
+
+  * Remove WfOptions
+
+ -- Simon Long <simon@raspberrypi.com>  Tue, 04 Aug 2026 13:30:36 +0100
+
 pplug-menu (1.19) trixie; urgency=medium
 
   * New XML
