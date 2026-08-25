@@ -102,7 +102,7 @@ static void handle_menu_item_add_to_launcher (GtkWidget *mi, gpointer);
 static void handle_search_resize (GtkWidget *, GtkAllocation *, gpointer user_data);
 #else
 static void handle_menu_item_gesture_pressed (GtkGestureLongPress *, gdouble, gdouble, GtkWidget *);
-static void handle_popped_up (GtkMenu *menu, gpointer, gpointer, gboolean, gboolean, MenuPlugin *);
+static void constrain_menu_size (GtkMenu *menu, gpointer, gpointer, gboolean, gboolean, MenuPlugin *);
 #endif
 
 /*----------------------------------------------------------------------------*/
@@ -179,6 +179,7 @@ static void resize_search (MenuPlugin *m)
     gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (m->scr), GTK_POLICY_NEVER, nrows < height ? GTK_POLICY_NEVER : GTK_POLICY_AUTOMATIC);
 
     gtk_widget_set_size_request (m->scr, -1, nrows);
+
 #ifdef LXPLUG
     gtk_window_resize (GTK_WINDOW (m->swin), 1, 1);
 #endif
@@ -553,6 +554,22 @@ static gboolean handle_menu_item_button_release (GtkWidget* mi, GdkEventButton*,
 }
 
 #ifndef LXPLUG
+static void constrain_menu_size (GtkMenu *menu, gpointer, gpointer, gboolean, gboolean, MenuPlugin *)
+{
+    GdkRectangle rect;
+    GtkWidget *win = gtk_widget_get_toplevel (GTK_WIDGET (menu));
+    GdkWindow *gwin = gtk_widget_get_window (win);
+    GdkMonitor *mon = gdk_display_get_monitor_at_window (gdk_display_get_default (), gwin);
+    gdk_monitor_get_workarea (mon, &rect);
+    int height = gdk_window_get_height (gwin);
+    int max_height = rect.height;
+    if (height > max_height)
+    {
+        height = max_height;
+        gdk_window_resize (gwin, gdk_window_get_width (gwin), height);
+    }
+}
+
 static void handle_menu_item_gesture_pressed (GtkGestureLongPress *, gdouble, gdouble, GtkWidget *)
 {
     longpress = TRUE;
@@ -651,7 +668,7 @@ static int sys_menu_load_submenu (MenuPlugin* m, MenuCacheDir* dir, GtkWidget* m
                 gtk_menu_set_reserve_toggle_size (GTK_MENU (sub), FALSE);
                 g_signal_connect (sub, "key-press-event", G_CALLBACK (handle_key_presses), m);
 #ifndef LXPLUG
-                g_signal_connect (sub, "popped-up", G_CALLBACK (handle_popped_up), m);
+                g_signal_connect (sub, "popped-up", G_CALLBACK (constrain_menu_size), m);
 #endif
                 gint s_count = sys_menu_load_submenu (m, MENU_CACHE_DIR (item), sub, -1);
                 if (s_count)
@@ -687,26 +704,6 @@ static void insert_system_menu (MenuPlugin *m, GtkMenu *menu, int position)
     menu_cache_item_unref (MENU_CACHE_ITEM (dir));
 }
 
-/* Functions to create individual menu items from panel config */
-
-#ifndef LXPLUG
-static void handle_popped_up (GtkMenu *menu, gpointer, gpointer, gboolean, gboolean, MenuPlugin *)
-{
-    GdkRectangle rect;
-    GtkWidget *win = gtk_widget_get_toplevel (GTK_WIDGET (menu));
-    GdkWindow *gwin = gtk_widget_get_window (win);
-    GdkMonitor *mon = gdk_display_get_monitor_at_window (gdk_display_get_default (), gwin);
-    gdk_monitor_get_workarea (mon, &rect);
-    int height = gdk_window_get_height (gwin);
-    int max_height = rect.height;
-    if (height > max_height)
-    {
-        height = max_height;
-        gdk_window_resize (gwin, gdk_window_get_width (gwin), height);
-    }
-}
-#endif
-
 /* Top level function to read in menu data from panel configuration */
 static gboolean create_menu (MenuPlugin *m)
 {
@@ -716,7 +713,7 @@ static gboolean create_menu (MenuPlugin *m)
     gtk_container_set_border_width (GTK_CONTAINER (m->menu), 0);
     g_signal_connect (m->menu, "key-press-event", G_CALLBACK (handle_key_presses), m);
 #ifndef LXPLUG
-    g_signal_connect (m->menu, "popped-up", G_CALLBACK (handle_popped_up), m);
+    g_signal_connect (m->menu, "popped-up", G_CALLBACK (constrain_menu_size), m);
 #endif
     insert_system_menu (m, GTK_MENU (m->menu), -1);
 
