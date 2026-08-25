@@ -32,8 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <gtkmm/button.h>
 
 extern "C" {
-#include <menu-cache.h>
-#include "lxutils.h"
+#include "plugin.h"
 #include "smenu.h"
 }
 

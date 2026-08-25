@@ -4,17 +4,21 @@ lxpanel = dependency('lxpanel-pi')
 wfpanel = dependency('wf-panel-pi')
 menu_cache = dependency('libmenu-cache')
 
-lsources = files(
+sources = files(
   'smenu.c',
   'gtk-launch.c',
   'properties.c'
 )
 
+lsources = files(
+  'smenu_lxp.c'
+)
+
 ldeps = [ gtk, lxpanel, menu_cache ]
 
-largs = [ '-DPACKAGE_DATA_DIR="' + lresource_dir + '"', '-DGETTEXT_PACKAGE="lpplug_' + meson.project_name() + '"' ]
+largs = [ '-DPACKAGE_DATA_DIR="' + lresource_dir + '"', '-DGETTEXT_PACKAGE="lpplug_' + meson.project_name() + '"', '-DUSES_MENUCACHE' ]
 
-shared_module(meson.project_name(), lsources,
+shared_module(meson.project_name(), [ sources, lsources ],
         dependencies: ldeps,
         install: true,
         install_dir: get_option('libdir') / 'lxpanel-pi',
@@ -28,9 +32,9 @@ wsources = files(
 
 wdeps = [ gtkmm, wfpanel, menu_cache ]
 
-wargs = [ '-DPACKAGE_DATA_DIR="' + wresource_dir + '"', '-DGETTEXT_PACKAGE="wfplug_' + meson.project_name() +'"' ]
+wargs = [ '-DPACKAGE_DATA_DIR="' + wresource_dir + '"', '-DGETTEXT_PACKAGE="wfplug_' + meson.project_name() +'"', '-DUSES_MENUCACHE' ]
 
-shared_module('lib' + meson.project_name(), [ lsources, wsources ],
+shared_module('lib' + meson.project_name(), [ sources, wsources ],
         dependencies: wdeps,
         install: true,
         install_dir: get_option('libdir') / 'wf-panel-pi',

@@ -43,13 +43,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <fcntl.h>
 #include <locale.h>
 #include <glib/gi18n.h>
-#include <menu-cache.h>
 
-#ifdef LXPLUG
 #include "plugin.h"
-#else
-#include "lxutils.h"
-#endif
 
 #include "smenu.h"
 
@@ -94,7 +89,7 @@ static void search_destroyed (GtkWidget *, gpointer data);
 static void create_search (MenuPlugin *m);
 static void destroy_menu (MenuPlugin *m);
 static void handle_menu_item_activate (GtkMenuItem *mi, gpointer user_data);
-static void handle_menu_item_properties (GtkWidget *mi, gpointer user_data);
+static void handle_menu_item_properties (GtkWidget *mi, gpointer);
 static void handle_restore_submenu (GtkMenuItem *mi, GtkWidget *submenu);
 static void show_context_menu (MenuPlugin *m, GtkWidget* mi);
 static gboolean handle_menu_item_button_press (GtkWidget* mi, GdkEventButton* evt, gpointer user_data);
@@ -104,7 +99,7 @@ static int sys_menu_load_submenu (MenuPlugin* m, MenuCacheDir* dir, GtkWidget* m
 static void insert_system_menu (MenuPlugin *m, GtkMenu *menu, int position);
 static gboolean create_menu (MenuPlugin *m);
 static void menu_button_clicked (GtkWidget *, MenuPlugin *m);
-static void handle_menu_item_add_to_desktop (GtkWidget *mi, gpointer user_data);
+static void handle_menu_item_add_to_desktop (GtkWidget *mi, gpointer);
 #ifdef LXPLUG
 static void handle_search_resize (GtkWidget *, GtkAllocation *, gpointer user_data);
 static void handle_menu_hidden (GtkWidget *, gpointer user_data);
@@ -123,11 +118,7 @@ static void handle_popped_up (GtkMenu *menu, gpointer, gpointer, gboolean, gbool
 
 static void destroy_search (MenuPlugin *m)
 {
-#ifdef LXPLUG
-    if (m->swin) gtk_widget_destroy (m->swin);
-#else
     close_popup ();
-#endif
     m->swin = NULL;
 }
 
@@ -416,10 +407,9 @@ static void handle_menu_item_activate (GtkMenuItem *mi, gpointer)
     gtk_launch (gtk_widget_get_name (GTK_WIDGET (mi)));
 }
 
-static void handle_menu_item_add_to_desktop (GtkWidget *mi, gpointer user_data)
+static void handle_menu_item_add_to_desktop (GtkWidget *mi, gpointer)
 {
-    MenuPlugin *m = (MenuPlugin *) user_data;
-    MenuCacheItem *item = menu_cache_find_item_by_id (m->menu_cache, gtk_widget_get_name (mi));
+    MenuCacheItem *item = menu_cache_find_item_by_id (mcache, gtk_widget_get_name (mi));
     char *path = g_build_filename (g_get_home_dir (), "Desktop", menu_cache_item_get_file_basename (item), NULL);
     FILE *fp = fopen (path, "wb");
     fprintf (fp, "[Desktop Entry]\nType=Link\n");
@@ -437,10 +427,9 @@ static void handle_menu_item_add_to_launcher (GtkWidget *mi, gpointer)
 }
 #endif
 
-static void handle_menu_item_properties (GtkWidget *mi, gpointer user_data)
+static void handle_menu_item_properties (GtkWidget *mi, gpointer)
 {
-    MenuPlugin *m = (MenuPlugin *) user_data;
-    MenuCacheItem *item = menu_cache_find_item_by_id (m->menu_cache, gtk_widget_get_name (mi));
+    MenuCacheItem *item = menu_cache_find_item_by_id (mcache, gtk_widget_get_name (mi));
     show_properties_dialog (item);
 }
 
@@ -697,7 +686,7 @@ static void insert_system_menu (MenuPlugin *m, GtkMenu *menu, int position)
     MenuCacheDir *dir = NULL;
 
     if (m->applist) gtk_list_store_clear (m->applist);
-    while (dir == NULL) dir = menu_cache_dup_root_dir (m->menu_cache);
+    while (dir == NULL) dir = menu_cache_dup_root_dir (mcache);
 
     sys_menu_load_submenu (m, dir, GTK_WIDGET (menu), position);
     menu_cache_item_unref (MENU_CACHE_ITEM (dir));
@@ -840,22 +829,13 @@ void menu_init (MenuPlugin *m)
 
     /* Set up button */
     gtk_button_set_relief (GTK_BUTTON (m->plugin), GTK_RELIEF_NONE);
-#ifndef LXPLUG
     g_signal_connect (m->plugin, "clicked", G_CALLBACK (menu_button_clicked), m);
-    m->gesture = add_long_press (m->plugin, NULL, NULL);
-#endif
+    wrap_add_longpress (m->gesture, m->plugin, NULL, NULL);
 
     /* Set up variables */
     m->applist = gtk_list_store_new (3, GDK_TYPE_PIXBUF, G_TYPE_STRING, G_TYPE_STRING);
     m->swin = NULL;
     m->menu = NULL;
-
-    gboolean need_prefix = (g_getenv ("XDG_MENU_PREFIX") == NULL);
-    m->menu_cache = menu_cache_lookup (need_prefix ? "lxde-applications.menu" : "applications.menu");
-    if (m->menu_cache == NULL) g_warning ("Error loading applications menu");
-
-    // we don't need a notification, but if you don't call this, the cache never loads...
-    m->reload_notify = menu_cache_add_reload_notify (m->menu_cache, NULL, NULL);
 
     /* Show the widget and return */
     gtk_widget_show_all (m->plugin);
@@ -869,106 +849,12 @@ void menu_destructor (gpointer user_data)
     destroy_search (m);
 
     if (m->applist) gtk_list_store_clear (m->applist);
-    if (m->menu_cache)
-    {
-        menu_cache_remove_reload_notify (m->menu_cache, m->reload_notify);
-        // unref'ing the menu cache causes a segfault because its io thread isn't being closed...
-    }
 
-#ifndef LXPLUG
-    if (m->gesture) g_object_unref (m->gesture);
-    if (m->migesture) g_object_unref (m->migesture);
-#endif
+    wrap_free_gesture (m->gesture);
+    wrap_free_gesture (m->migesture);
 
     g_free (m);
 }
-
-/*----------------------------------------------------------------------------*/
-/* LXPanel plugin functions                                                   */
-/*----------------------------------------------------------------------------*/
-#ifdef LXPLUG
-
-/* Constructor */
-static GtkWidget *menu_constructor (LXPanel *panel, config_setting_t *settings)
-{
-    /* Allocate and initialize plugin context */
-    MenuPlugin *m = g_new0 (MenuPlugin, 1);
-
-    /* Allocate top level widget and set into plugin widget pointer. */
-    m->panel = panel;
-    m->settings = settings;
-    m->plugin = gtk_button_new ();
-    lxpanel_plugin_set_data (m->plugin, m, menu_destructor);
-
-    /* Read config */
-    menu_set_values (m);
-    lxplug_read_settings (m->settings, conf_table);
-
-    menu_init (m);
-
-    return m->plugin;
-}
-
-/* Handler for button press */
-static gboolean menu_button_press_event (GtkWidget *plugin, GdkEventButton *event, LXPanel *)
-{
-    MenuPlugin *m = lxpanel_plugin_get_data (plugin);
-    if (event->button == 1)
-    {
-        menu_button_clicked (plugin, m);
-        return TRUE;
-    }
-    return FALSE;
-}
-
-/* Handler for system config changed message from panel */
-static void menu_panel_configuration_changed (LXPanel *, GtkWidget *plugin)
-{
-    MenuPlugin *m = lxpanel_plugin_get_data (plugin);
-    menu_update_display (m);
-}
-
-/* Handler for control message */
-static gboolean menu_control (GtkWidget *plugin, const char *cmd)
-{
-    MenuPlugin *m = lxpanel_plugin_get_data (plugin);
-    return menu_control_msg (m, cmd);
-}
-
-/* Apply changes from config dialog */
-static gboolean menu_apply_config (gpointer user_data)
-{
-    MenuPlugin *m = lxpanel_plugin_get_data (GTK_WIDGET (user_data));
-
-    lxplug_write_settings (m->settings, conf_table);
-
-    menu_update_display (m);
-    return FALSE;
-}
-
-/* Display configuration dialog */
-static GtkWidget *menu_configure (LXPanel *panel, GtkWidget *plugin)
-{
-    return lxpanel_generic_config_dlg_new (_(PLUGIN_TITLE), panel,
-        menu_apply_config, plugin,
-        conf_table);
-}
-
-int module_lxpanel_gtk_version = 1;
-char module_name[] = PLUGIN_NAME;
-
-/* Plugin descriptor */
-LXPanelPluginInit fm_module_init_lxpanel_gtk = {
-    .name = PLUGIN_TITLE,
-    .description = N_("Searchable Application Menu"),
-    .new_instance = menu_constructor,
-    .reconfigure = menu_panel_configuration_changed,
-    .config = menu_configure,
-    .button_press_event = menu_button_press_event,
-    .control = menu_control,
-    .gettext_package = GETTEXT_PACKAGE
-};
-#endif
 
 /* End of file */
 /*----------------------------------------------------------------------------*/
