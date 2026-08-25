@@ -48,10 +48,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "smenu.h"
 
-#ifndef LXPLUG
-#include "launcher.h"
-#endif
-
 extern void gtk_launch (const char *app_name);
 extern void show_properties_dialog (MenuCacheItem *item);
 
@@ -92,20 +88,19 @@ static void handle_menu_item_activate (GtkMenuItem *mi, gpointer user_data);
 static void handle_menu_item_properties (GtkWidget *mi, gpointer);
 static void handle_restore_submenu (GtkMenuItem *mi, GtkWidget *submenu);
 static void show_context_menu (MenuPlugin *m, GtkWidget* mi);
-static gboolean handle_menu_item_button_press (GtkWidget* mi, GdkEventButton* evt, gpointer user_data);
 static gboolean handle_key_presses (GtkWidget *, GdkEventKey *event, gpointer user_data);
+static gboolean handle_menu_item_button_press (GtkWidget* mi, GdkEventButton* evt, gpointer user_data);
+static gboolean handle_menu_item_button_release (GtkWidget* mi, GdkEventButton*, MenuPlugin* m);
 static GtkWidget *create_system_menu_item (MenuCacheItem *item, MenuPlugin *m);
 static int sys_menu_load_submenu (MenuPlugin* m, MenuCacheDir* dir, GtkWidget* menu, int pos);
 static void insert_system_menu (MenuPlugin *m, GtkMenu *menu, int position);
 static gboolean create_menu (MenuPlugin *m);
 static void menu_button_clicked (GtkWidget *, MenuPlugin *m);
 static void handle_menu_item_add_to_desktop (GtkWidget *mi, gpointer);
+static void handle_menu_item_add_to_launcher (GtkWidget *mi, gpointer);
 #ifdef LXPLUG
 static void handle_search_resize (GtkWidget *, GtkAllocation *, gpointer user_data);
-static void handle_menu_hidden (GtkWidget *, gpointer user_data);
 #else
-static void handle_menu_item_add_to_launcher (GtkWidget *mi, gpointer);
-static gboolean handle_menu_item_button_release (GtkWidget* mi, GdkEventButton*, MenuPlugin* m);
 static void handle_menu_item_gesture_pressed (GtkGestureLongPress *, gdouble, gdouble, GtkWidget *);
 static void handle_popped_up (GtkMenu *menu, gpointer, gpointer, gboolean, gboolean, MenuPlugin *);
 #endif
@@ -420,12 +415,10 @@ static void handle_menu_item_add_to_desktop (GtkWidget *mi, gpointer)
     g_free (path);
 }
 
-#ifndef LXPLUG
 static void handle_menu_item_add_to_launcher (GtkWidget *mi, gpointer)
 {
     add_to_launcher (gtk_widget_get_name (mi));
 }
-#endif
 
 static void handle_menu_item_properties (GtkWidget *mi, gpointer)
 {
@@ -454,12 +447,13 @@ static void show_context_menu (MenuPlugin *m, GtkWidget* mi)
         gtk_menu_shell_append (GTK_MENU_SHELL (menu), item);
     }
 
-#ifndef LXPLUG
-    item = gtk_menu_item_new_with_label (_("Add to Launcher"));
-    gtk_widget_set_name (item, gtk_widget_get_name (mi));
-    g_signal_connect (item, "activate", G_CALLBACK (handle_menu_item_add_to_launcher), m);
-    gtk_menu_shell_append (GTK_MENU_SHELL (menu), item);
-#endif
+    if (!system ("pgrep wf-panel-pi > /dev/null"))
+    {
+        item = gtk_menu_item_new_with_label (_("Add to Launcher"));
+        gtk_widget_set_name (item, gtk_widget_get_name (mi));
+        g_signal_connect (item, "activate", G_CALLBACK (handle_menu_item_add_to_launcher), m);
+        gtk_menu_shell_append (GTK_MENU_SHELL (menu), item);
+    }
 
     item = gtk_separator_menu_item_new ();
     gtk_menu_shell_append (GTK_MENU_SHELL (menu), item);
@@ -479,20 +473,6 @@ static void show_context_menu (MenuPlugin *m, GtkWidget* mi)
     gtk_menu_item_set_submenu (GTK_MENU_ITEM (mi), menu);
     g_signal_connect (mi, "deselect", G_CALLBACK (handle_restore_submenu), item);
     gtk_widget_show_all (menu);
-}
-
-static gboolean handle_menu_item_button_press (GtkWidget* mi, GdkEventButton* evt, gpointer user_data)
-{
-    MenuPlugin *m = (MenuPlugin *) user_data;
-
-    longpress = FALSE;
-    if (evt->button == 3)
-    {
-        /* don't make duplicates */
-        if (g_signal_handler_find (mi, G_SIGNAL_MATCH_FUNC, 0, 0, NULL, handle_restore_submenu, NULL)) return FALSE;
-        show_context_menu (m, mi);
-    }
-    return FALSE;
 }
 
 /* Handler for keyboard events while menu is open */
@@ -517,7 +497,8 @@ static gboolean handle_key_presses (GtkWidget *, GdkEventKey *event, gpointer us
         destroy_menu (m);
         return TRUE;
     }
-#else
+#endif
+
     if (event->keyval == GDK_KEY_Return)
     {
         GtkWidget *menu = gtk_menu_shell_get_selected_item (GTK_MENU_SHELL (m->menu));
@@ -532,13 +513,29 @@ static gboolean handle_key_presses (GtkWidget *, GdkEventKey *event, gpointer us
                 return TRUE;
             }
         }
-        else if (menu) handle_menu_item_activate (GTK_MENU_ITEM (menu), m);
+        else if (menu)
+        {
+            handle_menu_item_activate (GTK_MENU_ITEM (menu), m);
+            return TRUE;
+        }
     }
-#endif
     return FALSE;
 }
 
-#ifndef LXPLUG
+static gboolean handle_menu_item_button_press (GtkWidget* mi, GdkEventButton* evt, gpointer user_data)
+{
+    MenuPlugin *m = (MenuPlugin *) user_data;
+
+    longpress = FALSE;
+    if (evt->button == 3)
+    {
+        /* don't make duplicates */
+        if (g_signal_handler_find (mi, G_SIGNAL_MATCH_FUNC, 0, 0, NULL, handle_restore_submenu, NULL)) return FALSE;
+        show_context_menu (m, mi);
+    }
+    return FALSE;
+}
+
 static gboolean handle_menu_item_button_release (GtkWidget* mi, GdkEventButton*, MenuPlugin* m)
 {
     if (!longpress)
@@ -555,6 +552,7 @@ static gboolean handle_menu_item_button_release (GtkWidget* mi, GdkEventButton*,
     return TRUE;
 }
 
+#ifndef LXPLUG
 static void handle_menu_item_gesture_pressed (GtkGestureLongPress *, gdouble, gdouble, GtkWidget *)
 {
     longpress = TRUE;
@@ -612,11 +610,9 @@ static GtkWidget *create_system_menu_item (MenuCacheItem *item, MenuPlugin *m)
                 if (str) gtk_widget_set_tooltip_text (mi, str);
             }
             g_signal_connect (mi, "button-press-event", G_CALLBACK (handle_menu_item_button_press), m);
-#ifdef LXPLUG
-            g_signal_connect (mi, "activate", G_CALLBACK (handle_menu_item_activate), m);
-#else
             g_signal_connect (mi, "button-release-event", G_CALLBACK (handle_menu_item_button_release), m);
 
+#ifndef LXPLUG
             m->migesture = gtk_gesture_long_press_new (mi);
             gtk_gesture_single_set_touch_only (GTK_GESTURE_SINGLE (m->migesture), gestures_touch_only);
             g_signal_connect (m->migesture, "pressed", G_CALLBACK (handle_menu_item_gesture_pressed), mi);
@@ -678,7 +674,6 @@ static int sys_menu_load_submenu (MenuPlugin* m, MenuCacheDir* dir, GtkWidget* m
     return count;
 }
 
-
 /* Functions to load system menu into panel menu in response to 'system' tag */
 
 static void insert_system_menu (MenuPlugin *m, GtkMenu *menu, int position)
@@ -694,13 +689,7 @@ static void insert_system_menu (MenuPlugin *m, GtkMenu *menu, int position)
 
 /* Functions to create individual menu items from panel config */
 
-#ifdef LXPLUG
-static void handle_menu_hidden (GtkWidget *, gpointer user_data)
-{
-    MenuPlugin *m = (MenuPlugin *) user_data;
-    if (m->swin && !gtk_widget_is_visible (m->swin)) m->swin = NULL;
-}
-#else
+#ifndef LXPLUG
 static void handle_popped_up (GtkMenu *menu, gpointer, gpointer, gboolean, gboolean, MenuPlugin *)
 {
     GdkRectangle rect;
@@ -726,9 +715,7 @@ static gboolean create_menu (MenuPlugin *m)
     gtk_menu_set_reserve_toggle_size (GTK_MENU (m->menu), FALSE);
     gtk_container_set_border_width (GTK_CONTAINER (m->menu), 0);
     g_signal_connect (m->menu, "key-press-event", G_CALLBACK (handle_key_presses), m);
-#ifdef LXPLUG
-    g_signal_connect (m->menu, "hide", G_CALLBACK (handle_menu_hidden), m);
-#else
+#ifndef LXPLUG
     g_signal_connect (m->menu, "popped-up", G_CALLBACK (handle_popped_up), m);
 #endif
     insert_system_menu (m, GTK_MENU (m->menu), -1);
