@@ -39,10 +39,20 @@ void gtk_launch (const char *app_name)
 
     info = G_APP_INFO (g_desktop_app_info_new (desktop_file_name));
     g_free (desktop_file_name);
-    if (!info) return;
+    if (!info)
+    {
+        g_free (bus_name);
+        return;
+    }
 
     launch_context = G_APP_LAUNCH_CONTEXT (gdk_display_get_app_launch_context (gdk_display_get_default ()));
-    if (!g_app_info_launch (info, NULL, launch_context, NULL)) return;
+    if (!g_app_info_launch (info, NULL, launch_context, NULL))
+    {
+        g_object_unref (info);
+        g_object_unref (launch_context);
+        g_free (bus_name);
+        return;
+    }
     g_object_unref (info);
     g_object_unref (launch_context);
 

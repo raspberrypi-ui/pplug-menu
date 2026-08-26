@@ -239,6 +239,7 @@ static gboolean handle_search_keypress (GtkWidget *, GdkEventKey *event, gpointe
                                 {
                                     gtk_tree_model_get (model, &iter, 2, &str, -1);
                                     gtk_launch (str);
+                                    g_free (str);
                                 }
                                 destroy_search (m);
                                 return TRUE;
@@ -269,6 +270,7 @@ static void handle_list_select (GtkTreeView *tv, GtkTreePath *path, GtkTreeViewC
     {
         gtk_tree_model_get (mod, &iter, 2, &str, -1);
         gtk_launch (str);
+        g_free (str);
     }
 
     destroy_search (m);
@@ -292,6 +294,7 @@ static gboolean handle_list_button (GtkWidget *, GdkEventButton *event, gpointer
             gtk_tree_path_free (path);
 
             gtk_launch (str);
+            g_free (str);
             destroy_search (m);
         }
         return TRUE;
@@ -562,7 +565,7 @@ static GtkWidget *create_system_menu_item (MenuCacheItem *item, MenuPlugin *m)
     GdkPixbuf *icon;
     const char *str;
     int scale;
-    GtkGesture *gesture;
+    GtkGesture *gesture = NULL;
 
     if (menu_cache_item_get_type (item) == MENU_CACHE_TYPE_SEP)
     {
@@ -807,7 +810,11 @@ void menu_destructor (gpointer user_data)
     destroy_menu (m);
     destroy_search (m);
 
-    if (m->applist) gtk_list_store_clear (m->applist);
+    if (m->applist)
+    {
+        gtk_list_store_clear (m->applist);
+        g_object_unref (m->applist);
+    }
 
     wrap_free_gesture (m->gesture);
 

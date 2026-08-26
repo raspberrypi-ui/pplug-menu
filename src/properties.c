@@ -40,13 +40,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 /*----------------------------------------------------------------------------*/
 
 static GtkWidget *dlg, *img_icon, *lbl_loc, *lbl_id;
-static char *icon_name;
 
 /*----------------------------------------------------------------------------*/
 /* Prototypes                                                                 */
 /*----------------------------------------------------------------------------*/
 
-static void show_icon (void);
+static void show_icon (const char *name);
 static void edit_item (GtkButton *, gpointer data);
 static void dialog_cancel (GtkButton *, gpointer);
 
@@ -59,7 +58,7 @@ static void dialog_cancel (GtkButton *, gpointer);
 void show_properties_dialog (MenuCacheItem *item)
 {
     GtkBuilder *builder;
-    char *path;
+    char *path, *icon_name;
 
     textdomain (GETTEXT_PACKAGE);
     builder = gtk_builder_new_from_file (PACKAGE_DATA_DIR "/ui/properties.ui");
@@ -69,7 +68,8 @@ void show_properties_dialog (MenuCacheItem *item)
     lbl_id = (GtkWidget *) gtk_builder_get_object (builder, "lbl_file");
 
     icon_name = g_strdup (menu_cache_item_get_icon (item));
-    show_icon ();
+    show_icon (icon_name);
+    g_free (icon_name);
 
     gtk_label_set_text (GTK_LABEL (lbl_id), menu_cache_item_get_file_basename (item));
     gtk_label_set_text (GTK_LABEL (gtk_builder_get_object (builder, "lbl_name")), menu_cache_item_get_name (item));
@@ -93,16 +93,16 @@ void show_properties_dialog (MenuCacheItem *item)
     g_object_unref (builder);
 }
 
-static void show_icon (void)
+static void show_icon (const char *name)
 {
     GdkPixbuf *pixbuf;
     int scale;
 
     scale = gtk_widget_get_scale_factor (dlg);
-    if (strchr (icon_name, '/'))
-        pixbuf = gdk_pixbuf_new_from_file_at_scale (icon_name, scale * 32, scale * 32, TRUE, NULL);
+    if (strchr (name, '/'))
+        pixbuf = gdk_pixbuf_new_from_file_at_scale (name, scale * 32, scale * 32, TRUE, NULL);
     else
-        pixbuf = gtk_icon_theme_load_icon_for_scale (gtk_icon_theme_get_default (), icon_name, 32,
+        pixbuf = gtk_icon_theme_load_icon_for_scale (gtk_icon_theme_get_default (), name, 32,
             scale, GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
     set_image_from_pixbuf (img_icon, pixbuf);
     g_object_unref (pixbuf);
