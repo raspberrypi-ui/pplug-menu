@@ -333,6 +333,7 @@ static void create_search (MenuPlugin *m)
 
     /* create a scrolled window to hold the tree view */
     m->scr = gtk_scrolled_window_new (NULL, NULL);
+    gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (m->scr), GTK_POLICY_NEVER, GTK_POLICY_NEVER);
 
     /* put in box in the appropriate order */
     if (!m->fixed && wrap_is_at_bottom (m)) gtk_box_pack_start (GTK_BOX (box), m->scr, FALSE, FALSE, 0);
