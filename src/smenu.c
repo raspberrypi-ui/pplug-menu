@@ -81,10 +81,12 @@ static void handle_search_changed (GtkEditable *, gpointer user_data);
 static gboolean handle_list_keypress (GtkWidget *, GdkEventKey *event, gpointer user_data);
 static gboolean handle_search_keypress (GtkWidget *, GdkEventKey *event, gpointer user_data);
 static void handle_list_select (GtkTreeView *tv, GtkTreePath *path, GtkTreeViewColumn *, gpointer user_data);
+static gboolean handle_list_button (GtkWidget *, GdkEventButton *event, gpointer user_data);
 static void search_destroyed (GtkWidget *, gpointer data);
 static void create_search (MenuPlugin *m);
 static void destroy_menu (MenuPlugin *m);
 static void handle_menu_item_activate (GtkMenuItem *mi, gpointer user_data);
+static void handle_menu_item_add_to_desktop (GtkWidget *mi, gpointer);
 static void handle_menu_item_properties (GtkWidget *mi, gpointer);
 static void handle_restore_submenu (GtkMenuItem *mi, GtkWidget *submenu);
 static void show_context_menu (MenuPlugin *m, GtkWidget* mi);
@@ -96,13 +98,12 @@ static int sys_menu_load_submenu (MenuPlugin* m, MenuCacheDir* dir, GtkWidget* m
 static void insert_system_menu (MenuPlugin *m, GtkMenu *menu, int position);
 static gboolean create_menu (MenuPlugin *m);
 static void menu_button_clicked (GtkWidget *, MenuPlugin *m);
-static void handle_menu_item_add_to_desktop (GtkWidget *mi, gpointer);
-static void handle_menu_item_add_to_launcher (GtkWidget *mi, gpointer);
 #ifdef LXPLUG
 static void handle_search_resize (GtkWidget *, GtkAllocation *, gpointer user_data);
 #else
-static void handle_menu_item_gesture_pressed (GtkGestureLongPress *, gdouble, gdouble, GtkWidget *);
 static void constrain_menu_size (GtkMenu *menu, gpointer, gpointer, gboolean, gboolean, MenuPlugin *);
+static void handle_menu_item_gesture_pressed (GtkGestureLongPress *, gdouble, gdouble, GtkWidget *);
+static void handle_menu_item_add_to_launcher (GtkWidget *mi, gpointer);
 #endif
 
 /*----------------------------------------------------------------------------*/
@@ -301,17 +302,6 @@ static gboolean handle_list_button (GtkWidget *, GdkEventButton *event, gpointer
     return FALSE;
 }
 
-#ifdef LXPLUG
-static void handle_search_resize (GtkWidget *, GtkAllocation *, gpointer user_data)
-{
-    MenuPlugin *m = (MenuPlugin *) user_data;
-    int x, y;
-
-    lxpanel_plugin_popup_set_position_helper (m->panel, m->plugin, m->swin, &x, &y);
-    gdk_window_move (gtk_widget_get_window (m->swin), x, y);
-}
-#endif
-
 static void search_destroyed (GtkWidget *, gpointer data)
 {
     MenuPlugin *m = (MenuPlugin *) data;
@@ -416,11 +406,6 @@ static void handle_menu_item_add_to_desktop (GtkWidget *mi, gpointer)
     g_free (path);
 }
 
-static void handle_menu_item_add_to_launcher (GtkWidget *mi, gpointer)
-{
-    add_to_launcher (gtk_widget_get_name (mi));
-}
-
 static void handle_menu_item_properties (GtkWidget *mi, gpointer)
 {
     MenuCacheItem *item = menu_cache_find_item_by_id (mcache, gtk_widget_get_name (mi));
@@ -448,13 +433,12 @@ static void show_context_menu (MenuPlugin *m, GtkWidget* mi)
         gtk_menu_shell_append (GTK_MENU_SHELL (menu), item);
     }
 
-    if (!system ("pgrep wf-panel-pi > /dev/null"))
-    {
-        item = gtk_menu_item_new_with_label (_("Add to Launcher"));
-        gtk_widget_set_name (item, gtk_widget_get_name (mi));
-        g_signal_connect (item, "activate", G_CALLBACK (handle_menu_item_add_to_launcher), m);
-        gtk_menu_shell_append (GTK_MENU_SHELL (menu), item);
-    }
+#ifndef LXPLUG
+    item = gtk_menu_item_new_with_label (_("Add to Launcher"));
+    gtk_widget_set_name (item, gtk_widget_get_name (mi));
+    g_signal_connect (item, "activate", G_CALLBACK (handle_menu_item_add_to_launcher), m);
+    gtk_menu_shell_append (GTK_MENU_SHELL (menu), item);
+#endif
 
     item = gtk_separator_menu_item_new ();
     gtk_menu_shell_append (GTK_MENU_SHELL (menu), item);
@@ -553,7 +537,16 @@ static gboolean handle_menu_item_button_release (GtkWidget* mi, GdkEventButton*,
     return TRUE;
 }
 
-#ifndef LXPLUG
+#ifdef LXPLUG
+static void handle_search_resize (GtkWidget *, GtkAllocation *, gpointer user_data)
+{
+    MenuPlugin *m = (MenuPlugin *) user_data;
+    int x, y;
+
+    lxpanel_plugin_popup_set_position_helper (m->panel, m->plugin, m->swin, &x, &y);
+    gdk_window_move (gtk_widget_get_window (m->swin), x, y);
+}
+#else
 static void constrain_menu_size (GtkMenu *menu, gpointer, gpointer, gboolean, gboolean, MenuPlugin *)
 {
     GdkRectangle rect;
@@ -573,6 +566,11 @@ static void constrain_menu_size (GtkMenu *menu, gpointer, gpointer, gboolean, gb
 static void handle_menu_item_gesture_pressed (GtkGestureLongPress *, gdouble, gdouble, GtkWidget *)
 {
     longpress = TRUE;
+}
+
+static void handle_menu_item_add_to_launcher (GtkWidget *mi, gpointer)
+{
+    add_to_launcher (gtk_widget_get_name (mi));
 }
 #endif
 
