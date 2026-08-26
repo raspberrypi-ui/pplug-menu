@@ -562,6 +562,7 @@ static GtkWidget *create_system_menu_item (MenuCacheItem *item, MenuPlugin *m)
     GdkPixbuf *icon;
     const char *str;
     int scale;
+    GtkGesture *gesture;
 
     if (menu_cache_item_get_type (item) == MENU_CACHE_TYPE_SEP)
     {
@@ -607,7 +608,8 @@ static GtkWidget *create_system_menu_item (MenuCacheItem *item, MenuPlugin *m)
             g_signal_connect (mi, "button-press-event", G_CALLBACK (handle_menu_item_button_press), m);
             g_signal_connect (mi, "button-release-event", G_CALLBACK (handle_menu_item_button_release), m);
 
-            wrap_add_longpress (m->migesture, mi, G_CALLBACK (handle_gesture_nop), m);
+            wrap_add_longpress (gesture, mi, G_CALLBACK (handle_gesture_nop), m);
+            g_object_set_data_full (G_OBJECT (mi), "longpress-gesture", gesture, g_object_unref);
         }
         if (icon) g_object_unref (icon);
     }
@@ -808,7 +810,6 @@ void menu_destructor (gpointer user_data)
     if (m->applist) gtk_list_store_clear (m->applist);
 
     wrap_free_gesture (m->gesture);
-    wrap_free_gesture (m->migesture);
 
     g_free (m);
 }

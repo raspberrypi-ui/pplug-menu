@@ -40,7 +40,6 @@ typedef struct
     config_setting_t *settings;     /* Plugin settings */
 #else
     GtkGesture *gesture;
-    GtkGesture *migesture;
 #endif
 
     GtkWidget *img;                 /* Taskbar icon */
