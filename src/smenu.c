@@ -92,7 +92,7 @@ static void handle_restore_submenu (GtkMenuItem *mi, GtkWidget *submenu);
 static void show_context_menu (MenuPlugin *m, GtkWidget* mi);
 static gboolean handle_key_presses (GtkWidget *, GdkEventKey *event, gpointer user_data);
 static gboolean handle_menu_item_button_press (GtkWidget* mi, GdkEventButton* evt, gpointer user_data);
-static gboolean handle_menu_item_button_release (GtkWidget* mi, GdkEventButton*, MenuPlugin* m);
+static gboolean handle_menu_item_button_release (GtkWidget* mi, GdkEventButton*, gpointer user_data);
 static GtkWidget *create_system_menu_item (MenuCacheItem *item, MenuPlugin *m);
 static int sys_menu_load_submenu (MenuPlugin* m, MenuCacheDir* dir, GtkWidget* menu, int pos);
 static void insert_system_menu (MenuPlugin *m, GtkMenu *menu, int position);
@@ -521,8 +521,9 @@ static gboolean handle_menu_item_button_press (GtkWidget* mi, GdkEventButton* ev
     return FALSE;
 }
 
-static gboolean handle_menu_item_button_release (GtkWidget* mi, GdkEventButton*, MenuPlugin* m)
+static gboolean handle_menu_item_button_release (GtkWidget* mi, GdkEventButton*, gpointer user_data)
 {
+    MenuPlugin *m = (MenuPlugin *) user_data;
     if (!longpress)
     {
         handle_menu_item_activate (GTK_MENU_ITEM (mi), m);
