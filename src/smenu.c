@@ -98,7 +98,7 @@ static void menu_button_clicked (GtkWidget *, MenuPlugin *m);
 #ifdef LXPLUG
 static void handle_search_resize (GtkWidget *, GtkAllocation *, gpointer user_data);
 #else
-static void constrain_menu_size (GtkMenu *menu, gpointer, gpointer, gboolean, gboolean, MenuPlugin *);
+static void constrain_menu_size (GtkMenu *menu, gpointer, gpointer, gboolean, gboolean, gpointer);
 static void handle_gesture_nop (GtkGestureLongPress *, GdkEventSequence *, gpointer);
 static void handle_menu_item_add_to_launcher (GtkWidget *mi, gpointer);
 #endif
@@ -527,7 +527,7 @@ static void handle_search_resize (GtkWidget *, GtkAllocation *, gpointer user_da
     gdk_window_move (gtk_widget_get_window (m->swin), x, y);
 }
 #else
-static void constrain_menu_size (GtkMenu *menu, gpointer, gpointer, gboolean, gboolean, MenuPlugin *)
+static void constrain_menu_size (GtkMenu *menu, gpointer, gpointer, gboolean, gboolean, gpointer)
 {
     GdkRectangle rect;
     GtkWidget *win = gtk_widget_get_toplevel (GTK_WIDGET (menu));
