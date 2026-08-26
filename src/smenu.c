@@ -510,6 +510,11 @@ static gboolean handle_menu_item_button_release (GtkWidget* mi, GdkEventButton*,
         gtk_launch (gtk_widget_get_name (mi));
         destroy_menu (m);
     }
+    else
+    {
+        show_context_menu (m, mi);
+        gtk_menu_item_select (GTK_MENU_ITEM (mi));
+    }
     longpress = FALSE;
     return TRUE;
 }
