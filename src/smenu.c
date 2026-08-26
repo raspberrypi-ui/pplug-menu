@@ -85,7 +85,6 @@ static gboolean handle_list_button (GtkWidget *, GdkEventButton *event, gpointer
 static void search_destroyed (GtkWidget *, gpointer data);
 static void create_search (MenuPlugin *m);
 static void destroy_menu (MenuPlugin *m);
-static void handle_menu_item_activate (GtkMenuItem *mi, gpointer user_data);
 static void handle_menu_item_add_to_desktop (GtkWidget *mi, gpointer);
 static void handle_menu_item_properties (GtkWidget *mi, gpointer);
 static void handle_remove_submenu (GtkMenuItem *mi, gpointer user_data);
@@ -388,11 +387,6 @@ static void destroy_menu (MenuPlugin *m)
     m->menu = NULL;
 }
 
-static void handle_menu_item_activate (GtkMenuItem *mi, gpointer)
-{
-    gtk_launch (gtk_widget_get_name (GTK_WIDGET (mi)));
-}
-
 static void handle_menu_item_add_to_desktop (GtkWidget *mi, gpointer)
 {
     MenuCacheItem *item = menu_cache_find_item_by_id (mcache, gtk_widget_get_name (mi));
@@ -485,14 +479,14 @@ static gboolean handle_key_presses (GtkWidget *, GdkEventKey *event, gpointer us
             GtkWidget *subitem = gtk_menu_shell_get_selected_item (GTK_MENU_SHELL (submenu));
             if (subitem)
             {
-                handle_menu_item_activate (GTK_MENU_ITEM (subitem), m);
+                gtk_launch (gtk_widget_get_name (subitem));
                 destroy_menu (m);
                 return TRUE;
             }
         }
         else if (menu)
         {
-            handle_menu_item_activate (GTK_MENU_ITEM (menu), m);
+            gtk_launch (gtk_widget_get_name (menu));
             return TRUE;
         }
     }
@@ -513,7 +507,7 @@ static gboolean handle_menu_item_button_release (GtkWidget* mi, GdkEventButton*,
     MenuPlugin *m = (MenuPlugin *) user_data;
     if (!longpress)
     {
-        handle_menu_item_activate (GTK_MENU_ITEM (mi), m);
+        gtk_launch (gtk_widget_get_name (mi));
         destroy_menu (m);
     }
     longpress = FALSE;
