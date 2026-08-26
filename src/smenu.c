@@ -67,8 +67,6 @@ conf_table_t conf_table[5] = {
     {CONF_TYPE_NONE, NULL,               NULL,                                  NULL,   NULL}
 };
 
-static gboolean longpress;
-
 /*----------------------------------------------------------------------------*/
 /* Prototypes                                                                 */
 /*----------------------------------------------------------------------------*/
@@ -101,7 +99,7 @@ static void menu_button_clicked (GtkWidget *, MenuPlugin *m);
 static void handle_search_resize (GtkWidget *, GtkAllocation *, gpointer user_data);
 #else
 static void constrain_menu_size (GtkMenu *menu, gpointer, gpointer, gboolean, gboolean, MenuPlugin *);
-static void handle_menu_item_gesture_pressed (GtkGestureLongPress *, gdouble, gdouble, GtkWidget *);
+static void handle_gesture_nop (GtkGestureLongPress *, GdkEventSequence *, gpointer);
 static void handle_menu_item_add_to_launcher (GtkWidget *mi, gpointer);
 #endif
 
@@ -497,7 +495,7 @@ static gboolean handle_menu_item_button_press (GtkWidget* mi, GdkEventButton* ev
 {
     MenuPlugin *m = (MenuPlugin *) user_data;
 
-    longpress = FALSE;
+    CLEAR_PRESS
     if (evt->button == 3) show_context_menu (m, mi);
     return FALSE;
 }
@@ -505,7 +503,7 @@ static gboolean handle_menu_item_button_press (GtkWidget* mi, GdkEventButton* ev
 static gboolean handle_menu_item_button_release (GtkWidget* mi, GdkEventButton*, gpointer user_data)
 {
     MenuPlugin *m = (MenuPlugin *) user_data;
-    if (!longpress)
+    if (!LONGPRESS)
     {
         gtk_launch (gtk_widget_get_name (mi));
         destroy_menu (m);
@@ -515,7 +513,7 @@ static gboolean handle_menu_item_button_release (GtkWidget* mi, GdkEventButton*,
         show_context_menu (m, mi);
         gtk_menu_item_select (GTK_MENU_ITEM (mi));
     }
-    longpress = FALSE;
+    CLEAR_PRESS
     return TRUE;
 }
 
@@ -545,9 +543,9 @@ static void constrain_menu_size (GtkMenu *menu, gpointer, gpointer, gboolean, gb
     }
 }
 
-static void handle_menu_item_gesture_pressed (GtkGestureLongPress *, gdouble, gdouble, GtkWidget *)
+static void handle_gesture_nop (GtkGestureLongPress *, GdkEventSequence *, gpointer)
 {
-    longpress = TRUE;
+    // this space intentionally blank...
 }
 
 static void handle_menu_item_add_to_launcher (GtkWidget *mi, gpointer)
@@ -609,12 +607,7 @@ static GtkWidget *create_system_menu_item (MenuCacheItem *item, MenuPlugin *m)
             g_signal_connect (mi, "button-press-event", G_CALLBACK (handle_menu_item_button_press), m);
             g_signal_connect (mi, "button-release-event", G_CALLBACK (handle_menu_item_button_release), m);
 
-#ifndef LXPLUG
-            m->migesture = gtk_gesture_long_press_new (mi);
-            gtk_gesture_single_set_touch_only (GTK_GESTURE_SINGLE (m->migesture), gestures_touch_only);
-            g_signal_connect (m->migesture, "pressed", G_CALLBACK (handle_menu_item_gesture_pressed), mi);
-            gtk_event_controller_set_propagation_phase (GTK_EVENT_CONTROLLER (m->migesture), GTK_PHASE_BUBBLE);
-#endif
+            wrap_add_longpress (m->migesture, mi, G_CALLBACK (handle_gesture_nop), m);
         }
         if (icon) g_object_unref (icon);
     }
