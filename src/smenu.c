@@ -55,6 +55,8 @@ extern void show_properties_dialog (MenuCacheItem *item);
 /* Typedefs and macros                                                        */
 /*----------------------------------------------------------------------------*/
 
+#define BAR_MARGIN 5
+
 /*----------------------------------------------------------------------------*/
 /* Global data                                                                */
 /*----------------------------------------------------------------------------*/
@@ -150,13 +152,8 @@ static void resize_search (MenuPlugin *m)
     }
     else
     {
-#ifdef LXPLUG
-        gdk_monitor_get_geometry (gdk_display_get_monitor_at_window (gdk_display_get_default (), gtk_widget_get_window (GTK_WIDGET (&(m->panel->window)))), &rect);
-        height = rect.height - gtk_widget_get_allocated_height (GTK_WIDGET (&(m->panel->window))) - gtk_widget_get_allocated_height (m->srch);
-#else
-        gdk_monitor_get_geometry (gtk_layer_get_monitor (GTK_WINDOW (m->swin)), &rect);
-        height = rect.height - gtk_layer_get_exclusive_zone (find_panel (m->plugin)) - gtk_widget_get_allocated_height (m->srch);
-#endif
+        gdk_monitor_get_geometry (gdk_display_get_monitor_at_window (gdk_display_get_default (), gtk_widget_get_window (m->swin)), &rect);
+        height = rect.height - BAR_MARGIN - gtk_widget_get_allocated_height (m->srch) - gtk_widget_get_allocated_height (m->plugin);
 
         /* update the stored row height if current height is bigger */
         path = gtk_tree_path_new_from_indices (0, -1);
