@@ -95,9 +95,7 @@ static int sys_menu_load_submenu (MenuPlugin* m, MenuCacheDir* dir, GtkWidget* m
 static void insert_system_menu (MenuPlugin *m, GtkMenu *menu, int position);
 static gboolean create_menu (MenuPlugin *m);
 static void menu_button_clicked (GtkWidget *, MenuPlugin *m);
-#ifdef LXPLUG
-static void handle_search_resize (GtkWidget *, GtkAllocation *, gpointer user_data);
-#else
+#ifndef LXPLUG
 static void constrain_menu_size (GtkMenu *menu, gpointer, gpointer, gboolean, gboolean, gpointer);
 static void handle_gesture_nop (GtkGestureLongPress *, GdkEventSequence *, gpointer);
 static void handle_menu_item_add_to_launcher (GtkWidget *mi, gpointer);
@@ -153,12 +151,11 @@ static void resize_search (MenuPlugin *m)
     else
     {
 #ifdef LXPLUG
-        gdk_monitor_get_geometry (gdk_display_get_monitor_at_window (gdk_display_get_default (), GDK_WINDOW (m->panel)), &rect);
+        gdk_monitor_get_geometry (gdk_display_get_monitor_at_window (gdk_display_get_default (), gtk_widget_get_window (GTK_WIDGET (&(m->panel->window)))), &rect);
         height = rect.height - gtk_widget_get_allocated_height (GTK_WIDGET (&(m->panel->window))) - gtk_widget_get_allocated_height (m->srch);
 #else
         gdk_monitor_get_geometry (gtk_layer_get_monitor (GTK_WINDOW (m->swin)), &rect);
-        height = (rect.height - gtk_layer_get_exclusive_zone (find_panel (m->plugin)))
-            - gtk_widget_get_allocated_height (m->srch);
+        height = rect.height - gtk_layer_get_exclusive_zone (find_panel (m->plugin)) - gtk_widget_get_allocated_height (m->srch);
 #endif
 
         /* update the stored row height if current height is bigger */
@@ -173,14 +170,12 @@ static void resize_search (MenuPlugin *m)
         if (nrows > height) nrows = height;
     }
 
-    /* set the size of the scrolled window and then redraw the window */
+    /* set the size of the scrolled window */
     gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (m->scr), GTK_POLICY_NEVER, nrows < height ? GTK_POLICY_NEVER : GTK_POLICY_AUTOMATIC);
-
     gtk_widget_set_size_request (m->scr, -1, nrows);
 
-#ifdef LXPLUG
+    /* trigger a size allocate call (only needed under X) */
     gtk_window_resize (GTK_WINDOW (m->swin), 1, 1);
-#endif
 }
 
 static void handle_search_changed (GtkEditable *, gpointer user_data)
@@ -374,11 +369,6 @@ static void create_search (MenuPlugin *m)
     /* realise */
     wrap_popup_at_button (m, m->swin, m->plugin);
     resize_search (m);
-
-#ifdef LXPLUG
-    /* resize window as needed */
-    if (!m->fixed && panel_is_at_bottom (m->panel)) g_signal_connect (m->swin, "size-allocate", G_CALLBACK (handle_search_resize), m);
-#endif
 }
 
 /* Handlers for system menu items */
@@ -521,16 +511,7 @@ static gboolean handle_menu_item_button_release (GtkWidget* mi, GdkEventButton*,
     return TRUE;
 }
 
-#ifdef LXPLUG
-static void handle_search_resize (GtkWidget *, GtkAllocation *, gpointer user_data)
-{
-    MenuPlugin *m = (MenuPlugin *) user_data;
-    int x, y;
-
-    lxpanel_plugin_popup_set_position_helper (m->panel, m->plugin, m->swin, &x, &y);
-    gdk_window_move (gtk_widget_get_window (m->swin), x, y);
-}
-#else
+#ifndef LXPLUG
 static void constrain_menu_size (GtkMenu *menu, gpointer, gpointer, gboolean, gboolean, gpointer)
 {
     GdkRectangle rect;
