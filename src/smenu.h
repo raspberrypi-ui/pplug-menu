@@ -34,14 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 typedef struct 
 {
     GtkWidget *plugin;
-
-#ifdef LXPLUG
-    LXPanel *panel;                 /* Back pointer to panel */
-    config_setting_t *settings;     /* Plugin settings */
-#else
     GtkGesture *gesture;
-#endif
-
     GtkWidget *img;                 /* Taskbar icon */
     GtkWidget *menu;                /* Menu */
     GtkWidget *swin;                /* Search window popup */
@@ -54,6 +47,7 @@ typedef struct
     int rheight;
     gboolean tooltips;
     gboolean fixed;
+    LXPLUG_VARS
 } MenuPlugin;
 
 extern conf_table_t conf_table[5];
