@@ -79,13 +79,6 @@ static void menu_panel_configuration_changed (LXPanel *, GtkWidget *plugin)
     menu_update_display (m);
 }
 
-/* Handler for control message */
-static gboolean menu_control (GtkWidget *plugin, const char *cmd)
-{
-    MenuPlugin *m = lxpanel_plugin_get_data (plugin);
-    return menu_control_msg (m, cmd);
-}
-
 /* Apply changes from config dialog */
 static gboolean menu_apply_config (gpointer user_data)
 {
@@ -103,18 +96,25 @@ static GtkWidget *menu_configure (LXPanel *panel, GtkWidget *plugin)
         conf_table);
 }
 
+/* Handler for control message */
+static gboolean menu_control (GtkWidget *plugin, const char *cmd)
+{
+    MenuPlugin *m = lxpanel_plugin_get_data (plugin);
+    return menu_control_msg (m, cmd);
+}
+
 int module_lxpanel_gtk_version = 1;
 char module_name[] = PLUGIN_NAME;
 
 /* Plugin descriptor */
 LXPanelPluginInit fm_module_init_lxpanel_gtk = {
     .name = PLUGIN_TITLE,
+    .gettext_package = GETTEXT_PACKAGE,
     .description = N_("Searchable Application Menu"),
     .new_instance = menu_constructor,
     .reconfigure = menu_panel_configuration_changed,
     .config = menu_configure,
-    .control = menu_control,
-    .gettext_package = GETTEXT_PACKAGE
+    .control = menu_control
 };
 
 /* End of file */
