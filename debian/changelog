@@ -1,3 +1,9 @@
+pplug-menu (1.23) trixie; urgency=medium
+
+  * Remove menu size constraint; add add_to_launcher for X; add Georgian translation
+
+ -- Simon Long <simon@raspberrypi.com>  Tue, 01 Sep 2026 09:43:39 +0100
+
 pplug-menu (1.22) trixie; urgency=medium
 
   * Modify for new lxpanel shims

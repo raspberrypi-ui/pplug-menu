@@ -37,11 +37,6 @@ extern "C" {
     const char *package_name (void) { return GETTEXT_PACKAGE; };
 }
 
-void WidgetSmenu::widget_command (const char *cmd)
-{
-    menu_control_msg (m, cmd);
-}
-
 void WidgetSmenu::widget_set_icon (void)
 {
     menu_update_display (m);
@@ -50,6 +45,11 @@ void WidgetSmenu::widget_set_icon (void)
 void WidgetSmenu::widget_config_reload (void)
 {
     if (load_configuration_data (PLUGIN_NAME, conf_table)) menu_update_display (m);
+}
+
+void WidgetSmenu::widget_command (const char *cmd)
+{
+    menu_control_msg (m, cmd);
 }
 
 void WidgetSmenu::widget_init (Gtk::HBox *container)
