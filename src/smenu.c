@@ -98,7 +98,6 @@ static void insert_system_menu (MenuPlugin *m, GtkMenu *menu, int position);
 static gboolean create_menu (MenuPlugin *m);
 static void menu_button_clicked (GtkWidget *, MenuPlugin *m);
 #ifndef LXPLUG
-static void constrain_menu_size (GtkMenu *menu, gpointer, gpointer, gboolean, gboolean, gpointer);
 static void handle_gesture_nop (GtkGestureLongPress *, GdkEventSequence *, gpointer);
 static void handle_menu_item_add_to_launcher (GtkWidget *mi, gpointer);
 #endif
@@ -509,18 +508,6 @@ static gboolean handle_menu_item_button_release (GtkWidget* mi, GdkEventButton*,
 }
 
 #ifndef LXPLUG
-static void constrain_menu_size (GtkMenu *menu, gpointer, gpointer, gboolean, gboolean, gpointer)
-{
-    GdkRectangle rect;
-    GtkWidget *win = gtk_widget_get_toplevel (GTK_WIDGET (menu));
-    GdkWindow *gwin = gtk_widget_get_window (win);
-    GdkMonitor *mon = gdk_display_get_monitor_at_window (gdk_display_get_default (), gwin);
-    gdk_monitor_get_geometry (mon, &rect);
-    int height = gdk_window_get_height (gwin);
-    int max_height = rect.height;
-    if (height > max_height) gdk_window_resize (gwin, gdk_window_get_width (gwin), max_height);
-}
-
 static void handle_gesture_nop (GtkGestureLongPress *, GdkEventSequence *, gpointer)
 {
     // this space intentionally blank...
@@ -620,9 +607,6 @@ static int sys_menu_load_submenu (MenuPlugin* m, MenuCacheDir* dir, GtkWidget* m
                 GtkWidget* sub = gtk_menu_new ();
                 gtk_menu_set_reserve_toggle_size (GTK_MENU (sub), FALSE);
                 g_signal_connect (sub, "key-press-event", G_CALLBACK (handle_key_presses), m);
-#ifndef LXPLUG
-                g_signal_connect (sub, "popped-up", G_CALLBACK (constrain_menu_size), m);
-#endif
                 gint s_count = sys_menu_load_submenu (m, MENU_CACHE_DIR (item), sub, -1);
                 if (s_count)
                 {   
@@ -665,9 +649,6 @@ static gboolean create_menu (MenuPlugin *m)
     gtk_menu_set_reserve_toggle_size (GTK_MENU (m->menu), FALSE);
     gtk_container_set_border_width (GTK_CONTAINER (m->menu), 0);
     g_signal_connect (m->menu, "key-press-event", G_CALLBACK (handle_key_presses), m);
-#ifndef LXPLUG
-    g_signal_connect (m->menu, "popped-up", G_CALLBACK (constrain_menu_size), m);
-#endif
     insert_system_menu (m, GTK_MENU (m->menu), -1);
 
     return TRUE;
