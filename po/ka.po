@@ -1,0 +1,89 @@
+# Georgian translation for lpplug_smenu.
+# Copyright (C) 2026 lpplug_smenu's authors.
+# This file is distributed under the same license as the lpplug_smenu package.
+# Ekaterine Papava <papava.e@gtu.ge>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: lpplug_smenu\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-05-21 13:32+0200\n"
+"PO-Revision-Date: 2026-08-29 16:00+0200\n"
+"Last-Translator: Ekaterine Papava <papava.e@gtu.ge>\n"
+"Language-Team: Georgian <(nothing)>\n"
+"Language: ka\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.9\n"
+
+#: src/smenu.c:72
+msgid "Icon horizontal padding"
+msgstr "ხატულას ჰორიზონტალური შევსება"
+
+#: src/smenu.c:73
+msgid "Show tooltips for menu items"
+msgstr "მინიშნებების ჩვენება მენიუს პუნქტებისთვის"
+
+#: src/smenu.c:74
+msgid "Fix height of search window"
+msgstr "ძებნის ფანჯრის მუდმივი სიმაღლე"
+
+#: src/smenu.c:75
+msgid "Search window height"
+msgstr "ძენის ფანჯრის სიმაღლე"
+
+#: src/smenu.c:462
+msgid "Add to desktop"
+msgstr "სამუშაო მაგიდაზე დამატება"
+
+#: src/smenu.c:469
+msgid "Add to Launcher"
+msgstr "გამშვებზე დამატება"
+
+#: src/smenu.c:478
+msgid "Properties"
+msgstr "თვისებები"
+
+#: src/smenu.c:821 src/smenu.c:935 src/smenu.cpp:53
+msgid "Click here to open applications menu"
+msgstr "დააწკაპუნეთ აქ აპლიკაციების მენიუს გასახსნელად"
+
+#: src/smenu.c:954
+msgid "Searchable Application Menu"
+msgstr "ძებნადი აპლიკაციის მენიუ"
+
+#. End of file
+#. ----------------------------------------------------------------------------
+#. ============================================================================
+#. Copyright (c) 2022-2025 Raspberry Pi
+#. All rights reserved.
+#.
+#. Redistribution and use in source and binary forms, with or without
+#. modification, are permitted provided that the following conditions are met:
+#. * Redistributions of source code must retain the above copyright
+#. notice, this list of conditions and the following disclaimer.
+#. * Redistributions in binary form must reproduce the above copyright
+#. notice, this list of conditions and the following disclaimer in the
+#. documentation and/or other materials provided with the distribution.
+#. * Neither the name of the copyright holder nor the
+#. names of its contributors may be used to endorse or promote products
+#. derived from this software without specific prior written permission.
+#.
+#. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+#. ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+#. WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+#. DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY
+#. DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+#. (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+#. LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+#. ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+#. (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+#. SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#. ============================================================================
+#. ----------------------------------------------------------------------------
+#. Typedefs and macros
+#. ----------------------------------------------------------------------------
+#: src/smenu.h:32
+msgid "Menu"
+msgstr "მენიუ"
