@@ -86,6 +86,7 @@ static void search_destroyed (GtkWidget *, gpointer data);
 static void create_search (MenuPlugin *m);
 static void destroy_menu (MenuPlugin *m);
 static void handle_menu_item_add_to_desktop (GtkWidget *mi, gpointer);
+static void handle_menu_item_add_to_launcher (GtkWidget *mi, gpointer);
 static void handle_menu_item_properties (GtkWidget *mi, gpointer);
 static void handle_remove_submenu (GtkMenuItem *mi, gpointer user_data);
 static void show_context_menu (MenuPlugin *m, GtkWidget* mi);
@@ -99,7 +100,6 @@ static gboolean create_menu (MenuPlugin *m);
 static void menu_button_clicked (GtkWidget *, MenuPlugin *m);
 #ifndef LXPLUG
 static void handle_gesture_nop (GtkGestureLongPress *, GdkEventSequence *, gpointer);
-static void handle_menu_item_add_to_launcher (GtkWidget *mi, gpointer);
 #endif
 
 /*----------------------------------------------------------------------------*/
@@ -388,6 +388,11 @@ static void handle_menu_item_add_to_desktop (GtkWidget *mi, gpointer)
     g_free (path);
 }
 
+static void handle_menu_item_add_to_launcher (GtkWidget *mi, gpointer)
+{
+    add_to_launcher (gtk_widget_get_name (mi));
+}
+
 static void handle_menu_item_properties (GtkWidget *mi, gpointer)
 {
     MenuCacheItem *item = menu_cache_find_item_by_id (mcache, gtk_widget_get_name (mi));
@@ -414,12 +419,10 @@ static void show_context_menu (MenuPlugin *m, GtkWidget* mi)
         gtk_menu_shell_append (GTK_MENU_SHELL (menu), item);
     }
 
-#ifndef LXPLUG
     item = gtk_menu_item_new_with_label (_("Add to Launcher"));
     gtk_widget_set_name (item, gtk_widget_get_name (mi));
     g_signal_connect (item, "activate", G_CALLBACK (handle_menu_item_add_to_launcher), m);
     gtk_menu_shell_append (GTK_MENU_SHELL (menu), item);
-#endif
 
     item = gtk_separator_menu_item_new ();
     gtk_menu_shell_append (GTK_MENU_SHELL (menu), item);
@@ -511,11 +514,6 @@ static gboolean handle_menu_item_button_release (GtkWidget* mi, GdkEventButton*,
 static void handle_gesture_nop (GtkGestureLongPress *, GdkEventSequence *, gpointer)
 {
     // this space intentionally blank...
-}
-
-static void handle_menu_item_add_to_launcher (GtkWidget *mi, gpointer)
-{
-    add_to_launcher (gtk_widget_get_name (mi));
 }
 #endif
 
