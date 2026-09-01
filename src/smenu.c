@@ -93,14 +93,12 @@ static void show_context_menu (MenuPlugin *m, GtkWidget* mi);
 static gboolean handle_key_presses (GtkWidget *, GdkEventKey *event, gpointer user_data);
 static gboolean handle_menu_item_button_press (GtkWidget* mi, GdkEventButton* evt, gpointer user_data);
 static gboolean handle_menu_item_button_release (GtkWidget* mi, GdkEventButton*, gpointer user_data);
+static void handle_gesture_nop (GtkGestureLongPress *, GdkEventSequence *, gpointer);
 static GtkWidget *create_system_menu_item (MenuCacheItem *item, MenuPlugin *m);
 static int sys_menu_load_submenu (MenuPlugin* m, MenuCacheDir* dir, GtkWidget* menu, int pos);
 static void insert_system_menu (MenuPlugin *m, GtkMenu *menu, int position);
 static gboolean create_menu (MenuPlugin *m);
 static void menu_button_clicked (GtkWidget *, MenuPlugin *m);
-#ifndef LXPLUG
-static void handle_gesture_nop (GtkGestureLongPress *, GdkEventSequence *, gpointer);
-#endif
 
 /*----------------------------------------------------------------------------*/
 /* Function definitions                                                       */
@@ -510,12 +508,10 @@ static gboolean handle_menu_item_button_release (GtkWidget* mi, GdkEventButton*,
     return TRUE;
 }
 
-#ifndef LXPLUG
 static void handle_gesture_nop (GtkGestureLongPress *, GdkEventSequence *, gpointer)
 {
     // this space intentionally blank...
 }
-#endif
 
 /* Functions to create system menu items */
 
