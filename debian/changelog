@@ -1,3 +1,9 @@
+pplug-menu (1.24) trixie; urgency=medium
+
+  * Version bump for build
+
+ -- Simon Long <simon@raspberrypi.com>  Wed, 02 Sep 2026 13:24:12 +0100
+
 pplug-menu (1.23) trixie; urgency=medium
 
   * Remove menu size constraint; add add_to_launcher for X; add Georgian translation
