@@ -476,6 +476,7 @@ static gboolean handle_key_presses (GtkWidget *, GdkEventKey *event, gpointer us
         else if (menu)
         {
             gtk_launch (gtk_widget_get_name (menu));
+            destroy_menu (m);
             return TRUE;
         }
     }
