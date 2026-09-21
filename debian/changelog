@@ -1,3 +1,9 @@
+pplug-menu (1.26) trixie; urgency=medium
+
+  * Add tooltip for widget browser
+
+ -- Simon Long <simon@raspberrypi.com>  Mon, 21 Sep 2026 09:44:29 +0100
+
 pplug-menu (1.25) trixie; urgency=medium
 
   * Fix handling of enter key on top-level items
