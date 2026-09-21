@@ -80,7 +80,7 @@ msgstr "Click here to open applications menu"
 
 #: ../src/smenu.c:1111
 msgid "Searchable Application Menu"
-msgstr "Searchable Application Menu"
+msgstr "Searchable application menu"
 
 #: ../src/smenu.h:32
 msgid "Menu"
