@@ -48,6 +48,11 @@ typedef struct
     int rheight;
     gboolean tooltips;
     gboolean fixed;
+
+    gpointer reload_notify;
+    GFile *iconcache;
+    GFileMonitor *filemon;
+
     LXPLUG_VARS
 } MenuPlugin;
 
@@ -62,6 +67,7 @@ extern void menu_set_values (MenuPlugin *m);
 extern void menu_update_display (MenuPlugin *m);
 extern gboolean menu_control_msg (MenuPlugin *m, const char *cmd);
 extern void menu_destructor (gpointer user_data);
+extern void handle_reload_menu (MenuCache *, gpointer user_data);
 
 /* End of file */
 /*----------------------------------------------------------------------------*/

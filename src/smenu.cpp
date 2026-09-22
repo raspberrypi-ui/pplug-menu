@@ -40,12 +40,17 @@ extern "C" {
 
 void WidgetSmenu::widget_set_icon (void)
 {
+    handle_reload_menu (NULL, m);
     menu_update_display (m);
 }
 
 void WidgetSmenu::widget_config_reload (void)
 {
-    if (load_configuration_data (PLUGIN_NAME, conf_table)) menu_update_display (m);
+    if (load_configuration_data (PLUGIN_NAME, conf_table))
+    {
+        handle_reload_menu (NULL, m);
+        menu_update_display (m);
+    }
 }
 
 void WidgetSmenu::widget_command (const char *cmd)

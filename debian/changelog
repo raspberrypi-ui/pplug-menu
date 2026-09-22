@@ -1,3 +1,9 @@
+pplug-menu (1.27) trixie; urgency=medium
+
+  * Only recreate menu on cache reload
+
+ -- Simon Long <simon@raspberrypi.com>  Tue, 22 Sep 2026 15:01:05 +0100
+
 pplug-menu (1.26) trixie; urgency=medium
 
   * Add tooltip for widget browser

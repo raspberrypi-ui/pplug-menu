@@ -369,8 +369,7 @@ static void create_search (MenuPlugin *m)
 
 static void destroy_menu (MenuPlugin *m)
 {
-    if (m->menu) gtk_widget_destroy (m->menu);
-    m->menu = NULL;
+    if (m->menu) gtk_menu_shell_deactivate (GTK_MENU_SHELL (m->menu));
 }
 
 static void handle_menu_item_add_to_desktop (GtkWidget *mi, gpointer)
@@ -640,6 +639,7 @@ static void insert_system_menu (MenuPlugin *m, GtkMenu *menu, int position)
 static gboolean create_menu (MenuPlugin *m)
 {
     destroy_menu (m);
+    if (m->menu) gtk_widget_destroy (m->menu);
     m->menu = gtk_menu_new ();
     gtk_menu_set_reserve_toggle_size (GTK_MENU (m->menu), FALSE);
     gtk_container_set_border_width (GTK_CONTAINER (m->menu), 0);
@@ -647,6 +647,21 @@ static gboolean create_menu (MenuPlugin *m)
     insert_system_menu (m, GTK_MENU (m->menu), -1);
 
     return TRUE;
+}
+
+void handle_reload_menu (MenuCache *, gpointer user_data)
+{
+    MenuPlugin *m = (MenuPlugin *) user_data;
+
+    create_menu (m);
+}
+
+/* Icon cache update handler */
+static void handle_icon_cache_update (GFileMonitor *, GFile *, GFile *, GFileMonitorEvent, gpointer user_data)
+{
+    MenuPlugin *m = (MenuPlugin *) user_data;
+    gtk_icon_theme_rescan_if_needed (gtk_icon_theme_get_default ());
+    handle_reload_menu (NULL, m);
 }
 
 /*----------------------------------------------------------------------------*/
@@ -659,11 +674,7 @@ static void menu_button_clicked (GtkWidget *, MenuPlugin *m)
     CHECK_LONGPRESS
     if (m->menu && gtk_widget_is_visible (m->menu)) destroy_menu (m);
     else if (m->swin && gtk_widget_is_visible (m->swin)) destroy_search (m);
-    else
-    {
-        create_menu (m);
-        wrap_show_menu (m->plugin, m->menu);
-    }
+    else wrap_show_menu (m->plugin, m->menu);
 }
 
 /* Handler for system config changed message from panel */
@@ -705,11 +716,7 @@ gboolean menu_control_msg (MenuPlugin *m, const char *cmd)
     {
         if (m->menu && gtk_widget_is_visible (m->menu)) destroy_menu (m);
         else if (m->swin && gtk_widget_is_visible (m->swin)) destroy_search (m);
-        else
-        {
-            create_menu (m);
-            wrap_show_menu (m->plugin, m->menu);
-        }
+        else wrap_show_menu (m->plugin, m->menu);
         return TRUE;
     }
 
@@ -750,6 +757,15 @@ void menu_init (MenuPlugin *m)
     m->swin = NULL;
     m->menu = NULL;
 
+    /* Monitor the menu and icon caches */
+    m->reload_notify = menu_cache_add_reload_notify (mcache, handle_reload_menu, m);
+    m->iconcache = g_file_new_for_path ("/usr/share/icons/hicolor/icon-theme.cache");
+    m->filemon = g_file_monitor_file (m->iconcache, G_FILE_MONITOR_NONE, NULL, NULL);
+    g_signal_connect (m->filemon, "changed", G_CALLBACK (handle_icon_cache_update), m);
+
+    /* Force an initial load of the menu just in case */
+    handle_reload_menu (NULL, m);
+
     /* Show the widget and return */
     gtk_widget_show_all (m->plugin);
 }
@@ -760,6 +776,10 @@ void menu_destructor (gpointer user_data)
 
     destroy_menu (m);
     destroy_search (m);
+
+    if (m->reload_notify) menu_cache_remove_reload_notify (mcache, m->reload_notify);
+    if (m->filemon) g_object_unref (m->filemon);
+    if (m->iconcache) g_object_unref (m->iconcache);
 
     if (m->applist)
     {
